@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 namespace Allax
 {
-    //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();"
+    //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();" or "Engine E=new Engine();"
     public interface IEngine
     {
         ISPNet GetSPNetInstance(SPNetSettings settings);
@@ -15,22 +15,20 @@ namespace Allax
 	}
 	public interface ILayer
 	{
-		List<IBlock> GetBlocks(); //no ref. Because IBlock is reference type.
+		List<IBlock> GetBlocks(); //
 		IBlock GetBlock(byte number); // 1..N
 		void DeleteBlock(byte number); //!! (note for me)
 	}
 	public interface ISBlockDB
-	{
-		Dictionary<List<short>,List<short>> Export();
+    {
+        List<List<short>> GetCorMatrix(List<List<byte>> func_table);
+        Dictionary<List<short>,List<short>> Export();
 	}
 	public interface ISPNet
 	{
 		void AddLayer(LayerType type);
 		void DeleteLayer(byte number);
-		List<ILayer> GetLayers();
-		
+		List<ILayer> GetLayers();	
 		void PerformLinearAnalisys();
-		
-		void RegisterCallback(CallbackAddSolution func);
 	}
 }

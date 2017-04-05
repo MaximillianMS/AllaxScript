@@ -7,11 +7,7 @@ namespace Allax
     {
         //Fourier Transform DB
         Dictionary<List<short>, List<short>> FuncDB;
-        /*public virtual SBlockDB GetInstance(Dictionary<List<short>,List<short>> DB)
-        {
-            return new SBlockDB(DB);
-        }*/
-        public virtual Dictionary<List<short>, List<short>> Export()
+        public Dictionary<List<short>, List<short>> Export()
         {
             return FuncDB;
         }
@@ -94,15 +90,13 @@ namespace Allax
     abstract class Block : IBlock
     {
         public abstract void Init(List<byte> arg); //SBlock size:4-8. Whole word: up to 64bit.
-        Int64 ActiveInputs; //Active inputs for analysis. unlim output-input support
-        Int64 ActiveOutputs; // Same for outputs
     };
     class PBlock : Block
     {
         int VarCount;
         int _length;
         List<int> outputNumber;
-        public int GetOutputNumber(int InputNumber) // Global Numeration 1-16
+        public int GetOutputNumber(int InputNumber) // 
         {
             return outputNumber[InputNumber];
         }
@@ -113,7 +107,7 @@ namespace Allax
         }
         public override void Init(List<byte> arg) // from interfaces
         {
-            const int bias = 0; //S-Block record type: 'some args, Line1, Line2, ..., LineN'. No some args => Bias=0.
+            const int bias = 0; //P-Block record type: 'some args, Output1, Output1, ..., OutputN'. No some args => Bias=0. Output value starts with 1.
             if (arg.Count >= bias)
             {
                 if (arg.Count - bias == _length)
@@ -121,7 +115,7 @@ namespace Allax
                     outputNumber.AddRange(Enumerable.Repeat<int>(0, _length));
                     for (int i = bias; i < arg.Count; i++)
                     {
-                        outputNumber[i - bias] = arg[i] - 1;
+                        outputNumber[i - bias] = arg[i] - 1; // Convert from global numeration
                     }
                 }
             }
@@ -136,7 +130,7 @@ namespace Allax
     }
     class SBlock : Block
     {
-        SBlockDB _database;
+        ISBlockDB _database;
         List<List<short>> CorTable;
         List<List<byte>> FuncTable;
         public List<SBlockState> _states;
@@ -211,6 +205,10 @@ namespace Allax
                         CorTable = _database.GetCorMatrix(FuncTable);
                     Sort();
                 }
+                else
+                {
+                    throw new Exception("Argument length error");
+                }
             }
         }
 
@@ -226,7 +224,7 @@ namespace Allax
             FuncTable.Clear();
             VarCount = 0;
         }
-        public SBlock(SBlockDB database, byte block_length) //!NOW USED
+        public SBlock(ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
             BlockID = "";
@@ -246,30 +244,13 @@ namespace Allax
             CorTable = _database.GetCorMatrix(FuncTable);
         }
     };
-    class Layer : ILayer
+    abstract class Layer : ILayer
     {
-        public virtual List<IBlock> GetBlocks()
-        {
-            return null;
-        }
-        public virtual void DeleteBlock(byte number)
-        {
-            ;
-        }
-        public virtual IBlock GetBlock(byte number)
-        {
-            return null;
-        }// from interfaces
-        //public virtual void NextConfig();
-        public LayerType type;
-        List<bool> ActiveInputs;
-        List<bool> ActiveOutputs;
-        public Layer()
-        {
-            ActiveInputs.Clear();
-            ActiveOutputs.Clear();
-        }
-        List<Block> Blocks;
+        public abstract List<IBlock> GetBlocks();
+        public abstract void DeleteBlock(byte number);
+        public abstract IBlock GetBlock(byte number);
+        protected LayerType type;
+        protected List<Block> Blocks;
     };
     class KLayer : Layer
     {
@@ -282,43 +263,69 @@ namespace Allax
         {
             type = LayerType.KLayer;
         }
+        public override List<IBlock> GetBlocks()
+        {
+            throw new NotImplementedException();
+        }
+        public override void DeleteBlock(byte number)
+        {
+            throw new NotImplementedException();
+        }
+        public override IBlock GetBlock(byte number)
+        {
+            throw new NotImplementedException();
+        }
     };
     class SLayer : Layer
     {
-        public virtual List<IBlock> GetBlocks()
+        public override List<IBlock> GetBlocks()
         {
             return Blocks.ConvertAll(x => ((IBlock)x));
         }
-        public virtual IBlock GetBlock(int number)// from interfaces
+        public override IBlock GetBlock(byte number)// from interfaces
         {
             if (number - 1 < Blocks.Count)
                 return Blocks[number - 1];
             else
                 return null;
         }
-        List<Block> Blocks;
-        public SLayer(SBlockDB db, byte block_length, byte blocks_count)
+        public override void DeleteBlock(byte number)
+        {
+            throw new NotImplementedException();
+        }
+        public SLayer(ISBlockDB db, byte block_length, byte blocks_count)
         {
             type = LayerType.SLayer;
-            Blocks.AddRange(Enumerable.Repeat <SBlock>(new SBlock(db, block_length), blocks_count));
+            Blocks.AddRange(Enumerable.Repeat<SBlock>(new SBlock(db, block_length), blocks_count));
         }
         ushort ActiveBlocks; // Active Block bit mask. 16 block support in one layer. 
     };
     class PLayer : Layer
     {
-        List<Block> Blocks;
         public PLayer(byte word_length)
         {
             type = LayerType.PLayer;
             Blocks.Add(new PBlock(word_length));
         }
-        public int GetOutputNumber(int InputNumber) // Global Numeration 1-16
+        int GetOutputNumber(int InputNumber) // Global Numeration 1-16
         {
             return ((PBlock)(Blocks[0])).GetOutputNumber(InputNumber);
         }
-        public int[] GetOutputNumber(int[] inputNums) // Global Numeration 1-16
+        int[] GetOutputNumber(int[] inputNums) // Global Numeration 1-16
         {
-            return (from num in inputNums select Blocks[0].GetOutputNumber[num]).ToArray();
+            return (from num in inputNums select GetOutputNumber(num)).ToArray();
+        }
+        public override List<IBlock> GetBlocks()
+        {
+            return new List<IBlock> { Blocks[0] };
+        }
+        public override void DeleteBlock(byte number)
+        {
+            throw new NotImplementedException();
+        }
+        public override IBlock GetBlock(byte number)
+        {
+            throw new NotImplementedException();
         }
     };
     struct SBlockState
@@ -329,7 +336,7 @@ namespace Allax
             _inputs = inputs;
             _outputs = outputs;
         }
-        public Int64 _cor;
+        public Int64 _cor; // Abs(value) from Matrix
         public int _inputs;
         public int _outputs;
     }
@@ -339,18 +346,9 @@ namespace Allax
     }
     class SPNet : ISPNet
     {
-        public Layer GetLayer(int LayerNumber)
-        {
-            return null;//!!!
-        }
         List<Layer> Layers;
         SPNetSettings _settings;
-        static Int64 MIN;
-        CallbackAddSolution AddSolution;
-        public virtual void RegisterCallback(CallbackAddSolution Func)
-        {
-            AddSolution = Func;
-        }
+        static Int64 MIN; // CURRENT MIN FOR THREADS
         public void AddLayer(Layer layer)
         {
             Layers.Add(layer);
@@ -366,7 +364,7 @@ namespace Allax
         public virtual void PerformLinearAnalisys()
         {
             //!!
-
+            //NOT IMPLEMENTED
         }
         public SPNet(SPNetSettings settings)
         {
@@ -388,7 +386,7 @@ namespace Allax
                     }
                 case LayerType.SLayer:
                     {
-                        SLayer layer = new SLayer(_settings.db, _settings.word_length / _settings.sblock_count, _settings.sblock_count);
+                        SLayer layer = new SLayer(_settings.db, (byte)(_settings.word_length / _settings.sblock_count), _settings.sblock_count);
                         AddLayer(layer);
 
                         break;
