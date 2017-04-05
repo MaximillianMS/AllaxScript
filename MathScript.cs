@@ -72,7 +72,7 @@ namespace Allax
             }
             return null;
         }
-        List<List<short>> GetCorMatrix(List<List<byte>> func_table)
+        public List<List<short>> GetCorMatrix(List<List<byte>> func_table)
         {
             int LinCombo = 0;
             List<List<short>> CorMatrix = new List<List<short>>();
@@ -91,9 +91,9 @@ namespace Allax
             return CorMatrix;
         }
     }
-    class Block : IBlock
+    abstract class Block : IBlock
     {
-        public virtual void Init(List<byte> arg) {; } //SBlock size:4-8. Whole word: up to 64bit.
+        public abstract void Init(List<byte> arg); //SBlock size:4-8. Whole word: up to 64bit.
         Int64 ActiveInputs; //Active inputs for analysis. unlim output-input support
         Int64 ActiveOutputs; // Same for outputs
     };
@@ -102,7 +102,7 @@ namespace Allax
         int VarCount;
         int _length;
         List<int> outputNumber;
-        int GetOutputNumber(int InputNumber) // Global Numeration 1-16
+        public int GetOutputNumber(int InputNumber) // Global Numeration 1-16
         {
             return outputNumber[InputNumber];
         }
@@ -111,7 +111,7 @@ namespace Allax
             _length = word_length;
             outputNumber.Clear();
         }
-        public virtual void Init(List<char> arg) // from interfaces
+        public override void Init(List<byte> arg) // from interfaces
         {
             const int bias = 0; //S-Block record type: 'some args, Line1, Line2, ..., LineN'. No some args => Bias=0.
             if (arg.Count >= bias)
@@ -129,7 +129,10 @@ namespace Allax
     }
     class KBlock : Block
     {
-
+        public override void Init(List<byte> arg)
+        {
+            throw new NotImplementedException("KBlock do not needed to init");
+        }
     }
     class SBlock : Block
     {
@@ -139,6 +142,7 @@ namespace Allax
         public List<SBlockState> _states;
         int VarCount;
         byte _length;
+        string BlockID = "";
         public List<SBlockState> ExtractStates(Int64 MIN, Int64 CurrentCor, int inputs)// MIN prevalence, current inputs
         {
             var States = new List<SBlockState>();
@@ -165,17 +169,16 @@ namespace Allax
             {
                 for (int col = 1; col < CorTable[0].Count; col++)
                 {
-                    SBlockState state = new SBlockState(CorTable[row][col], col, row);
-                    _states.Add(System.Math.Abs(CorTable[row][col]), state);
+                    _states.Add(new SBlockState(Math.Abs(CorTable[row][col]), col, row));
                 }
             }
-            _states = _states.OrderByDescending(o => abs(o._cor)).ToList();
+            _states = _states.OrderByDescending(o => Math.Abs(o._cor)).ToList();
         }
         short GetCorrelation(int inputs, int outputs)
         {
             return CorTable[outputs][inputs];
         }
-        public virtual void Init(List<char> arg) // from interfaces
+        public override void Init(List<byte> arg) // from interfaces
         {
             const int bias = 0; //S-Block record type: 'some args, Line1, Line2, ..., LineN'. No some args => Bias=0.
             if (arg.Count >= bias)
@@ -191,56 +194,56 @@ namespace Allax
                     //Line2**n-1: 	y0..yn
                     for (int i = bias; i < arg.Count; i++)
                     {
-                        Func[i - bias].AddRange(Enumerable.Repeat<>(byte, VarCount);
+                        FuncTable[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
                         for (int j = VarCount - 1; j >= 0; j--)
                         {
-                            if (arg[i] & 1 << j == 0)
+                            if ((arg[i] & (1 << j)) == 0)
                             {
-                                CorTable[i - bias].push_back(0);
+                                CorTable[i - bias].Add(0);
                             }
                             else
                             {
-                                CorTable[i - bias].push_back(1);
+                                CorTable[i - bias].Add(1);
                             }
                         }
                     }
                     if (_database != null)
-                        CorTable = _database.GetCorMatrixByTable(FuncTable);
+                        CorTable = _database.GetCorMatrix(FuncTable);
                     Sort();
                 }
             }
         }
 
-    SetDB(SBlockDB database)
+        void SetDB(SBlockDB database)
         {
             _database = database;
         }
-        SBlock()
+        public SBlock()
         {
-            _database = NULL;
+            _database = null;
             BlockID = "";
-            CorTable.clear();
-            FuncTable.clear();
+            CorTable.Clear();
+            FuncTable.Clear();
             VarCount = 0;
         }
-        SBlock(SBlockDB database, byte block_length) //!NOW USED
+        public SBlock(SBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
             BlockID = "";
-            CorTable.clear();
-            FuncTable.clear();
+            CorTable.Clear();
+            FuncTable.Clear();
             VarCount = 0;
             _length = block_length;
         }
-        SBlock(List<List<byte>> table, SBlockDB database)
+        public SBlock(List<List<byte>> table, SBlockDB database)
         {
             _database = database;
             BlockID = "";
-            CorTable.clear();
-            FuncTable.clear();
+            CorTable.Clear();
+            FuncTable.Clear();
             FuncTable = table;
             VarCount = 0;
-            CorTable = _database.GetCorMatrixByTable(FuncTable);
+            CorTable = _database.GetCorMatrix(FuncTable);
         }
     };
     class Layer : ILayer
@@ -284,7 +287,7 @@ namespace Allax
     {
         public virtual List<IBlock> GetBlocks()
         {
-            return Blocks;
+            return Blocks.ConvertAll(x => ((IBlock)x));
         }
         public virtual IBlock GetBlock(int number)// from interfaces
         {
@@ -297,7 +300,7 @@ namespace Allax
         public SLayer(SBlockDB db, byte block_length, byte blocks_count)
         {
             type = LayerType.SLayer;
-            Blocks.AddRange(Enumerable.Repeat < List<SBlock>(new SBlock(db, block_length), blocks_count));
+            Blocks.AddRange(Enumerable.Repeat <SBlock>(new SBlock(db, block_length), blocks_count));
         }
         ushort ActiveBlocks; // Active Block bit mask. 16 block support in one layer. 
     };
@@ -311,7 +314,7 @@ namespace Allax
         }
         public int GetOutputNumber(int InputNumber) // Global Numeration 1-16
         {
-            return Blocks[0].GetOutputNumber(InputNumber);
+            return ((PBlock)(Blocks[0])).GetOutputNumber(InputNumber);
         }
         public int[] GetOutputNumber(int[] inputNums) // Global Numeration 1-16
         {
@@ -320,7 +323,7 @@ namespace Allax
     };
     struct SBlockState
     {
-        SBlockState(Int64 cor, int inputs, int outputs)
+        public SBlockState(Int64 cor, int inputs, int outputs)
         {
             _cor = cor;
             _inputs = inputs;
@@ -352,13 +355,13 @@ namespace Allax
         {
             Layers.Add(layer);
         }
-        public virtual SetSBlockDB(SBlockDB db)
+        public virtual void SetSBlockDB(SBlockDB db)
         {
             _settings.db = db;
         }
         public virtual List<ILayer> GetLayers()
         {
-            return Layers;
+            return Layers.ConvertAll(x => ((ILayer)x));
         }
         public virtual void PerformLinearAnalisys()
         {
@@ -390,18 +393,16 @@ namespace Allax
 
                         break;
                     }
-                case Layer.PLayer:
+                case LayerType.PLayer:
                     {
                         PLayer layer = new PLayer(_settings.word_length);
-                        AddLayer(layer)
-
-
-                break;
+                        AddLayer(layer);
+                        break;
                     }
             }
         }
     }
-    public class Engine:IEngine
+    public class Engine : IEngine
     {
         public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
         {
