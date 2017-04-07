@@ -243,15 +243,19 @@ namespace Allax
             VarCount = 0;
             CorTable = _database.GetCorMatrix(FuncTable);
         }
-    };
+    }
     abstract class Layer : ILayer
     {
+        public LayerType GetLayerType()
+        {
+            return type;
+        }
         public abstract List<IBlock> GetBlocks();
         public abstract void DeleteBlock(byte number);
         public abstract IBlock GetBlock(byte number);
         protected LayerType type;
         protected List<Block> Blocks;
-    };
+    }
     class KLayer : Layer
     {
         List<int> Key;
@@ -275,7 +279,7 @@ namespace Allax
         {
             throw new NotImplementedException();
         }
-    };
+    }
     class SLayer : Layer
     {
         public override List<IBlock> GetBlocks()
@@ -299,7 +303,7 @@ namespace Allax
             Blocks.AddRange(Enumerable.Repeat<SBlock>(new SBlock(db, block_length), blocks_count));
         }
         ushort ActiveBlocks; // Active Block bit mask. 16 block support in one layer. 
-    };
+    }
     class PLayer : Layer
     {
         public PLayer(byte word_length)
@@ -327,7 +331,7 @@ namespace Allax
         {
             throw new NotImplementedException();
         }
-    };
+    }
     struct SBlockState
     {
         public SBlockState(Int64 cor, int inputs, int outputs)
@@ -348,6 +352,10 @@ namespace Allax
     {
         List<Layer> Layers;
         SPNetSettings _settings;
+        public SPNetSettings GetSettings()
+        {
+            return _settings;
+        }
         static Int64 MIN; // CURRENT MIN FOR THREADS
         public void AddLayer(Layer layer)
         {
@@ -361,10 +369,12 @@ namespace Allax
         {
             return Layers.ConvertAll(x => ((ILayer)x));
         }
+
         public virtual void PerformLinearAnalisys()
         {
             //!!
             //NOT IMPLEMENTED
+
         }
         public SPNet(SPNetSettings settings)
         {
@@ -399,6 +409,62 @@ namespace Allax
                     }
             }
         }
+    }
+    public class WayConverter
+    {
+        bool CheckStandartNetCondition(ISPNet Net)
+        {
+            return true;
+        }
+        public SPNetWay ToEmptyWay(ISPNet Net)
+        {
+            var NetWay = new SPNetWay();
+            if(CheckStandartNetCondition(Net))
+            {
+                var Layers = Net.GetLayers();
+                var Settings = Net.GetSettings();
+                var LayerCount = Layers.Count;
+                NetWay.layers = new List<SPNetWayLayer>();
+                for(int i=0;i<LayerCount;i++)
+                {
+                    var tmp = new SPNetWayLayer();
+                    tmp.type=Layers[i].GetLayerType();
+                    if (tmp.type != LayerType.SLayer)
+                    {
+                        tmp.blocks = new List<SPNetWayBlock>();
+                        var tmp_block = new SPNetWayBlock();
+                        tmp_block.active_inputs = new List<bool>();
+                        tmp_block.active_outputs = new List<bool>();
+                        tmp_block.active_inputs.AddRange(Enumerable.Repeat<bool>(false, Settings.word_length));
+                        tmp_block.active_outputs.AddRange(Enumerable.Repeat<bool>(false, Settings.word_length));
+                        tmp.blocks.Add(tmp_block);
+                    }
+                    else
+                    {
+                        foreach (var j in Enumerable.Range(0, Settings.sblock_count))
+                        {
+                            var tmp_sblock = new SPNetWayBlock();
+                            tmp_sblock.active_inputs = new List<bool>();
+                            tmp_sblock.active_outputs = new List<bool>();
+                            tmp_sblock.active_inputs.AddRange(Enumerable.Repeat<bool>(false, Settings.word_length / Settings.sblock_count));
+                            tmp_sblock.active_outputs.AddRange(Enumerable.Repeat<bool>(false, Settings.word_length / Settings.sblock_count));
+                            tmp.blocks.Add(tmp_sblock);
+                        }
+                    }
+                    NetWay.layers.Add(tmp);
+
+                }
+                return NetWay;
+            }
+            else
+            {
+                throw new Exception("Azaza. Wrong net.");
+            }
+        }
+    }
+    public class TaskConstructor
+    {
+
     }
     public class Engine : IEngine
     {

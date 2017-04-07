@@ -15,6 +15,7 @@ namespace Allax
 	}
 	public interface ILayer
 	{
+        LayerType GetLayerType();
 		List<IBlock> GetBlocks(); //
 		IBlock GetBlock(byte number); // 1..N
 		void DeleteBlock(byte number); //!! (note for me)
@@ -30,5 +31,6 @@ namespace Allax
 		void DeleteLayer(byte number);
 		List<ILayer> GetLayers();	
 		void PerformLinearAnalisys();
+        SPNetSettings GetSettings();
 	}
 }
