@@ -11,8 +11,9 @@ namespace Allax
     public interface IBlock
 	{
 		void Init(List<byte> arg); // P-Block: "1, 8 , 4, 3, 5, 7, 6, 2" array of char where char is num, not text.
-											// S-Block. First block 4x4: " 0x0A, 0x03, 0x03, ... , 0x01" (Length=16). Second block 4x4: "0x01, 0x02, 0xF, ..., 0x02, 0x01" (Length=16)
-	}
+                                   // S-Block. First block 4x4: " 0x0A, 0x03, 0x03, ... , 0x01" (Length=16). Second block 4x4: "0x01, 0x02, 0xF, ..., 0x02, 0x01" (Length=16)
+        List<SBlockState> ExtractStates(Int64 Min, Int64 CurrentCor, int inputs);
+    }
 	public interface ILayer
 	{
         LayerType GetLayerType();

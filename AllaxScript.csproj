@@ -36,9 +36,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExtraCollections.cs" />
     <Compile Include="Interfaces\MathInterfaces.cs" />
     <Compile Include="MathScript.cs" />
     <Compile Include="Types\MathTypes.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
