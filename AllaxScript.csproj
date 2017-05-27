@@ -40,6 +40,8 @@
     <Compile Include="Interfaces\MathInterfaces.cs" />
     <Compile Include="MathScript.cs" />
     <Compile Include="Types\MathTypes.cs" />
+    <Compile Include="UltraLogger\LoggerTypes.cs" />
+    <Compile Include="UltraLogger\UltraLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

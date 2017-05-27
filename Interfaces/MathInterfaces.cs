@@ -7,6 +7,7 @@ namespace Allax
     {
         ISPNet GetSPNetInstance(SPNetSettings settings);
         ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db);
+
     }
     public interface IBlock
 	{

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 namespace Allax
 {
-    
+
     class SBlockDB : ISBlockDB
     {
         //Fourier Transform DB
@@ -551,7 +551,7 @@ namespace Allax
     public class TaskConstructor
     {
         int _rounds_count;
-        int MIN;
+        Int64 MIN;
         ISPNet _net;
         Queue<Task> _tasks;
         SPNetWay _tempEmptyWay;
@@ -642,18 +642,21 @@ namespace Allax
         {
             kblock.active_outputs = kblock.active_inputs;
         }
-        static void SLayer(SPNetWay Way, ISPNet Net, int LIndex, int SIndex, ref long MIN, long CurrentCor)
+        static void SLayer(SPNetWay Way, ISPNet Net, int LIndex, ref long MIN, ref long CurrentCor)
         {
             throw new NotImplementedException();
-            SPNetWayBlock WayBlock = Way.layers[LIndex].blocks[SIndex];
-            IBlock NetBlock = Net.GetLayers()[LIndex].GetBlock((byte)SIndex);
-            var States = NetBlock.ExtractStates(MIN, CurrentCor, WayConverter.ToByte(WayBlock.active_inputs));
-            foreach (var State in States)
+            for (int SIndex = 0; SIndex < Way.layers[LIndex].blocks.Count; SIndex++)
             {
-                var Outputs = WayConverter.ToList(State._outputs, WayBlock.active_outputs.Count);
-                WayBlock.active_outputs = Outputs;
-                CurrentCor *= State._cor;
-                Solver(Net, Way, ref MIN, CurrentCor);
+                SPNetWayBlock WayBlock = Way.layers[LIndex].blocks[SIndex];
+                IBlock NetBlock = Net.GetLayers()[LIndex].GetBlock((byte)SIndex);
+                var States = NetBlock.ExtractStates(MIN, CurrentCor, WayConverter.ToByte(WayBlock.active_inputs));
+                foreach (var State in States)
+                {
+                    var Outputs = WayConverter.ToList(State._outputs, WayBlock.active_outputs.Count);
+                    WayBlock.active_outputs = Outputs;
+                    CurrentCor *= State._cor;
+                    //Solver(Net, Way, ref MIN, CurrentCor);
+                }
             }
         }
         static void PLayer()
@@ -683,10 +686,8 @@ namespace Allax
                     #region S-layer
                     if (lastNotEmptyLayerIndex % 3 == 1)
                     {
-                        for(int j=0;j<Way.layers[lastNotEmptyLayerIndex].blocks.Count;j++)
-                        {
-                            SLayer(Way, Net, lastNotEmptyLayerIndex, j, ref MIN, CurrentCor);
-                        }
+
+                        SLayer(Way, Net, lastNotEmptyLayerIndex, ref MIN, ref CurrentCor);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
