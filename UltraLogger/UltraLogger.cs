@@ -9,6 +9,7 @@ namespace AllaxScript.Logger
     public class UltraLogger
     {
         static int MAX_NOTES = 100000;
+        const string PredefinedPath = "C:\\Windows\\Temp\\";
         System.Collections.Concurrent.ConcurrentBag<Note> Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
         private static volatile UltraLogger instance;
         private UltraLogger() { }
@@ -52,7 +53,7 @@ namespace AllaxScript.Logger
                 //throw new Exception("Logger: Over 100000 notes in Logger");
             }
         }
-        public void ExportToFile(string Path = "C:\\Windows\\Temp\\")
+        public void ExportToFile(string Path = PredefinedPath)
         {
             AddToLog("Logger: Exporting Notes from UltraLogger started.");
             if (!System.IO.Directory.Exists(Path))
