@@ -40,14 +40,57 @@ namespace AllaxScript.Logger
             N.Msg = Msg;
             N.MsgLevel = 0;
             Notes.Add(N);
-            if (Notes.Count > MAX_NOTES)
+            if (Notes.Count == MAX_NOTES)
             {
-                throw new Exception("Over 100000 notes in Logger");
+                AddToLog("Logger: MAX_NOTES Reached", MsgType.Warning);
+                lock(syncRoot)
+                {
+                    ExportToFile();
+                    Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
+                }
+                return;
+                //throw new Exception("Logger: Over 100000 notes in Logger");
             }
+        }
+        public void ExportToFile(string Path = "C:\\Windows\\Temp\\")
+        {
+            AddToLog("Logger: Exporting Notes from UltraLogger started.");
+            if (!System.IO.Directory.Exists(Path))
+            {
+                AddToLog("Logger: No such directory exists: \"" + Path+"\"");
+                return;
+            }
+            Path+= "Allax_"+DateTime.Now.ToShortDateString()+".log";
+            AddToLog("Logger: File: "+Path);
+            using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Append, System.IO.FileAccess.Write))
+            using (var sw = new System.IO.StreamWriter(aFile))
+            {
+                var Notes = GetNotes();
+                string Buffer = "";
+                for (int i = 0; i < Notes.Count; i++)
+                {
+                    if (i > MAX_NOTES / 100)
+                    {
+                        Buffer += Notes[i]+"\n";
+                    }
+                    else
+                    {
+                        sw.WriteLine(Buffer);
+                        Buffer = "";
+                    }
+                }
+                if(Buffer!="")
+                {
+                    sw.WriteLine(Buffer);
+                    Buffer = "";
+                }
+
+            }
+               // AddToLog("Logger: File creation failed through exporting UltraLogger notes.");
         }
         public List<Note> GetNotes(bool SortByTime = false)
         {
-            AddToLog("Exporting Notes from UltraLogger");
+            AddToLog("Logger: Getting Notes from UltraLogger started.");
             List<Note> ret = new List<Note>(228);
             if (!SortByTime)
             {

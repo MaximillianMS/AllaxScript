@@ -14,5 +14,15 @@ namespace AllaxScript.Logger
         public int MsgLevel;
         public MsgType Type;
         public String Msg;
+        public override String ToString()
+        {
+            String ret = "";
+            ret += Time.ToShortDateString() + ":\t";
+            ret += String.Format("Thread:\t{0}\t", Thread);
+            ret += String.Format("MsgLevel:\t{0}\t", MsgLevel);
+            ret += String.Format("MsgType:\t{0}\t", Type);
+            ret += String.Format(Msg+"\t");
+            return ret;
+        }
     }
 }
