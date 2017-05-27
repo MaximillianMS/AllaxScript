@@ -45,6 +45,7 @@
     <Compile Include="Types\MathTypes.cs" />
     <Compile Include="Types\LoggerTypes.cs" />
     <Compile Include="UltraLogger\UltraLogger.cs" />
+    <Compile Include="Worker\Worker.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

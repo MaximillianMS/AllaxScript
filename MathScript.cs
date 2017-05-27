@@ -341,22 +341,6 @@ namespace Allax
             throw new NotImplementedException();
         }
     }
-    public struct SBlockState
-    {
-        public SBlockState(Int64 cor, int inputs, int outputs)
-        {
-            _cor = cor;
-            _inputs = inputs;
-            _outputs = outputs;
-        }
-        public Int64 _cor; // Abs(value) from Matrix
-        public int _inputs;
-        public int _outputs;
-    }
-    class Worker
-    {
-
-    }
     class SPNet : ISPNet
     {
         List<Layer> Layers;

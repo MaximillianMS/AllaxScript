@@ -39,8 +39,20 @@ namespace Allax
 		public byte sblock_count;
 		public ISBlockDB db;
 		CallbackAddSolution AddSolution;
-	}
-	public struct Solution
+    }
+    public struct SBlockState
+    {
+        public SBlockState(Int64 cor, int inputs, int outputs)
+        {
+            _cor = cor;
+            _inputs = inputs;
+            _outputs = outputs;
+        }
+        public Int64 _cor; // Abs(value) from Matrix
+        public int _inputs;
+        public int _outputs;
+    }
+    public struct Solution
 	{
 		public double prevalence;
 		public byte active_blocks_count;
