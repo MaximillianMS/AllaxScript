@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 namespace Allax
 {
-
     class SBlockDB : ISBlockDB
     {
         //Fourier Transform DB
