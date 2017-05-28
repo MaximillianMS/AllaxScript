@@ -6,7 +6,7 @@ namespace Allax
     public interface IEngine
     {
         ISPNet GetSPNetInstance(SPNetSettings settings);
-        ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db);
+        ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null);
 
     }
     public interface IBlock

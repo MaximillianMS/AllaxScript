@@ -101,10 +101,20 @@ namespace Allax
         }
         static void PLayer(SPNetWay Way, ISPNet Net, int LIndex)
         {
-            throw new NotImplementedException();
-            for(int i=0;i<Way.layers[LIndex].blocks[0].active_inputs.Count;i++)
+            var Params = new BlockStateExtrParams(Way.layers[LIndex].blocks[0].active_inputs, null, 0, 0, false);
+            var States = Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
+            if(States.Count==1)
             {
-                
+                //deep copying
+                foreach (var j in Enumerable.Range(0, Way.layers[LIndex].blocks[0].active_outputs.Count))
+                {
+                    Way.layers[LIndex].blocks[0].active_outputs[j] = States[0]._outputs[j];
+                }
+            }
+            else
+            {
+                Logger.UltraLogger.Instance.AddToLog("BaseSolver: Cant extract state from P-layer", Logger.MsgType.Error);
+                throw new NotImplementedException();
             }
         }
         public static void Solver(ISPNet Net, SPNetWay Way, ref long MIN, long CurrentCor)
@@ -121,7 +131,7 @@ namespace Allax
                 for (int i = lastNotEmptyLayerIndex / 3; i < roundsCount - 1; i++)
                 {
                     #region K-layer
-                    if (lastNotEmptyLayerIndex % 3 == 0)
+                    if (Way.layers[i].type==LayerType.KLayer)
                     {
                         KLayer(Way, lastNotEmptyLayerIndex);
                         CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
@@ -129,7 +139,7 @@ namespace Allax
                     }
                     #endregion
                     #region S-layer
-                    if (lastNotEmptyLayerIndex % 3 == 1)
+                    if (Way.layers[i].type == LayerType.SLayer)
                     {
                         SLayer(Way, Net, lastNotEmptyLayerIndex, ref MIN, ref CurrentCor);
                         CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
@@ -137,7 +147,7 @@ namespace Allax
                     }
                     #endregion
                     #region P-layer
-                    if (lastNotEmptyLayerIndex % 3 == 2)
+                    if (Way.layers[i].type == LayerType.PLayer)
                     {
                         PLayer(Way, Net, lastNotEmptyLayerIndex);
                         CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);

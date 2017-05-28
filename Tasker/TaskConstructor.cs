@@ -2,14 +2,25 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Allax
 {
     public class TaskConstructor
     {
+        private object syncRoot = new object();
+        private Int64 MultiTreadInt1; //correlation
         int _rounds_count;
-        Int64 MIN;
+        Int64 MIN
+        {
+            get
+            { return Interlocked.Read(ref MultiTreadInt1); }
+            set
+            {
+                Interlocked.Exchange(ref MultiTreadInt1, value);
+            }
+        }
         ISPNet _net;
         Queue<Task> _tasks;
         SPNetWay _tempEmptyWay;

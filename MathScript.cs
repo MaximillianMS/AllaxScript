@@ -12,7 +12,7 @@ namespace Allax
         {
             return FuncDB;
         }
-        public SBlockDB(Dictionary<List<short>, List<short>> FourierTransformDB)
+        public SBlockDB(Dictionary<List<short>, List<short>> FourierTransformDB=null)
         {
             if (FourierTransformDB != null)
             {
@@ -124,7 +124,26 @@ namespace Allax
         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
-            throw new NotImplementedException();
+            var State = new BlockState(Params.Inputs);
+            var ret = new List<BlockState>(1);
+            foreach (var j in Enumerable.Range(0, _length))
+            {
+                if(State._inputs[j]!=false)
+                {
+                    var Num = GetOutputNumber(j);
+                    if(Num<_length)
+                    {
+                        State._outputs[Num] = true;
+                    }
+                    else
+                    {
+                        Logger.UltraLogger.Instance.AddToLog("Net: Wrong pblock initializaion", Logger.MsgType.Error);
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            ret.Add(State);
+            return ret;
         }
     }
     class KBlock : Block
@@ -198,21 +217,25 @@ namespace Allax
                     //Line2**n-1: 	y0..yn
                     for (int i = bias; i < arg.Count; i++)
                     {
-                        FuncTable[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
+                        //FuncTable[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
                         for (int j = VarCount - 1; j >= 0; j--)
                         {
                             if ((arg[i] & (1 << j)) == 0)
                             {
-                                CorTable[i - bias].Add(0);
+                                FuncTable[i - bias].Add(0);
                             }
                             else
                             {
-                                CorTable[i - bias].Add(1);
+                                FuncTable[i - bias].Add(1);
                             }
                         }
                     }
                     if (_database != null)
                         CorTable = _database.GetCorMatrix(FuncTable);
+                    else
+                    {
+                        _database = new SBlockDB();
+                    }
                     Sort();
                 }
                 else
@@ -416,7 +439,7 @@ namespace Allax
         {
             return new SPNet(settings);
         }
-        public virtual ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db) //from interfaces
+        public virtual ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null) //from interfaces
         {
             return new SBlockDB(db);
         }

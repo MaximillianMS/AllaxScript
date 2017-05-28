@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Allax
 {
@@ -84,6 +85,17 @@ namespace Allax
             _cor = cor;
             _inputs = WayConverter.ToList(inputs, _length);
             _outputs = WayConverter.ToList(outputs, _length);
+        }
+        public BlockState(List<bool> Inputs)
+        {
+            _cor = 0;
+            if (Inputs != null)
+                _length = Inputs.Count;
+            else
+                _length = 0;
+            _inputs = Inputs;
+            _outputs = new List<bool>(_length);
+            _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
         }
         public int _length;
         public Int64 _cor; // Abs(value) from Matrix
