@@ -58,6 +58,12 @@ namespace Allax
                 throw new Exception("Azaza. Wrong net.");
             }
         }
+        /// <summary>
+        /// Deep Clone
+        /// </summary>
+        /// <param name="Way"></param>
+        /// <param name="empty">Copy just struct without values</param>
+        /// <returns></returns>
         public static SPNetWay CloneWay(SPNetWay Way, bool empty = false)
         {
             SPNetWay NewWay = new SPNetWay();

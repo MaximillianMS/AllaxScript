@@ -52,6 +52,44 @@ namespace Allax
         public int _inputs;
         public int _outputs;
     }
+    public struct BlockStateExtrParams
+    {
+        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Int64 MIN, Int64 CurrentCorrelation, bool CheckCorrelation=true)
+        {
+            if (Inputs == null)
+            {
+                Inputs = new List<bool>();
+            }
+            this.Inputs = Inputs;
+            if (Outputs == null)
+            {
+                Outputs = new List<bool>();
+            }
+            this.Outputs = Outputs;
+            this.CheckCorrelation = CheckCorrelation;
+            this.CurrentCorrelation = CurrentCorrelation;
+            this.MIN = MIN;
+        }
+        public Int64 MIN;
+        public List<bool> Inputs;
+        public List<bool> Outputs;
+        public bool CheckCorrelation;
+        public Int64 CurrentCorrelation;
+    }
+    public struct BlockState
+    {
+        public BlockState(Int64 cor, int inputs, int outputs, int length)
+        {
+            _length = length;
+            _cor = cor;
+            _inputs = WayConverter.ToList(inputs, _length);
+            _outputs = WayConverter.ToList(outputs, _length);
+        }
+        public int _length;
+        public Int64 _cor; // Abs(value) from Matrix
+        public List<bool> _inputs;
+        public List<bool> _outputs;
+    }
     public struct Solution
 	{
 		public double prevalence;

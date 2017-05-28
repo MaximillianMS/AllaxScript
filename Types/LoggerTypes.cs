@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AllaxScript.Logger
+namespace Allax.Logger
 {
     public enum MsgType { Action, Warning, Error }
     public struct Note

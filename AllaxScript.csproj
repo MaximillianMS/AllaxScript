@@ -44,6 +44,7 @@
     <Compile Include="Tasker\TaskConstructor.cs" />
     <Compile Include="Types\MathTypes.cs" />
     <Compile Include="Types\LoggerTypes.cs" />
+    <Compile Include="Types\TaskConstructorTypes.cs" />
     <Compile Include="UltraLogger\UltraLogger.cs" />
     <Compile Include="Worker\Worker.cs" />
   </ItemGroup>

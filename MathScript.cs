@@ -31,8 +31,8 @@ namespace Allax
         {
             if (func.Count > 1)
             {
-                List<short> left = new List<short>();
-                List<short> right = new List<short>();
+                var left = new List<short>();
+                var right = new List<short>();
                 left.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
                 right.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
                 for (int i = 0; i < func.Count / 2; i++)
@@ -54,7 +54,7 @@ namespace Allax
         {
             if (func_table.Count > 0)
             {
-                List<short> combo = new List<short>();
+                var combo = new List<short>();
                 combo.AddRange(Enumerable.Repeat<short>(0, func_table.Count));
                 for (int i = 0; i < func_table.Count; i++)
                 {
@@ -72,12 +72,12 @@ namespace Allax
         public List<List<short>> GetCorMatrix(List<List<byte>> func_table)
         {
             int LinCombo = 0;
-            List<List<short>> CorMatrix = new List<List<short>>();
+            var CorMatrix = new List<List<short>>();
             CorMatrix.AddRange(Enumerable.Repeat<List<short>>(new List<short>(), func_table.Count));
             for (LinCombo = 0; LinCombo < func_table.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(func_table, LinCombo);
-                List<short> f_spectrum = new List<short>();
+                var f_spectrum = new List<short>();
                 if (!FuncDB.TryGetValue(CorMatrix[LinCombo], out f_spectrum))
                 {
                     f_spectrum = FourierTransform(CorMatrix[LinCombo]);
@@ -91,7 +91,7 @@ namespace Allax
     abstract class Block : IBlock
     {
         public abstract void Init(List<byte> arg); //SBlock size:4-8. Whole word: up to 64bit.
-        public abstract List<SBlockState> ExtractStates(Int64 Min, Int64 CurrentCor, int inputs);
+        public abstract List<BlockState> ExtractStates(BlockStateExtrParams Params);
     };
     class PBlock : Block
     {
@@ -122,7 +122,7 @@ namespace Allax
                 }
             }
         }
-        public override List<SBlockState> ExtractStates(long Min, long CurrentCor, int inputs)
+        public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
             throw new NotImplementedException();
         }
@@ -133,7 +133,7 @@ namespace Allax
         {
             throw new NotImplementedException("KBlock do not needed to init");
         }
-        public override List<SBlockState> ExtractStates(long Min, long CurrentCor, int inputs)
+        public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
             throw new NotImplementedException();
         }
@@ -143,18 +143,18 @@ namespace Allax
         ISBlockDB _database;
         List<List<short>> CorTable;
         List<List<byte>> FuncTable;
-        public List<SBlockState> _states;
+        public List<BlockState> _states;
         int VarCount;
         byte _length;
         string BlockID = "";
-        public override List<SBlockState> ExtractStates(Int64 MIN, Int64 CurrentCor, int inputs)// MIN prevalence, current inputs
+        public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
-            var States = new List<SBlockState>();
-            foreach (SBlockState state in _states)
+            var States = new List<BlockState>();
+            foreach (var state in _states)
             {
-                if (state._cor * CurrentCor > MIN)
+                if (state._cor * Params.CurrentCorrelation > Params.MIN)
                 {
-                    if (state._inputs == inputs)
+                    if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
                         States.Add(state);
                     }
@@ -168,12 +168,12 @@ namespace Allax
         }
         public void Sort()
         {
-            _states = new List<SBlockState>(1 << (2 * VarCount));
+            _states = new List<BlockState>(1 << (2 * VarCount));
             for (int row = 1; row < CorTable.Count; row++)
             {
                 for (int col = 1; col < CorTable[0].Count; col++)
                 {
-                    _states.Add(new SBlockState(Math.Abs(CorTable[row][col]), col, row));
+                    _states.Add(new BlockState(Math.Abs(CorTable[row][col]), col, row, _length));
                 }
             }
             _states = _states.OrderByDescending(o => Math.Abs(o._cor)).ToList();
@@ -376,20 +376,20 @@ namespace Allax
             {
                 case LayerType.KLayer:
                     {
-                        KLayer layer = new KLayer();
+                        var layer = new KLayer();
                         AddLayer(layer);
                         break;
                     }
                 case LayerType.SLayer:
                     {
-                        SLayer layer = new SLayer(_settings.db, (byte)(_settings.word_length / _settings.sblock_count), _settings.sblock_count);
+                        var layer = new SLayer(_settings.db, (byte)(_settings.word_length / _settings.sblock_count), _settings.sblock_count);
                         AddLayer(layer);
 
                         break;
                     }
                 case LayerType.PLayer:
                     {
-                        PLayer layer = new PLayer(_settings.word_length);
+                        var layer = new PLayer(_settings.word_length);
                         AddLayer(layer);
                         break;
                     }
@@ -397,8 +397,16 @@ namespace Allax
         }
         public virtual void PerformLinearAnalisys()
         {
-            throw new NotImplementedException();
+            try
+            {
+                throw new NotImplementedException();
 
+
+            }
+            catch
+            {
+                Logger.UltraLogger.Instance.ExportToFile();
+            }
         }
     }
 

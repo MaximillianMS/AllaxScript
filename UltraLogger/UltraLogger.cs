@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AllaxScript.Logger
+namespace Allax.Logger
 {
     public class UltraLogger
     {
         static int MAX_NOTES = 100000;
+        static bool TurnedOn = false;
         const string PredefinedPath = "C:\\Windows\\Temp\\";
         System.Collections.Concurrent.ConcurrentBag<Note> Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
         private static volatile UltraLogger instance;
@@ -34,6 +35,8 @@ namespace AllaxScript.Logger
         }
         public void AddToLog(String Msg, Logger.MsgType Type = MsgType.Action, int MsgLevel = 0)
         {
+            if (!TurnedOn)
+                return;
             var N = new Note();
             N.Thread = System.Threading.Thread.CurrentThread.ManagedThreadId;
             N.Time = DateTime.Now;
@@ -41,14 +44,13 @@ namespace AllaxScript.Logger
             N.Msg = Msg;
             N.MsgLevel = 0;
             Notes.Add(N);
-            if (Notes.Count == MAX_NOTES)
+            if (Notes.Count > MAX_NOTES)
             {
-                AddToLog("Logger: MAX_NOTES Reached", MsgType.Warning);
-                lock(syncRoot)
-                {
+                //AddToLog("Logger: MAX_NOTES Reached", MsgType.Warning);
+                //lock(syncRoot)
+                //{
                     ExportToFile();
-                    Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
-                }
+                //}
                 return;
                 //throw new Exception("Logger: Over 100000 notes in Logger");
             }
@@ -63,29 +65,34 @@ namespace AllaxScript.Logger
             }
             Path+= "Allax_"+DateTime.Now.ToShortDateString()+".log";
             AddToLog("Logger: File: "+Path);
+            if(Notes.Count!=0)
             using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Append, System.IO.FileAccess.Write))
             using (var sw = new System.IO.StreamWriter(aFile))
             {
-                var Notes = GetNotes();
-                string Buffer = "";
-                for (int i = 0; i < Notes.Count; i++)
+                lock (syncRoot)
                 {
-                    if (i > MAX_NOTES / 100)
+
+                    var Notes = GetNotes();
+                    string Buffer = "";
+                    for (int i = 0; i < Notes.Count; i++)
                     {
-                        Buffer += Notes[i]+"\n";
+                        if (i % (MAX_NOTES / 100) != 0)
+                        {
+                            Buffer += Notes[i] + "\n";
+                        }
+                        else
+                        {
+                            sw.WriteLine(Buffer);
+                            Buffer = "";
+                        }
                     }
-                    else
+                    if (Buffer != "")
                     {
                         sw.WriteLine(Buffer);
                         Buffer = "";
                     }
+                    this.Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
                 }
-                if(Buffer!="")
-                {
-                    sw.WriteLine(Buffer);
-                    Buffer = "";
-                }
-
             }
                // AddToLog("Logger: File creation failed through exporting UltraLogger notes.");
         }
