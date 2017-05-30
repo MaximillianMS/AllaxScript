@@ -112,11 +112,18 @@ namespace Allax
             }
             return Way;
         }
-        public static byte ToByte(List<bool> Input)
+        public static long ToLong(List<bool> Input)
         {
-            throw new NotImplementedException();
-            byte ret = 0;
-
+            long ret = 0;
+		    List<bool> Input = new List<bool> {true, true, false, false, true, true, true, false};
+    		foreach (bool b in Input)
+	    	{
+		    	ret = ret << 1;
+			    if (b)
+    			{
+	    			ret += 1;
+		    	}
+    		}
             return ret;
         }
         public static List<bool> ToList(int Input, int length)
