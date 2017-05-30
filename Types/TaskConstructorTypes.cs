@@ -13,17 +13,30 @@ namespace Allax
     }
     public struct ExtraParams
     {
-        int Weight;
-        MultiTime Time;
+        public ExtraParams(ISolver Solver)
+        {
+            this.Solver = Solver;
+            Weight = 0;
+            Time = new MultiTime();
+        }
+        public ISolver Solver;
+        public int Weight;
+        public MultiTime Time;
     }
     public struct Task
     {
         SPNetWay Way;
+        long CurrentCorrelation;
         ExtraParams Params;
-        public Task(SPNetWay Way, ExtraParams Params)
+        public Task(SPNetWay Way, long CurrentCorrelation, ExtraParams Params)
         {
             this.Way = Way;
             this.Params = Params;
+            this.CurrentCorrelation = CurrentCorrelation;
+        }
+        public void Exec()
+        {
+            Params.Solver.Solve(Way, CurrentCorrelation);
         }
     }
     public struct TaskConstructorParams

@@ -29,6 +29,7 @@ namespace Allax
             Init(Params);
             _rounds_count = _net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(_net);
+
             Solver = new BaseSolver(new SolverParams(_net, AddTask));
         }
         public void AddTask(Task T)
@@ -49,12 +50,14 @@ namespace Allax
             {
                 AnalysePreviousTasks();
             }*/
+            //REWRITE!
+            throw new NotImplementedException();
             _tasks = new ConcurrentQueue<Task>();
             for (int i = 0; (i < count) && Iter.IsFinished(); i++)
             {
                 OpenTextInput NextInput = Iter.NextState();
                 SPNetWay ws = WayConverter.ToWay(_net, NextInput);
-                _tasks.Enqueue(new Task(ws, new ExtraParams()));
+                _tasks.Enqueue(new Task(ws, new ExtraParams(Solver)));
             }
             return _tasks;
         }
