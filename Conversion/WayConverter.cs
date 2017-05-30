@@ -13,7 +13,7 @@ namespace Allax
         {
             return true;
         }
-        public static SPNetWay ToEmptyWay(ISPNet Net)
+        public static SPNetWay ToWay(ISPNet Net)
         {
             var NetWay = new SPNetWay();
             if (CheckStandartNetCondition(Net))
@@ -105,7 +105,12 @@ namespace Allax
         }
         public static SPNetWay ToWay(ISPNet Net, OpenTextInput Input)
         {
-            throw new NotImplementedException();
+            var Way = ToWay(Net);
+            foreach(var j in Enumerable.Range(0, Input.input.Count))
+            {
+                Way.layers[0].blocks[0].active_inputs[j] = Input.input[j];
+            }
+            return Way;
         }
         public static byte ToByte(List<bool> Input)
         {

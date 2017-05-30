@@ -5,7 +5,6 @@ using System.Linq;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
-	public delegate void Log(String s, Int32 error_code);
 	public enum AnalisysType
 	{
 		Linear,
@@ -39,7 +38,7 @@ namespace Allax
 		public byte round_count;
 		public byte sblock_count;
 		public ISBlockDB db;
-		CallbackAddSolution AddSolution;
+		public CallbackAddSolution AddSolution;
     }
     public struct SBlockState
     {

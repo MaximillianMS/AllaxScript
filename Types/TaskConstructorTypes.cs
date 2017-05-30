@@ -11,7 +11,7 @@ namespace Allax
         Int64 UnixTime;
         Int64 Ticks;
     }
-    public struct SolverParams
+    public struct ExtraParams
     {
         int Weight;
         MultiTime Time;
@@ -19,11 +19,19 @@ namespace Allax
     public struct Task
     {
         SPNetWay Way;
-        SolverParams Params;
-        public Task(SPNetWay Way, SolverParams Params)
+        ExtraParams Params;
+        public Task(SPNetWay Way, ExtraParams Params)
         {
             this.Way = Way;
             this.Params = Params;
         }
+    }
+    public struct TaskConstructorParams
+    {
+        public TaskConstructorParams(ISPNet Net)
+        {
+            this.Net = Net;
+        }
+        public ISPNet Net;
     }
 }

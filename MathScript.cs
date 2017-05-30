@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+
 namespace Allax
 {
     class SBlockDB : ISBlockDB
@@ -366,13 +368,31 @@ namespace Allax
     }
     class SPNet : ISPNet
     {
+        private static Int64 MultiTreadInt1; //correlation
+        public Int64 MIN
+        {
+            get
+            { return Interlocked.Read(ref MultiTreadInt1); }
+            set
+            {
+                Interlocked.Exchange(ref MultiTreadInt1, value);
+            }
+        }
+        public Int64 GetMultiThreadMIN()
+        {
+            return MIN;
+        }
+        public void SetMultiThreadMIN(Int64 MIN)
+        {
+            this.MIN = MIN;
+        }
         List<Layer> Layers;
         SPNetSettings _settings;
+        IWorker _worker;
         public SPNetSettings GetSettings()
         {
             return _settings;
         }
-        static Int64 MIN; // CURRENT MIN FOR THREADS
         public void AddLayer(Layer layer)
         {
             Layers.Add(layer);
@@ -423,8 +443,8 @@ namespace Allax
             try
             {
                 throw new NotImplementedException();
-
-
+                _worker = new Worker(new WorkerParams(this, Environment.ProcessorCount));
+                _worker.Run();
             }
             catch
             {

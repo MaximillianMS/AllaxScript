@@ -6,9 +6,33 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public static class BaseSolver
+    public struct SolverParams
     {
-        static int SearchLastNotEmptyLayer(SPNetWay Way)
+        public SolverParams(ISPNet Net, CallbackAddTask AddTaskFunc)
+        {
+            this.Net = Net;
+            this.AddTaskFunc = AddTaskFunc;
+        }
+        public ISPNet Net;
+        public CallbackAddTask AddTaskFunc;
+    }
+    public interface ISolver
+    {
+        void Init(SolverParams Params);
+        void Solve(SPNetWay Way, long CurrentCor);
+    }
+    public class BaseSolver:ISolver
+    {
+        SolverParams Params;
+        public void Init(SolverParams Params)
+        {
+            this.Params = Params;
+        }
+        public BaseSolver(SolverParams Params)
+        {
+            Init(Params);
+        }
+        int SearchLastNotEmptyLayer(SPNetWay Way)
         {
             int index = -1;
             for (int i = 0; i < Way.layers.Count; i++)
@@ -30,7 +54,7 @@ namespace Allax
             }
             return index;
         }
-        static void CopyOutToIn(SPNetWay Way, int SrcLIndex, int DestLIndex)
+        void CopyOutToIn(SPNetWay Way, int SrcLIndex, int DestLIndex)
         {
             throw new NotImplementedException();
             if(SrcLIndex<Way.layers.Count&&DestLIndex<Way.layers.Count)
@@ -68,41 +92,44 @@ namespace Allax
                         }
                     }
                 }
+                #endregion
             }
             else
             {
                 Logger.UltraLogger.Instance.AddToLog("BaseSolver: Copying layers error.", Logger.MsgType.Error);
             }
         }
-        static void KLayer(SPNetWay Way, int LIndex)
+        void KLayer(SPNetWay Way, int LIndex)
         {
             var kblock = Way.layers[LIndex].blocks[0];
             kblock.active_outputs = kblock.active_inputs;
             Way.layers[LIndex].blocks[0] = kblock;
         }
-        static void SLayer(SPNetWay Way, ISPNet Net, int LIndex, ref long MIN, ref long CurrentCor)
+        void SLayer(SPNetWay Way, int LIndex, ref long CurrentCor)
         {
             throw new NotImplementedException();
             for (int BIndex = 0; BIndex < Way.layers[LIndex].blocks.Count; BIndex++)
             {
                 var WayBlock = Way.layers[LIndex].blocks[BIndex];
-                var NetBlock = Net.GetLayers()[LIndex].GetBlock((byte)BIndex);
-                var States = NetBlock.ExtractStates(new BlockStateExtrParams(WayBlock.active_inputs, null, MIN, CurrentCor, true));
+                var NetBlock = this.Params.Net.GetLayers()[LIndex].GetBlock((byte)BIndex);
+                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, this.Params.Net.GetMultiThreadMIN(), CurrentCor, true);
+                var States = NetBlock.ExtractStates(Params);
                 foreach (var State in States)
                 {
+                    var NewWay = WayConverter.CloneWay(Way);
                     var Outputs = State._outputs;
                     WayBlock.active_outputs = Outputs;
                     CurrentCor *= State._cor;
-                    Way.layers[LIndex].blocks[BIndex] = WayBlock;
+                    NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
                     //Solver(Net, Way, ref MIN, CurrentCor);
                 }
             }
 
         }
-        static void PLayer(SPNetWay Way, ISPNet Net, int LIndex)
+        void PLayer(SPNetWay Way, int LIndex)
         {
             var Params = new BlockStateExtrParams(Way.layers[LIndex].blocks[0].active_inputs, null, 0, 0, false);
-            var States = Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
+            var States = this.Params.Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if(States.Count==1)
             {
                 //deep copying
@@ -117,7 +144,7 @@ namespace Allax
                 throw new NotImplementedException();
             }
         }
-        public static void Solver(ISPNet Net, SPNetWay Way, ref long MIN, long CurrentCor)
+        public void Solve(SPNetWay Way, long CurrentCor)
         {
             throw new NotImplementedException();
             var layersCount = Way.layers.Count();
@@ -141,7 +168,7 @@ namespace Allax
                     #region S-layer
                     if (Way.layers[i].type == LayerType.SLayer)
                     {
-                        SLayer(Way, Net, lastNotEmptyLayerIndex, ref MIN, ref CurrentCor);
+                        SLayer(Way, lastNotEmptyLayerIndex, ref CurrentCor);
                         CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
@@ -149,7 +176,7 @@ namespace Allax
                     #region P-layer
                     if (Way.layers[i].type == LayerType.PLayer)
                     {
-                        PLayer(Way, Net, lastNotEmptyLayerIndex);
+                        PLayer(Way, lastNotEmptyLayerIndex);
                         CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
@@ -160,6 +187,7 @@ namespace Allax
             #region LastRound
             throw new NotImplementedException();
             #endregion
+            this.Params.Net.GetSettings().AddSolution(new Solution());
         }
     }
 }

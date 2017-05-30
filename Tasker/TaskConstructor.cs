@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,46 +8,53 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public class TaskConstructor
+    public delegate void CallbackAddTask(Task T);
+    public interface ITaskConstructor
+    {
+        ConcurrentQueue<Task> GetTasks(int Count);
+        void AddTask(Task T);
+        void Init(TaskConstructorParams Params);
+    }
+    public class TaskConstructor:ITaskConstructor
     {
         private object syncRoot = new object();
-        private Int64 MultiTreadInt1; //correlation
         int _rounds_count;
-        Int64 MIN
-        {
-            get
-            { return Interlocked.Read(ref MultiTreadInt1); }
-            set
-            {
-                Interlocked.Exchange(ref MultiTreadInt1, value);
-            }
-        }
         ISPNet _net;
-        Queue<Task> _tasks;
+        ConcurrentQueue<Task> _tasks;
         SPNetWay _tempEmptyWay;
         OpenTextInputWeightIterator Iter;
-        public TaskConstructor(ISPNet Net)
+        ISolver Solver;
+        public TaskConstructor(TaskConstructorParams Params)
         {
-            _net = Net;
+            Init(Params);
             _rounds_count = _net.GetLayers().Count / 3;
-            _tempEmptyWay = WayConverter.ToEmptyWay(_net);
+            _tempEmptyWay = WayConverter.ToWay(_net);
+            Solver = new BaseSolver(new SolverParams(_net, AddTask));
+        }
+        public void AddTask(Task T)
+        {
+            _tasks.Enqueue(T);
+        }
+        public void Init(TaskConstructorParams Params)
+        {
+            _net = Params.Net;
         }
         void AnalysePreviousTasks()
         {
             throw new NotImplementedException();
         }
-        public Queue<Task> GetTasks(int count)
+        public ConcurrentQueue<Task> GetTasks(int count)
         {
-            if (_tasks.Count != 0)
+            /*if (_tasks.Count != 0)
             {
                 AnalysePreviousTasks();
-            }
-            _tasks.Clear();
+            }*/
+            _tasks = new ConcurrentQueue<Task>();
             for (int i = 0; (i < count) && Iter.IsFinished(); i++)
             {
                 OpenTextInput NextInput = Iter.NextState();
                 SPNetWay ws = WayConverter.ToWay(_net, NextInput);
-                _tasks.Enqueue(new Task(ws, new SolverParams()));
+                _tasks.Enqueue(new Task(ws, new ExtraParams()));
             }
             return _tasks;
         }
@@ -65,7 +73,7 @@ namespace Allax
     }
     class OpenTextInputTextBlock
     {
-        List<byte> input;
+        List<bool> input;
         int weight;
         bool finished;
         int StatesPassed;
@@ -80,7 +88,7 @@ namespace Allax
     }
     public struct OpenTextInput
     {
-        List<byte> input;
-        int weight;
+        public List<bool> input;
+        public int weight;
     }
 }

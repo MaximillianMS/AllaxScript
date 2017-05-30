@@ -34,5 +34,7 @@ namespace Allax
 		List<ILayer> GetLayers();	
 		void PerformLinearAnalisys();
         SPNetSettings GetSettings();
+        Int64 GetMultiThreadMIN();
+        void SetMultiThreadMIN(Int64 MIN);
 	}
 }
