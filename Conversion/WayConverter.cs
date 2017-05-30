@@ -127,9 +127,20 @@ namespace Allax
         }
         public static List<bool> ToList(int Input, int length)
         {
-            throw new NotImplementedException();
-            var ret = new List<bool>(length);
-
+            List<bool> ret = new List<bool>();
+            for (int i = 0; i < length; i++)
+            {
+                if (Input % 2 == 0)
+                {
+                    ret.Add(false);
+                }
+                else
+                {
+                    ret.Add(true);
+                }
+                Input = Input >> 1;
+            }
+            ret.Reverse();
             return ret;
         }
     }
