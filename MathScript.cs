@@ -369,7 +369,7 @@ namespace Allax
     class SPNet : ISPNet
     {
         private static Int64 MultiTreadInt1; //correlation
-        public Int64 MIN
+        private Int64 MIN
         {
             get
             { return Interlocked.Read(ref MultiTreadInt1); }
@@ -389,6 +389,7 @@ namespace Allax
         List<Layer> Layers;
         SPNetSettings _settings;
         IWorker _worker;
+        CallbackAddSolution AddSolution; 
         public SPNetSettings GetSettings()
         {
             return _settings;
@@ -397,11 +398,11 @@ namespace Allax
         {
             Layers.Add(layer);
         }
-        public virtual void SetSBlockDB(SBlockDB db)
+        public void SetSBlockDB(SBlockDB db)
         {
             _settings.db = db;
         }
-        public virtual List<ILayer> GetLayers()
+        public List<ILayer> GetLayers()
         {
             return Layers.ConvertAll(x => ((ILayer)x));
         }
@@ -409,11 +410,11 @@ namespace Allax
         {
             _settings = settings;
         }
-        public virtual void DeleteLayer(byte number)
+        public void DeleteLayer(byte number)
         {
             Layers.RemoveAt(number);
         }
-        public virtual void AddLayer(LayerType type) // from interfaces
+        public void AddLayer(LayerType type) // from interfaces
         {
             switch (type)
             {
@@ -438,13 +439,21 @@ namespace Allax
                     }
             }
         }
-        public virtual void PerformLinearAnalisys()
+        public CallbackAddSolution GetCallbackAddSolution()
         {
+            return AddSolution;
+        }
+        public void PerformLinearAnalisys(LinearAnalisysParams Params)
+        {
+            throw new NotImplementedException();
             try
             {
-                throw new NotImplementedException();
-                _worker = new Worker(new WorkerParams(this, Environment.ProcessorCount));
-                _worker.Run();
+                this.AddSolution = Params.AddSolution;
+                if(!Params.ASync)
+                {
+                    _worker = new Worker(new WorkerParams(this, Environment.ProcessorCount));
+                    _worker.Run();
+                }
             }
             catch
             {

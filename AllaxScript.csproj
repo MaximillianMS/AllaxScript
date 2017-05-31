@@ -41,10 +41,12 @@
     <Compile Include="Interfaces\MathInterfaces.cs" />
     <Compile Include="MathScript.cs" />
     <Compile Include="Solver\BaseSolver\BaseSolver.cs" />
-    <Compile Include="Tasker\TaskConstructor.cs" />
+    <Compile Include="Tasker\Tasker.cs" />
     <Compile Include="Types\MathTypes.cs" />
     <Compile Include="Types\LoggerTypes.cs" />
-    <Compile Include="Types\TaskConstructorTypes.cs" />
+    <Compile Include="Types\SolverTypes.cs" />
+    <Compile Include="Types\TaskerTypes.cs" />
+    <Compile Include="Types\WorkerTypes.cs" />
     <Compile Include="UltraLogger\UltraLogger.cs" />
     <Compile Include="Worker\Worker.cs" />
   </ItemGroup>

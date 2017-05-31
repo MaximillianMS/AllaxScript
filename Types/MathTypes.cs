@@ -32,13 +32,33 @@ namespace Allax
 	{
 		public List<SPNetWayLayer> layers; // Input-Output on every layer 
 	}
-	public struct SPNetSettings
+    public enum AvailableSolverTypes { BaseSolver }
+    public struct LinearAnalisysParams
+    {
+        public bool ASync;
+        public LinearAlg Alg;
+        public CallbackAddSolution AddSolution;
+        LinearAnalisysParams(LinearAlg Alg, CallbackAddSolution AddSolution)
+        {
+            ASync = true;
+            this.Alg = Alg;
+            this.AddSolution = AddSolution;
+        }
+    }
+    public struct LinearAlg
+    {
+
+    }
+    public struct DifferAlg
+    {
+
+    }
+    public struct SPNetSettings
 	{
 		public byte word_length;
 		public byte round_count;
 		public byte sblock_count;
 		public ISBlockDB db;
-		public CallbackAddSolution AddSolution;
     }
     public struct SBlockState
     {

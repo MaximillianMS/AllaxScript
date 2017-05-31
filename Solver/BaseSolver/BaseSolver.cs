@@ -6,16 +6,6 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public struct SolverParams
-    {
-        public SolverParams(ISPNet Net, CallbackAddTask AddTaskFunc)
-        {
-            this.Net = Net;
-            this.AddTaskFunc = AddTaskFunc;
-        }
-        public ISPNet Net;
-        public CallbackAddTask AddTaskFunc;
-    }
     public interface ISolver
     {
         void Init(SolverParams Params);
@@ -28,6 +18,10 @@ namespace Allax
         {
             this.Params = Params;
         }
+        /// <summary>
+        /// Automatically calls "init" func
+        /// </summary>
+        /// <param name="Params"></param>
         public BaseSolver(SolverParams Params)
         {
             Init(Params);
@@ -53,51 +47,6 @@ namespace Allax
                 }
             }
             return index;
-        }
-        void CopyOutToIn(SPNetWay Way, int SrcLIndex, int DestLIndex)
-        {
-            throw new NotImplementedException();
-            if(SrcLIndex<Way.layers.Count&&DestLIndex<Way.layers.Count)
-            {
-                #region From S-layer to P-layer
-                if (Way.layers[SrcLIndex].type == LayerType.SLayer && Way.layers[DestLIndex].type == LayerType.PLayer)
-                {
-                    Way.layers[DestLIndex].blocks[0].active_inputs.Clear();
-                    for (int i = 0; i < Way.layers[SrcLIndex].blocks.Count; i++)
-                    {
-                        for (int j = 0; j < Way.layers[SrcLIndex].blocks[i].active_outputs.Count; j++)
-                        {
-                            Way.layers[DestLIndex].blocks[0].active_inputs.Add(Way.layers[SrcLIndex].blocks[i].active_inputs[j]);
-                        }
-                    }
-                }
-                #endregion
-                #region From P-Layer to K-Layer
-                if (Way.layers[SrcLIndex].type == LayerType.PLayer && Way.layers[DestLIndex].type == LayerType.KLayer)
-                {
-                    var block = Way.layers[DestLIndex].blocks[0];
-                    block.active_inputs = Way.layers[SrcLIndex].blocks[0].active_outputs;
-                    Way.layers[DestLIndex].blocks[0] = block;
-                }
-                #endregion
-                #region From K-Layer to S-Layer
-                if(Way.layers[SrcLIndex].type == LayerType.KLayer && Way.layers[DestLIndex].type == LayerType.SLayer)
-                {
-                    var srcBIndex = 0;
-                    for (int i = 0; i < Way.layers[DestLIndex].blocks.Count; i++)
-                    {
-                        for (int j = 0; (j < Way.layers[DestLIndex].blocks[i].active_outputs.Count)&&(srcBIndex<Way.layers[srcBIndex].blocks[0].active_outputs.Count); j++, srcBIndex++)
-                        {
-                            Way.layers[DestLIndex].blocks[i].active_inputs[j]=Way.layers[SrcLIndex].blocks[0].active_outputs[srcBIndex];
-                        }
-                    }
-                }
-                #endregion
-            }
-            else
-            {
-                Logger.UltraLogger.Instance.AddToLog("BaseSolver: Copying layers error.", Logger.MsgType.Error);
-            }
         }
         void KLayer(SPNetWay Way, int LIndex)
         {
@@ -161,7 +110,7 @@ namespace Allax
                     if (Way.layers[i].type==LayerType.KLayer)
                     {
                         KLayer(Way, lastNotEmptyLayerIndex);
-                        CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
@@ -169,7 +118,7 @@ namespace Allax
                     if (Way.layers[i].type == LayerType.SLayer)
                     {
                         SLayer(Way, lastNotEmptyLayerIndex, ref CurrentCor);
-                        CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
@@ -177,7 +126,7 @@ namespace Allax
                     if (Way.layers[i].type == LayerType.PLayer)
                     {
                         PLayer(Way, lastNotEmptyLayerIndex);
-                        CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
@@ -187,7 +136,7 @@ namespace Allax
             #region LastRound
             throw new NotImplementedException();
             #endregion
-            this.Params.Net.GetSettings().AddSolution(new Solution());
+            this.Params.Net.GetCallbackAddSolution()(new Solution());
         }
     }
 }

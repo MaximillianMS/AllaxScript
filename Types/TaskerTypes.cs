@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
+
+    public delegate void CallbackAddTask(Task T);
     public struct MultiTime
     {
         Int64 UnixTime;
@@ -39,9 +41,9 @@ namespace Allax
             Params.Solver.Solve(Way, CurrentCorrelation);
         }
     }
-    public struct TaskConstructorParams
+    public struct TaskerParams
     {
-        public TaskConstructorParams(ISPNet Net)
+        public TaskerParams(ISPNet Net)
         {
             this.Net = Net;
         }

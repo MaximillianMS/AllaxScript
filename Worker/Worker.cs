@@ -7,20 +7,6 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public struct WorkerParams
-    {
-        public WorkerParams(ISPNet Net, int MaxThreads)
-        {
-            this.Net = Net;
-            this.MaxThreads = MaxThreads;
-        }
-        public ISPNet Net;
-        public int MaxThreads;
-    }
-    public struct WorkerThreadParams
-    {
-        public Task T;
-    }
     public interface IWorkerThread
     {
         void Init(WorkerThreadParams Params);
@@ -47,13 +33,13 @@ namespace Allax
     public class Worker:IWorker
     {
         WorkerParams Params;
-        ITaskConstructor Tasker;
+        ITasker Tasker;
         ConcurrentQueue<Task> TaskQueue;
         List<IWorkerThread> Threads;
         public Worker(WorkerParams Params)
         {
             Init(Params);
-            Tasker = new TaskConstructor(new TaskConstructorParams(Params.Net));
+            Tasker = new Tasker(new TaskerParams(Params.Net));
         }
         public void Init(WorkerParams Params)
         {

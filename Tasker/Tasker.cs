@@ -8,14 +8,13 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public delegate void CallbackAddTask(Task T);
-    public interface ITaskConstructor
+    public interface ITasker
     {
         ConcurrentQueue<Task> GetTasks(int Count);
         void AddTask(Task T);
-        void Init(TaskConstructorParams Params);
+        void Init(TaskerParams Params);
     }
-    public class TaskConstructor:ITaskConstructor
+    public class Tasker:ITasker
     {
         private object syncRoot = new object();
         int _rounds_count;
@@ -24,19 +23,21 @@ namespace Allax
         SPNetWay _tempEmptyWay;
         OpenTextInputWeightIterator Iter;
         ISolver Solver;
-        public TaskConstructor(TaskConstructorParams Params)
+        Dictionary<AvailableSolverTypes, ISolver> Solvers;
+        public Tasker(TaskerParams Params)
         {
             Init(Params);
             _rounds_count = _net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(_net);
 
             Solver = new BaseSolver(new SolverParams(_net, AddTask));
+            Solvers = new Dictionary<AvailableSolverTypes, ISolver> { { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(_net, AddTask))} /*"Heuristics" : new HeuristicSolver()*/ };
         }
         public void AddTask(Task T)
         {
             _tasks.Enqueue(T);
         }
-        public void Init(TaskConstructorParams Params)
+        public void Init(TaskerParams Params)
         {
             _net = Params.Net;
         }
@@ -57,7 +58,7 @@ namespace Allax
             {
                 OpenTextInput NextInput = Iter.NextState();
                 SPNetWay ws = WayConverter.ToWay(_net, NextInput);
-                _tasks.Enqueue(new Task(ws, new ExtraParams(Solver)));
+                _tasks.Enqueue(new Task(ws, 1, new ExtraParams(Solver)));
             }
             return _tasks;
         }

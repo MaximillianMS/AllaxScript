@@ -7,7 +7,6 @@ namespace Allax
     {
         ISPNet GetSPNetInstance(SPNetSettings settings);
         ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null);
-
     }
     public interface IBlock
 	{
@@ -32,8 +31,9 @@ namespace Allax
 		void AddLayer(LayerType type);
 		void DeleteLayer(byte number);
 		List<ILayer> GetLayers();	
-		void PerformLinearAnalisys();
+		void PerformLinearAnalisys(LinearAnalisysParams Params);
         SPNetSettings GetSettings();
+        CallbackAddSolution GetCallbackAddSolution();
         Int64 GetMultiThreadMIN();
         void SetMultiThreadMIN(Int64 MIN);
 	}
