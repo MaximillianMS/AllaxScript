@@ -8,16 +8,23 @@ namespace Allax
 {
     public struct WorkerParams
     {
-        public WorkerParams(ISPNet Net, int MaxThreads)
+        public WorkerParams(int MaxThreads, TaskerParams TaskerParams)
         {
-            this.Net = Net;
+            this.TaskerParams = TaskerParams;
             this.MaxThreads = MaxThreads;
         }
-        public ISPNet Net;
         public int MaxThreads;
+        public TaskerParams TaskerParams;
     }
     public struct WorkerThreadParams
     {
         public Task T;
+        public WorkerThreadState State;
+        public WorkerThreadParams(Task t)
+        {
+            T = t;
+            State = WorkerThreadState.Loaded;
+        }
     }
+    public enum WorkerThreadState {Free, Loaded, Started, Paused, Stopped }
 }

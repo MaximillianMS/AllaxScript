@@ -52,18 +52,18 @@ namespace Allax
             }
             return func;
         }
-        List<short> GetLinCombo(List<List<byte>> func_table, int LinCombo)
+        List<short> GetLinCombo(List<List<bool>> funcMatrix, int LinCombo)
         {
-            if (func_table.Count > 0)
+            if (funcMatrix.Count > 0)
             {
                 var combo = new List<short>();
-                combo.AddRange(Enumerable.Repeat<short>(0, func_table.Count));
-                for (int i = 0; i < func_table.Count; i++)
+                combo.AddRange(Enumerable.Repeat<short>(0, funcMatrix.Count));
+                for (int i = 0; i < funcMatrix.Count; i++)
                 {
-                    for (int j = 0; j < func_table[0].Count; j++)
+                    for (int j = 0; j < funcMatrix[0].Count; j++)
                     {
-                        if ((LinCombo & (1 << (func_table.Count - 1 - j))) != 0)
-                            combo[i] += func_table[i][j];
+                        if ((LinCombo & (1 << (funcMatrix.Count - 1 - j))) != 0)
+                            combo[i] += (short)((funcMatrix[i][j])?1:0);
                     }
                     combo[i] = (short)(combo[i] & 1);
                 }
@@ -71,14 +71,14 @@ namespace Allax
             }
             return null;
         }
-        public List<List<short>> GetCorMatrix(List<List<byte>> func_table)
+        public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
             int LinCombo = 0;
             var CorMatrix = new List<List<short>>();
-            CorMatrix.AddRange(Enumerable.Repeat<List<short>>(new List<short>(), func_table.Count));
-            for (LinCombo = 0; LinCombo < func_table.Count; LinCombo++)
+            CorMatrix.AddRange(Enumerable.Repeat<List<short>>(new List<short>(), funcMatrix.Count));
+            for (LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
-                CorMatrix[LinCombo] = GetLinCombo(func_table, LinCombo);
+                CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
                 var f_spectrum = new List<short>();
                 if (!FuncDB.TryGetValue(CorMatrix[LinCombo], out f_spectrum))
                 {
@@ -162,12 +162,20 @@ namespace Allax
     class SBlock : Block
     {
         ISBlockDB _database;
-        List<List<short>> CorTable;
-        List<List<byte>> FuncTable;
+        List<List<short>> CorMatrix;
+        List<List<bool>> FuncMatrix;
         public List<BlockState> _states;
         int VarCount;
         byte _length;
         string BlockID = "";
+        public List<List<short>> GetCorMatrix()
+        {
+            return CorMatrix;
+        }
+        public List<List<bool>> GetFuncMatrix()
+        {
+            return FuncMatrix;
+        }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
             var States = new List<BlockState>();
@@ -190,18 +198,18 @@ namespace Allax
         public void Sort()
         {
             _states = new List<BlockState>(1 << (2 * VarCount));
-            for (int row = 1; row < CorTable.Count; row++)
+            for (int row = 1; row < CorMatrix.Count; row++)
             {
-                for (int col = 1; col < CorTable[0].Count; col++)
+                for (int col = 1; col < CorMatrix[0].Count; col++)
                 {
-                    _states.Add(new BlockState(Math.Abs(CorTable[row][col]), col, row, _length));
+                    _states.Add(new BlockState(Math.Abs(CorMatrix[row][col]), col, row, _length));
                 }
             }
             _states = _states.OrderByDescending(o => Math.Abs(o._cor)).ToList();
         }
         short GetCorrelation(int inputs, int outputs)
         {
-            return CorTable[outputs][inputs];
+            return CorMatrix[outputs][inputs];
         }
         public override void Init(List<byte> arg) // from interfaces
         {
@@ -209,31 +217,31 @@ namespace Allax
             if (arg.Count >= bias)
             {
                 if (arg.Count - bias != 0)
-                    VarCount = (int)Math.Log(arg.Count - bias, 2); // Table: 2**n x n
+                    VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
                 if (VarCount == _length)
                 {
-                    FuncTable.AddRange(Enumerable.Repeat<List<byte>>(new List<byte>(), arg.Count - bias));
+                    FuncMatrix.AddRange(Enumerable.Repeat<List<bool>>(new List<bool>(), arg.Count - bias));
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
                     //....................
                     //Line2**n-1: 	y0..yn
                     for (int i = bias; i < arg.Count; i++)
                     {
-                        //FuncTable[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
+                        //FuncMatrix[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
                         for (int j = VarCount - 1; j >= 0; j--)
                         {
                             if ((arg[i] & (1 << j)) == 0)
                             {
-                                FuncTable[i - bias].Add(0);
+                                FuncMatrix[i - bias].Add(false);
                             }
                             else
                             {
-                                FuncTable[i - bias].Add(1);
+                                FuncMatrix[i - bias].Add(true);
                             }
                         }
                     }
                     if (_database != null)
-                        CorTable = _database.GetCorMatrix(FuncTable);
+                        CorMatrix = _database.GetCorMatrix(FuncMatrix);
                     else
                     {
                         _database = new SBlockDB();
@@ -254,28 +262,28 @@ namespace Allax
         {
             _database = null;
             BlockID = "";
-            CorTable.Clear();
-            FuncTable.Clear();
+            CorMatrix.Clear();
+            FuncMatrix.Clear();
             VarCount = 0;
         }
         public SBlock(ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
             BlockID = "";
-            CorTable.Clear();
-            FuncTable.Clear();
+            CorMatrix.Clear();
+            FuncMatrix.Clear();
             VarCount = 0;
             _length = block_length;
         }
-        public SBlock(List<List<byte>> table, SBlockDB database)
+        public SBlock(List<List<bool>> Matrix, SBlockDB database)
         {
             _database = database;
             BlockID = "";
-            CorTable.Clear();
-            FuncTable.Clear();
-            FuncTable = table;
+            CorMatrix.Clear();
+            FuncMatrix.Clear();
+            FuncMatrix = Matrix;
             VarCount = 0;
-            CorTable = _database.GetCorMatrix(FuncTable);
+            CorMatrix = _database.GetCorMatrix(FuncMatrix);
         }
     }
     abstract class Layer : ILayer
@@ -445,14 +453,19 @@ namespace Allax
         }
         public void PerformLinearAnalisys(LinearAnalisysParams Params)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             try
             {
                 this.AddSolution = Params.AddSolution;
-                if(!Params.ASync)
+                var TaskerParams = new TaskerParams(this, Params.Alg, new DifferAlg());
+                _worker = new Worker(new WorkerParams(Environment.ProcessorCount, TaskerParams));
+                if (!Params.ASync)
                 {
-                    _worker = new Worker(new WorkerParams(this, Environment.ProcessorCount));
                     _worker.Run();
+                }
+                else
+                {
+                    _worker.AsyncRun();
                 }
             }
             catch
@@ -464,13 +477,19 @@ namespace Allax
 
     public class Engine : IEngine
     {
+        ISPNet TheNet;
+        ISBlockDB TheDB;
         public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
         {
-            return new SPNet(settings);
+            if (TheNet == null)
+                TheNet = new SPNet(settings);
+            return TheNet;
         }
         public virtual ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null) //from interfaces
         {
-            return new SBlockDB(db);
+            if (TheDB == null)
+                TheDB = new SBlockDB(db);
+            return TheDB;
         }
     }
 }

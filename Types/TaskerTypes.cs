@@ -38,15 +38,19 @@ namespace Allax
         }
         public void Exec()
         {
-            Params.Solver.Solve(Way, CurrentCorrelation);
+            Params.Solver.Solve(WayConverter.CloneWay(Way), CurrentCorrelation);
         }
     }
     public struct TaskerParams
     {
-        public TaskerParams(ISPNet Net)
+        public TaskerParams(ISPNet Net, LinearAlg LinAlg, DifferAlg DifAlg)
         {
             this.Net = Net;
+            this.DifAlg = DifAlg;
+            this.LinAlg = LinAlg;
         }
         public ISPNet Net;
+        public LinearAlg LinAlg;
+        public DifferAlg DifAlg;
     }
 }

@@ -23,7 +23,7 @@ namespace Allax
 	}
 	public interface ISBlockDB
     {
-        List<List<short>> GetCorMatrix(List<List<byte>> func_table);
+        List<List<short>> GetCorMatrix(List<List<bool>> func_table);
         Dictionary<List<short>,List<short>> Export();
 	}
 	public interface ISPNet

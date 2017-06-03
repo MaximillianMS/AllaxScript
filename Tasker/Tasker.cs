@@ -13,12 +13,13 @@ namespace Allax
         ConcurrentQueue<Task> GetTasks(int Count);
         void AddTask(Task T);
         void Init(TaskerParams Params);
+        bool IsFinished();
     }
     public class Tasker:ITasker
     {
         private object syncRoot = new object();
+        TaskerParams Params;
         int _rounds_count;
-        ISPNet _net;
         ConcurrentQueue<Task> _tasks;
         SPNetWay _tempEmptyWay;
         OpenTextInputWeightIterator Iter;
@@ -27,11 +28,6 @@ namespace Allax
         public Tasker(TaskerParams Params)
         {
             Init(Params);
-            _rounds_count = _net.GetLayers().Count / 3;
-            _tempEmptyWay = WayConverter.ToWay(_net);
-
-            Solver = new BaseSolver(new SolverParams(_net, AddTask));
-            Solvers = new Dictionary<AvailableSolverTypes, ISolver> { { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(_net, AddTask))} /*"Heuristics" : new HeuristicSolver()*/ };
         }
         public void AddTask(Task T)
         {
@@ -39,7 +35,17 @@ namespace Allax
         }
         public void Init(TaskerParams Params)
         {
-            _net = Params.Net;
+            this.Params = Params;
+            _rounds_count = Params.Net.GetLayers().Count / 3;
+            _tempEmptyWay = WayConverter.ToWay(Params.Net);
+            InitSolvers();
+        }
+        void InitSolvers()
+        {
+            Solvers = new Dictionary<AvailableSolverTypes, ISolver> {
+                { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(Params.Net, AddTask)) }
+                /*"Heuristics" : new HeuristicSolver()*/
+            };
         }
         void AnalysePreviousTasks()
         {
@@ -53,14 +59,20 @@ namespace Allax
             }*/
             //REWRITE!
             throw new NotImplementedException();
-            _tasks = new ConcurrentQueue<Task>();
+            var ret = new ConcurrentQueue<Task>();
             for (int i = 0; (i < count) && Iter.IsFinished(); i++)
             {
                 OpenTextInput NextInput = Iter.NextState();
-                SPNetWay ws = WayConverter.ToWay(_net, NextInput);
-                _tasks.Enqueue(new Task(ws, 1, new ExtraParams(Solver)));
+                SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
+                ret.Enqueue(new Task(ws, 1, new ExtraParams(Solver)));
             }
-            return _tasks;
+            return ret;
+        }
+
+        public bool IsFinished()
+        {
+            //throw new NotImplementedException();
+            return Iter.IsFinished()/*&&(_tasks.Count==0)*/;
         }
     }
     class OpenTextInputWeightIterator
