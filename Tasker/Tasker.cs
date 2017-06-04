@@ -82,7 +82,7 @@ namespace Allax
                     }
                     OpenTextInput NextInput = Iter.NextState();
                     SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
-                    ret.Add(new Task(ws, -1, new ExtraParams(Solver)));
+                    ret.Add(new Task(ws, Solver));
                 }
                 return ret;
             }

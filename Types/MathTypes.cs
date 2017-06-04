@@ -5,6 +5,16 @@ using System.Linq;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
+    public struct Prevalence
+    {
+        public Prevalence(long Mul, int ActiveBlocksCount)
+        {
+            this.Mul = Mul;
+            this.ActiveBlocksCount = ActiveBlocksCount;
+        }
+        public long Mul;
+        public int ActiveBlocksCount;
+    }
 	public enum AnalisysType
 	{
 		Linear,
@@ -60,21 +70,21 @@ namespace Allax
 		public byte sblock_count;
 		public ISBlockDB db;
     }
-    public struct SBlockState
-    {
-        public SBlockState(Int64 cor, int inputs, int outputs)
-        {
-            _cor = cor;
-            _inputs = inputs;
-            _outputs = outputs;
-        }
-        public Int64 _cor; // Abs(value) from Matrix
-        public int _inputs;
-        public int _outputs;
-    }
+//     public struct SBlockState
+//     {
+//         public SBlockState(Int64 cor, int inputs, int outputs)
+//         {
+//             _cor = cor;
+//             _inputs = inputs;
+//             _outputs = outputs;
+//         }
+//         public Int64 _cor; // Abs(value) from Matrix
+//         public int _inputs;
+//         public int _outputs;
+//     }
     public struct BlockStateExtrParams
     {
-        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Int64 MIN, Int64 CurrentCorrelation, bool CheckCorrelation=true)
+        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Prevalence MIN, Prevalence CurrentPrevalence, bool CheckCorrelation=true)
         {
             if (Inputs == null)
             {
@@ -87,14 +97,14 @@ namespace Allax
             }
             this.Outputs = Outputs;
             this.CheckCorrelation = CheckCorrelation;
-            this.CurrentCorrelation = CurrentCorrelation;
+            this.CurrentPrevalence = CurrentPrevalence;
             this.MIN = MIN;
         }
-        public Int64 MIN;
+        public Prevalence MIN;
         public List<bool> Inputs;
         public List<bool> Outputs;
         public bool CheckCorrelation;
-        public Int64 CurrentCorrelation;
+        public Prevalence CurrentPrevalence;
     }
     public struct BlockState
     {
@@ -123,8 +133,12 @@ namespace Allax
     }
     public struct Solution
 	{
-		public double prevalence;
-		public byte active_blocks_count;
-		public SPNetWay way;
+        public Solution(Prevalence p, SPNetWay w)
+        {
+            P = p;
+            Way = w;
+        }
+        public Prevalence P;
+		public SPNetWay Way;
 	}
 }

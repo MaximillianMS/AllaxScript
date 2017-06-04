@@ -63,7 +63,7 @@ namespace Allax
                     for (int j = 0; j < funcMatrix[0].Count; j++)
                     {
                         if ((LinCombo & (1 << (funcMatrix.Count - 1 - j))) != 0)
-                            combo[i] += (short)((funcMatrix[i][j])?1:0);
+                            combo[i] += (short)((funcMatrix[i][j]) ? 1 : 0);
                     }
                     combo[i] = (short)(combo[i] & 1);
                 }
@@ -130,10 +130,10 @@ namespace Allax
             var ret = new List<BlockState>(1);
             foreach (var j in Enumerable.Range(0, _length))
             {
-                if(State._inputs[j]!=false)
+                if (State._inputs[j] != false)
                 {
                     var Num = GetOutputNumber(j);
-                    if(Num<_length)
+                    if (Num < _length)
                     {
                         State._outputs[Num] = true;
                     }
@@ -179,9 +179,12 @@ namespace Allax
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
             var States = new List<BlockState>();
-            foreach (var state in _states)
+            var MIN = Params.MIN.ActiveBlocksCount / ((double)Params.MIN.ActiveBlocksCount);
+            for (int i = 0; i < _states.Count; i++)
             {
-                if (state._cor * Params.CurrentCorrelation > Params.MIN)
+                var state = States[i];
+                var P = (state._cor * Params.CurrentPrevalence.Mul) / ((double)Params.CurrentPrevalence.ActiveBlocksCount + 1);
+                if ((Params.CurrentPrevalence.Mul <= 0) || (P > MIN))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
@@ -376,23 +379,23 @@ namespace Allax
     }
     class SPNet : ISPNet
     {
-        private static Int64 MultiTreadInt1; //correlation
-        private Int64 MIN
+        private static Prevalence MultiThreadParam1; //correlation
+        private static long MultiThreadParam2;
+        private static double MultiThreadParam3;
+        private object syncRoot = new object();
+        public Prevalence GetMultiThreadPrevalence()
         {
-            get
-            { return Interlocked.Read(ref MultiTreadInt1); }
-            set
+            lock(syncRoot)
             {
-                Interlocked.Exchange(ref MultiTreadInt1, value);
+                return MultiThreadParam1;
             }
         }
-        public Int64 GetMultiThreadMIN()
+        public void SetMultiThreadPrevalence(Prevalence P)
         {
-            return MIN;
-        }
-        public void SetMultiThreadMIN(Int64 MIN)
-        {
-            this.MIN = MIN;
+            lock(syncRoot)
+            {
+                MultiThreadParam1 = P;
+            }
         }
         List<Layer> Layers;
         SPNetSettings _settings;

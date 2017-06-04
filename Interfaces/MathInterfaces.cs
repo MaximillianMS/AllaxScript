@@ -34,7 +34,7 @@ namespace Allax
 		void PerformLinearAnalisys(LinearAnalisysParams Params);
         SPNetSettings GetSettings();
         CallbackAddSolution GetCallbackAddSolution();
-        Int64 GetMultiThreadMIN();
-        void SetMultiThreadMIN(Int64 MIN);
+        Prevalence GetMultiThreadPrevalence();
+        void SetMultiThreadPrevalence(Prevalence P);
 	}
 }

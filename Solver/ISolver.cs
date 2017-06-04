@@ -9,6 +9,6 @@ namespace Allax
     public interface ISolver
     {
         void Init(SolverParams Params);
-        void Solve(SPNetWay Way, long CurrentCor);
+        void Solve(SPNetWay Way, Prevalence CurrentPrevalence);
     }
 }

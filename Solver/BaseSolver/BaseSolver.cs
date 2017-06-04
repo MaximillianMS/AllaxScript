@@ -49,23 +49,40 @@ namespace Allax
             kblock.active_outputs = kblock.active_inputs;
             Way.layers[LIndex].blocks[0] = kblock;
         }
-        void SLayer(SPNetWay Way, int LIndex, ref long CurrentCor)
+        void SLayer(SPNetWay Way, int LIndex, ref Prevalence CurrentPrevalence, int BIndex=0)
         {
-            throw new NotImplementedException();
-            for (int BIndex = 0; BIndex < Way.layers[LIndex].blocks.Count; BIndex++)
+            for (; BIndex < Way.layers[LIndex].blocks.Count; BIndex++)
             {
                 var WayBlock = Way.layers[LIndex].blocks[BIndex];
-                var NetBlock = this.Params.Net.GetLayers()[LIndex].GetBlock((byte)BIndex);
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, this.Params.Net.GetMultiThreadMIN(), CurrentCor, true);
-                var States = NetBlock.ExtractStates(Params);
-                foreach (var State in States)
+                if (WayBlock.active_inputs.All(x=>!x))
                 {
+                    continue;
+                }
+                if (!WayBlock.active_outputs.All(x => !x))
+                {
+                    continue; //already solved block
+                }
+                var NetBlock = this.Params.Net.GetLayers()[LIndex].GetBlocks()[BIndex];
+                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, this.Params.Net.GetMultiThreadPrevalence(), CurrentPrevalence, true);
+                var States = NetBlock.ExtractStates(Params);
+                for(int i=0;i<States.Count;i++)
+                {
+                    var State = States[i];
                     var NewWay = WayConverter.CloneWay(Way);
-                    var Outputs = State._outputs;
-                    WayBlock.active_outputs = Outputs;
-                    CurrentCor *= State._cor;
+                    var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
+                    NewBLock.active_outputs = State._outputs;
+                    NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
+                    CurrentPrevalence.ActiveBlocksCount++;
+                    if (CurrentPrevalence.Mul == 0)
+                    {
+                        CurrentPrevalence.Mul = State._cor;
+                    }
+                    else
+                    {
+                        CurrentPrevalence.Mul *= State._cor;
+                    }
                     NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
-                    //Solver(Net, Way, ref MIN, CurrentCor);
+                    Solve(NewWay, CurrentPrevalence);
                 }
             }
 
@@ -88,9 +105,8 @@ namespace Allax
                 throw new NotImplementedException();
             }
         }
-        public void Solve(SPNetWay Way, long CurrentCor)
+        public void Solve(SPNetWay Way, Prevalence CurrentPrevalence)
         {
-            throw new NotImplementedException();
             var layersCount = Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
@@ -112,7 +128,7 @@ namespace Allax
                     #region S-layer
                     if (Way.layers[i].type == LayerType.SLayer)
                     {
-                        SLayer(Way, lastNotEmptyLayerIndex, ref CurrentCor);
+                        SLayer(Way, lastNotEmptyLayerIndex, ref CurrentPrevalence);
                         WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
@@ -129,9 +145,9 @@ namespace Allax
             }
             #endregion
             #region LastRound
-            throw new NotImplementedException();
+            //No need to process LastRound, because LastRound must be reversed.
             #endregion
-            this.Params.Net.GetCallbackAddSolution()(new Solution());
+            Params.Net.GetCallbackAddSolution()(new Solution(CurrentPrevalence, Way));
         }
     }
 }
