@@ -449,13 +449,13 @@ namespace Allax
         {
             return AddSolution;
         }
-        public void PerformLinearAnalisys(LinearAnalisysParams Params)
+        public void PerformLinearAnalisys(AnalisysParams Params)
         {
             //throw new NotImplementedException();
             try
             {
                 this.AddSolution = Params.AddSolution;
-                var TaskerParams = new TaskerParams(this, Params.Alg, new DifferAlg());
+                var TaskerParams = new TaskerParams(this, Params.Alg);
                 _worker = new Worker(new WorkerParams(Environment.ProcessorCount, TaskerParams));
                 if (!Params.ASync)
                 {

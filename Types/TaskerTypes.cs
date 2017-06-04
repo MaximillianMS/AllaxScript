@@ -48,14 +48,12 @@ namespace Allax
     }
     public struct TaskerParams
     {
-        public TaskerParams(ISPNet Net, LinearAlg LinAlg, DifferAlg DifAlg)
+        public TaskerParams(ISPNet Net, Algorithm Alg)
         {
             this.Net = Net;
-            this.DifAlg = DifAlg;
-            this.LinAlg = LinAlg;
+            this.Alg = Alg;
         }
         public ISPNet Net;
-        public LinearAlg LinAlg;
-        public DifferAlg DifAlg;
+        public Algorithm Alg;
     }
 }

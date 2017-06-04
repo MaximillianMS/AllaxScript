@@ -22,7 +22,7 @@ namespace Allax
         int _rounds_count;
         ConcurrentQueue<Task> _tasks;
         SPNetWay _tempEmptyWay;
-        OpenTextInputWeightIterator Iter;
+        InputsIterator Iter;
         Dictionary<AvailableSolverTypes, ISolver> Solvers;
         public Tasker(TaskerParams Params)
         {
@@ -37,15 +37,23 @@ namespace Allax
             this.Params = Params;
             _rounds_count = Params.Net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Params.Net);
-            Iter = new OpenTextInputWeightIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
+            Iter = new InputsIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
             _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
-            //ProcessRules();
+            ProcessRules();
         }
         void ProcessRules()
         {
             throw new NotImplementedException();
-            var Alg = Params.LinAlg;
+            for(int i=0;i<Params.Alg.Rules.Count;i++)
+            {
+                var Rule = Params.Alg.Rules[i];
+                if (Rule.UseCustomInput==true)
+                {
+                    var T = new Task(WayConverter.ToWay(Params.Net, Rule.Input), Solvers[Rule.SolverType]);
+                    _tasks.Enqueue(new Task());
+                }
+            }
         }
         void InitSolvers()
         {
@@ -60,12 +68,10 @@ namespace Allax
         }
         public List<Task> GetTasks(int count)
         {
-            lock (syncRoot)
+            var ret = new List<Task>();
+            for (int i = 0; (i < count) && (!Iter.IsFinished() || _tasks.Count > 0); i++)
             {
-                var ret = new List<Task>();
-                for (int i = 0; (i < count) && Iter.IsFinished(); i++)
-                {
-                    if(_tasks!=null)
+                if (_tasks != null)
                     if (_tasks.Count > 0)
                     {
                         Task T;
@@ -79,12 +85,15 @@ namespace Allax
                             continue;
                         }
                     }
-                    OpenTextInput NextInput = Iter.NextState();
-                    SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
-                    ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver]));
+                SolverInputs NextInput;
+                lock (syncRoot)
+                {
+                    NextInput = Iter.NextState();
                 }
-                return ret;
+                SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
+                ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver]));
             }
+            return ret;
         }
 
         public bool IsFinished()
@@ -93,13 +102,13 @@ namespace Allax
             return Iter.IsFinished()/*&&(_tasks.Count==0)*/;
         }
     }
-    class OpenTextInputWeightIterator
+    class InputsIterator
     {
         int CurrentBlock;
         int BlocksCount;
         int BlockLength;
-        List<OpenTextInputTextBlock> Blocks;
-        public OpenTextInputWeightIterator(int BlocksCount, int BlockLength)
+        List<InputsIteratorBlock> Blocks;
+        public InputsIterator(int BlocksCount, int BlockLength)
         {
             this.BlocksCount = BlocksCount;
             this.BlockLength = BlockLength;
@@ -108,11 +117,11 @@ namespace Allax
                 Logger.UltraLogger.Instance.AddToLog("OTIWIterator: Wrong init params.", Logger.MsgType.Error);
                 throw new NotImplementedException();
             }
-            Blocks = new List<OpenTextInputTextBlock>(this.BlocksCount);
-            Blocks.AddRange(Enumerable.Repeat(new OpenTextInputTextBlock(this.BlockLength), this.BlocksCount));
+            Blocks = new List<InputsIteratorBlock>(this.BlocksCount);
+            Blocks.AddRange(Enumerable.Repeat(new InputsIteratorBlock(this.BlockLength), this.BlocksCount));
             CurrentBlock = 0;
         }
-        public OpenTextInput NextState()
+        public SolverInputs NextState()
         {
             //lock (syncRoot)
             {
@@ -121,12 +130,12 @@ namespace Allax
                     CurrentBlock++;
                     if (CurrentBlock >= BlocksCount)
                     {
-                        return new OpenTextInput();
+                        return new SolverInputs();
                     }
                 }
                 var CurrentBlockInput = Blocks[CurrentBlock].NextState();
                 CurrentBlockInput = CurrentBlockInput << ((BlocksCount - (CurrentBlock + 1)) * BlockLength);
-                return new OpenTextInput(CurrentBlockInput, BlockLength * BlocksCount);
+                return new SolverInputs(CurrentBlockInput, BlockLength * BlocksCount);
             }
 
         }
@@ -135,7 +144,7 @@ namespace Allax
             throw new NotImplementedException();
         }
     }
-    class OpenTextInputTextBlock
+    class InputsIteratorBlock
     {
         private object syncRoot = new object();
         //List<bool> input;
@@ -148,7 +157,7 @@ namespace Allax
             StatesPassed = 0;
             finished = false;
         }
-        public OpenTextInputTextBlock(int BlockLength)
+        public InputsIteratorBlock(int BlockLength)
         {
             //input = new List<bool>(BlockLength);
             //input.AddRange(Enumerable.Repeat(false, BlockLength));
@@ -186,20 +195,5 @@ namespace Allax
             }
             return finished;
         }
-    }
-    public struct OpenTextInput
-    {
-        public OpenTextInput(List<bool> Input)
-        {
-            input = Input;
-            weight = 0;
-        }
-        public OpenTextInput(long Input, int length)
-        {
-            input = WayConverter.ToList(Input, length);
-            weight = 0;
-        }
-        public List<bool> input;
-        public int weight;
     }
 }

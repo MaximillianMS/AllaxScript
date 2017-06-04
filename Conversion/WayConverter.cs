@@ -103,7 +103,7 @@ namespace Allax
             }
             return NewWay;
         }
-        public static SPNetWay ToWay(ISPNet Net, OpenTextInput Input)
+        public static SPNetWay ToWay(ISPNet Net, SolverInputs Input)
         {
             var Way = ToWay(Net);
             foreach(var j in Enumerable.Range(0, Input.input.Count))

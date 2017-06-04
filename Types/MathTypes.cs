@@ -43,25 +43,54 @@ namespace Allax
 		public List<SPNetWayLayer> layers; // Input-Output on every layer 
 	}
     public enum AvailableSolverTypes { BaseSolver, HeuristicSolver }
-    public struct LinearAnalisysParams
+    public struct AnalisysParams
     {
         public bool ASync;
-        public LinearAlg Alg;
+        public Algorithm Alg;
         public CallbackAddSolution AddSolution;
-        LinearAnalisysParams(LinearAlg Alg, CallbackAddSolution AddSolution)
+        AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution)
         {
             ASync = true;
             this.Alg = Alg;
             this.AddSolution = AddSolution;
         }
     }
-    public struct LinearAlg
+    public struct SolverInputs
     {
-
+        public SolverInputs(List<bool> Input)
+        {
+            input = Input;
+            weight = 0;
+        }
+        public SolverInputs(long Input, int length)
+        {
+            input = WayConverter.ToList(Input, length);
+            weight = 0;
+        }
+        public List<bool> input;
+        public int weight;
     }
-    public struct DifferAlg
+    public struct Rule
     {
-
+        public Rule(AvailableSolverTypes SolverType, SolverInputs Input=new SolverInputs(), bool UseCustomInput=false)
+        {
+            this.SolverType = SolverType;
+            this.Input = Input;
+            this.UseCustomInput = UseCustomInput;
+        }
+        public AvailableSolverTypes SolverType;
+        public bool UseCustomInput;
+        public SolverInputs Input;
+    }
+    public struct Algorithm
+    {
+        public Algorithm(List<Rule> Rules, AnalisysType Type)
+        {
+            this.Rules = Rules;
+            this.Type = Type;
+        }
+        public List<Rule> Rules;
+        public AnalisysType Type;
     }
     public struct SPNetSettings
 	{
@@ -70,18 +99,6 @@ namespace Allax
 		public byte sblock_count;
 		public ISBlockDB db;
     }
-//     public struct SBlockState
-//     {
-//         public SBlockState(Int64 cor, int inputs, int outputs)
-//         {
-//             _cor = cor;
-//             _inputs = inputs;
-//             _outputs = outputs;
-//         }
-//         public Int64 _cor; // Abs(value) from Matrix
-//         public int _inputs;
-//         public int _outputs;
-//     }
     public struct BlockStateExtrParams
     {
         public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Prevalence MIN, Prevalence CurrentPrevalence, bool CheckCorrelation=true)
