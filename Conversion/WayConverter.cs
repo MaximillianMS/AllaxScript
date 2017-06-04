@@ -114,7 +114,6 @@ namespace Allax
         }
         public static void CopyOutToIn(SPNetWay Way, int SrcLIndex, int DestLIndex)
         {
-            throw new NotImplementedException();
             if (SrcLIndex < Way.layers.Count && DestLIndex < Way.layers.Count)
             {
                 #region From S-layer to P-layer

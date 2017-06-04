@@ -23,7 +23,6 @@ namespace Allax
         ConcurrentQueue<Task> _tasks;
         SPNetWay _tempEmptyWay;
         OpenTextInputWeightIterator Iter;
-        ISolver Solver;
         Dictionary<AvailableSolverTypes, ISolver> Solvers;
         public Tasker(TaskerParams Params)
         {
@@ -41,7 +40,7 @@ namespace Allax
             Iter = new OpenTextInputWeightIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
             _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
-            ProcessRules();
+            //ProcessRules();
         }
         void ProcessRules()
         {
@@ -82,7 +81,7 @@ namespace Allax
                     }
                     OpenTextInput NextInput = Iter.NextState();
                     SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
-                    ret.Add(new Task(ws, Solver));
+                    ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver]));
                 }
                 return ret;
             }

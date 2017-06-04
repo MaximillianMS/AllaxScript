@@ -97,9 +97,8 @@ namespace Allax
     };
     class PBlock : Block
     {
-        int VarCount;
         int _length;
-        List<int> outputNumber;
+        List<int> outputNumber=new List<int>();
         public int GetOutputNumber(int InputNumber) // 
         {
             return outputNumber[InputNumber];
@@ -116,7 +115,7 @@ namespace Allax
             {
                 if (arg.Count - bias == _length)
                 {
-                    outputNumber.AddRange(Enumerable.Repeat<int>(0, _length));
+                    outputNumber.AddRange(Enumerable.Repeat(0, _length));
                     for (int i = bias; i < arg.Count; i++)
                     {
                         outputNumber[i - bias] = arg[i] - 1; // Convert from global numeration
@@ -167,7 +166,6 @@ namespace Allax
         public List<BlockState> _states;
         int VarCount;
         byte _length;
-        string BlockID = "";
         public List<List<short>> GetCorMatrix()
         {
             return CorMatrix;
@@ -221,9 +219,9 @@ namespace Allax
             {
                 if (arg.Count - bias != 0)
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
-                if (VarCount == _length)
+                if (VarCount == this._length)
                 {
-                    FuncMatrix.AddRange(Enumerable.Repeat<List<bool>>(new List<bool>(), arg.Count - bias));
+                    FuncMatrix.AddRange(Enumerable.Repeat(new List<bool>(), arg.Count - bias));
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
                     //....................
@@ -264,7 +262,6 @@ namespace Allax
         public SBlock()
         {
             _database = null;
-            BlockID = "";
             CorMatrix.Clear();
             FuncMatrix.Clear();
             VarCount = 0;
@@ -272,7 +269,6 @@ namespace Allax
         public SBlock(ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
-            BlockID = "";
             CorMatrix.Clear();
             FuncMatrix.Clear();
             VarCount = 0;
@@ -281,7 +277,6 @@ namespace Allax
         public SBlock(List<List<bool>> Matrix, SBlockDB database)
         {
             _database = database;
-            BlockID = "";
             CorMatrix.Clear();
             FuncMatrix.Clear();
             FuncMatrix = Matrix;
@@ -345,9 +340,8 @@ namespace Allax
         public SLayer(ISBlockDB db, byte block_length, byte blocks_count)
         {
             type = LayerType.SLayer;
-            Blocks.AddRange(Enumerable.Repeat<SBlock>(new SBlock(db, block_length), blocks_count));
+            Blocks.AddRange(Enumerable.Repeat(new SBlock(db, block_length), blocks_count));
         }
-        ushort ActiveBlocks; // Active Block bit mask. 16 block support in one layer. 
     }
     class PLayer : Layer
     {
@@ -420,6 +414,7 @@ namespace Allax
         public SPNet(SPNetSettings settings)
         {
             _settings = settings;
+            Layers = new List<Layer>();
         }
         public void DeleteLayer(byte number)
         {

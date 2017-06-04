@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Allax
@@ -134,7 +135,7 @@ namespace Allax
                 {
                     if (Tr.IsAlive && (Params.State == WorkerThreadState.Started))
                     {
-                        Tr.Suspend();
+                        throw new NotImplementedException();
                         Params.State = WorkerThreadState.Paused;
                     }
                 }
@@ -146,7 +147,7 @@ namespace Allax
                 {
                     if (Tr.IsAlive && (Params.State == WorkerThreadState.Paused))
                     {
-                        Tr.Resume();
+                        throw new NotImplementedException();
                         Params.State = WorkerThreadState.Started;
                     }
                 }
@@ -186,6 +187,7 @@ namespace Allax
         {
             this.Params = Params;
             Tasker = new Tasker(Params.TaskerParams);
+            TaskQueue = new ConcurrentQueue<Task>();
             CreateTheads();
         }
         void CreateTheads()
@@ -229,7 +231,6 @@ namespace Allax
         }
         public void Run()
         {
-            throw new NotImplementedException();
             AddTasks(Params.MaxThreads - TaskQueue.Count);
             if ((TaskQueue.Count != 0) && (!Tasker.IsFinished()))
             {

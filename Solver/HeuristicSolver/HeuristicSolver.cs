@@ -13,7 +13,7 @@ namespace Allax
             throw new NotImplementedException();
         }
 
-        public void Solve(SPNetWay Way, long CurrentCor)
+        public void Solve(SPNetWay Way, Prevalence P)
         {
             throw new NotImplementedException();
         }

@@ -89,9 +89,10 @@ namespace Allax
         }
         void PLayer(SPNetWay Way, int LIndex)
         {
-            var Params = new BlockStateExtrParams(Way.layers[LIndex].blocks[0].active_inputs, null, 0, 0, false);
+            var Params = new BlockStateExtrParams(Way.layers[LIndex].blocks[0].active_inputs, null,
+                                                                new Prevalence(), new Prevalence());
             var States = this.Params.Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
-            if(States.Count==1)
+            if (States.Count == 1)
             {
                 //deep copying
                 foreach (var j in Enumerable.Range(0, Way.layers[LIndex].blocks[0].active_outputs.Count))

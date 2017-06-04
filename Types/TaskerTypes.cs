@@ -15,11 +15,6 @@ namespace Allax
     }
     public struct ExtraParams
     {
-        public ExtraParams()
-        {
-            Weight = 0;
-            Time = new MultiTime();
-        }
         public int Weight;
         public MultiTime Time;
     }
