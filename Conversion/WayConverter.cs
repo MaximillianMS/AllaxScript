@@ -170,7 +170,7 @@ namespace Allax
             }
             return ret;
         }
-        public static List<bool> ToList(int Input, int length)
+        public static List<bool> ToList(long Input, int length)
         {
             List<bool> ret = new List<bool>();
             for (int i = 0; i < length; i++)

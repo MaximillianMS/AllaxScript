@@ -32,7 +32,7 @@ namespace Allax
 	{
 		public List<SPNetWayLayer> layers; // Input-Output on every layer 
 	}
-    public enum AvailableSolverTypes { BaseSolver }
+    public enum AvailableSolverTypes { BaseSolver, HeuristicSolver }
     public struct LinearAnalisysParams
     {
         public bool ASync;

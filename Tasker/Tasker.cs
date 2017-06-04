@@ -10,7 +10,7 @@ namespace Allax
 {
     public interface ITasker
     {
-        ConcurrentQueue<Task> GetTasks(int Count);
+        List<Task> GetTasks(int Count);
         void AddTask(Task T);
         void Init(TaskerParams Params);
         bool IsFinished();
@@ -38,35 +38,54 @@ namespace Allax
             this.Params = Params;
             _rounds_count = Params.Net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Params.Net);
+            Iter = new OpenTextInputWeightIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
+            _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
+            ProcessRules();
+        }
+        void ProcessRules()
+        {
+            throw new NotImplementedException();
+            var Alg = Params.LinAlg;
         }
         void InitSolvers()
         {
             Solvers = new Dictionary<AvailableSolverTypes, ISolver> {
-                { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(Params.Net, AddTask)) }
-                /*"Heuristics" : new HeuristicSolver()*/
+                { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(Params.Net, AddTask)) },
+                { AvailableSolverTypes.HeuristicSolver, new HeuristicSolver() }
             };
         }
         void AnalysePreviousTasks()
         {
             throw new NotImplementedException();
         }
-        public ConcurrentQueue<Task> GetTasks(int count)
+        public List<Task> GetTasks(int count)
         {
-            /*if (_tasks.Count != 0)
+            lock (syncRoot)
             {
-                AnalysePreviousTasks();
-            }*/
-            //REWRITE!
-            throw new NotImplementedException();
-            var ret = new ConcurrentQueue<Task>();
-            for (int i = 0; (i < count) && Iter.IsFinished(); i++)
-            {
-                OpenTextInput NextInput = Iter.NextState();
-                SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
-                ret.Enqueue(new Task(ws, 1, new ExtraParams(Solver)));
+                var ret = new List<Task>();
+                for (int i = 0; (i < count) && Iter.IsFinished(); i++)
+                {
+                    if(_tasks!=null)
+                    if (_tasks.Count > 0)
+                    {
+                        Task T;
+                        if (!_tasks.TryDequeue(out T))
+                        {
+                            Logger.UltraLogger.Instance.AddToLog("Tasker: Cant dequeue predefined tasks", Logger.MsgType.Error);
+                        }
+                        else
+                        {
+                            ret.Add(T);
+                            continue;
+                        }
+                    }
+                    OpenTextInput NextInput = Iter.NextState();
+                    SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
+                    ret.Add(new Task(ws, -1, new ExtraParams(Solver)));
+                }
+                return ret;
             }
-            return ret;
         }
 
         public bool IsFinished()
@@ -77,10 +96,40 @@ namespace Allax
     }
     class OpenTextInputWeightIterator
     {
+        int CurrentBlock;
+        int BlocksCount;
+        int BlockLength;
         List<OpenTextInputTextBlock> Blocks;
+        public OpenTextInputWeightIterator(int BlocksCount, int BlockLength)
+        {
+            this.BlocksCount = BlocksCount;
+            this.BlockLength = BlockLength;
+            if (this.BlocksCount <= 0 || this.BlockLength <= 0)
+            {
+                Logger.UltraLogger.Instance.AddToLog("OTIWIterator: Wrong init params.", Logger.MsgType.Error);
+                throw new NotImplementedException();
+            }
+            Blocks = new List<OpenTextInputTextBlock>(this.BlocksCount);
+            Blocks.AddRange(Enumerable.Repeat(new OpenTextInputTextBlock(this.BlockLength), this.BlocksCount));
+            CurrentBlock = 0;
+        }
         public OpenTextInput NextState()
         {
-            throw new NotImplementedException();
+            //lock (syncRoot)
+            {
+                if (Blocks[CurrentBlock].IsFinished())
+                {
+                    CurrentBlock++;
+                    if (CurrentBlock >= BlocksCount)
+                    {
+                        return new OpenTextInput();
+                    }
+                }
+                var CurrentBlockInput = Blocks[CurrentBlock].NextState();
+                CurrentBlockInput = CurrentBlockInput << ((BlocksCount - (CurrentBlock + 1)) * BlockLength);
+                return new OpenTextInput(CurrentBlockInput, BlockLength * BlocksCount);
+            }
+
         }
         public bool IsFinished()
         {
@@ -89,21 +138,68 @@ namespace Allax
     }
     class OpenTextInputTextBlock
     {
-        List<bool> input;
+        private object syncRoot = new object();
+        //List<bool> input;
         int weight;
         bool finished;
         int StatesPassed;
-        public List<byte> NextState()
+        int Length;
+        public void ResetState()
         {
-            throw new NotImplementedException();
+            StatesPassed = 0;
+            finished = false;
+        }
+        public OpenTextInputTextBlock(int BlockLength)
+        {
+            //input = new List<bool>(BlockLength);
+            //input.AddRange(Enumerable.Repeat(false, BlockLength));
+            Length = BlockLength;
+            StatesPassed = 0;
+            finished = false;
+        }
+        public long NextState()
+        {
+            //lock (syncRoot)
+            {
+                if (!IsFinished())
+                {
+                    //input = WayConverter.ToList(StatesPassed + 1, input.Count);
+                    StatesPassed++;
+                    return StatesPassed;
+                }
+                else
+                {
+                    //Cyclic
+                    ResetState();
+                    return NextState();
+                }
+            }
         }
         public bool IsFinished()
         {
-            throw new NotImplementedException();
+            if(StatesPassed>=(1<<Length))
+            {
+                finished = true;
+            }
+            else
+            {
+                finished = false;
+            }
+            return finished;
         }
     }
     public struct OpenTextInput
     {
+        public OpenTextInput(List<bool> Input)
+        {
+            input = Input;
+            weight = 0;
+        }
+        public OpenTextInput(long Input, int length)
+        {
+            input = WayConverter.ToList(Input, length);
+            weight = 0;
+        }
         public List<bool> input;
         public int weight;
     }

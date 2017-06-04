@@ -41,6 +41,8 @@
     <Compile Include="Interfaces\MathInterfaces.cs" />
     <Compile Include="MathScript.cs" />
     <Compile Include="Solver\BaseSolver\BaseSolver.cs" />
+    <Compile Include="Solver\HeuristicSolver\HeuristicSolver.cs" />
+    <Compile Include="Solver\ISolver.cs" />
     <Compile Include="Tasker\Tasker.cs" />
     <Compile Include="Types\MathTypes.cs" />
     <Compile Include="Types\LoggerTypes.cs" />
