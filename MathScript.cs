@@ -177,12 +177,11 @@ namespace Allax
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
             var States = new List<BlockState>();
-            var MIN = Params.MIN.ActiveBlocksCount / ((double)Params.MIN.ActiveBlocksCount);
             for (int i = 0; i < _states.Count; i++)
             {
                 var state = States[i];
-                var P = (state._cor * Params.CurrentPrevalence.Mul) / ((double)Params.CurrentPrevalence.ActiveBlocksCount + 1);
-                if ((Params.CurrentPrevalence.Mul <= 0) || (P > MIN))
+                var P = new Prevalence((state._cor * Params.CurrentPrevalence.Mul), Params.CurrentPrevalence.ActiveBlocksCount + 1);
+                if ((Params.CurrentPrevalence.Numerator == 0) || (P > Params.MIN))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {

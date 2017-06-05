@@ -1,19 +1,72 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using System.Numerics;
+using System.Diagnostics;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
     public struct Prevalence
     {
-        public Prevalence(long Mul, int ActiveBlocksCount)
+        public static explicit operator double(Prevalence P)
         {
-            this.Mul = Mul;
-            this.ActiveBlocksCount = ActiveBlocksCount;
+            return (0.5 + 0.5 * (double)());
         }
-        public long Mul;
+        public static Prevalence operator *(Prevalence L, long R)
+        {
+            var ret = L;
+            if (L.Numerator==0)
+            {
+                ret.Numerator = R;
+                Debug.Assert(L.ActiveBlocksCount == 0);
+            }
+            else
+            {
+                ret.Numerator *= R;
+            }
+            ret.ActiveBlocksCount++;
+            return ret;
+        }
+        public Prevalence(long Numerator, int ActiveBlocksCount, int BlockSize)
+        {
+            this.Numerator = Numerator;
+            this.ActiveBlocksCount = ActiveBlocksCount;
+            this.BlockSize = BlockSize;
+        }
+        public BigInteger Numerator;
         public int ActiveBlocksCount;
+        public int BlockSize;
+        public static bool operator >(Prevalence L, Prevalence R)
+        {
+            Debug.Assert(L.BlockSize == R.BlockSize);
+            if(L.ActiveBlocksCount==R.ActiveBlocksCount)
+            {
+                return L.Numerator > R.Numerator;
+            }
+            if(R.ActiveBlocksCount==0)
+            {
+                return true;
+            }
+            else
+            {
+                var tempL = L.Numerator;
+                var tempR = R.Numerator;
+                var Diff = Math.Abs(L.ActiveBlocksCount - R.ActiveBlocksCount);
+                for (int i=0;i<Diff;i++)
+                {
+                    if(Diff>0)
+                    {
+                        tempR *= 1 << L.BlockSize;
+                    }
+                    else
+                    {
+                        tempR *= 1 << L.BlockSize;
+                    }
+                }
+                return tempL > tempR;
+            }
+        }
+        public static bool operator <(Prevalence L, Prevalence R) { return R > L;  }
     }
 	public enum AnalisysType
 	{

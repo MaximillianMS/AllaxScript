@@ -8,6 +8,29 @@ namespace Allax
 {
     public static class WayConverter
     {
+        public static int SearchLastNotEmptyLayer(SPNetWay Way)
+        {
+            int index = -1;
+            for (int i = 0; i < Way.layers.Count; i++)
+            {
+                int input_sum = 0;
+                if (Way.layers[i].blocks != null)
+                    foreach (var block in Way.layers[i].blocks)
+                    {
+                        if (block.active_inputs != null)
+                            foreach (var input in block.active_inputs)
+                            {
+                                input_sum += Convert.ToInt32(input);
+                            }
+                    }
+                if (input_sum == 0)
+                {
+                    index = i - 1;
+                    break;
+                }
+            }
+            return index;
+        }
         //need to implement. True as default.
         public static bool CheckStandartNetCondition(ISPNet Net)
         {

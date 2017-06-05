@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
+    //almost static
     public class BaseSolver:ISolver
     {
         SolverParams Params;
@@ -21,28 +22,6 @@ namespace Allax
         {
             Init(Params);
         }
-        int SearchLastNotEmptyLayer(SPNetWay Way)
-        {
-            int index = -1;
-            for (int i = 0; i < Way.layers.Count; i++)
-            {
-                int input_sum = 0;
-                if (Way.layers[i].blocks != null)
-                    foreach (var block in Way.layers[i].blocks)
-                    {
-                        if (block.active_inputs != null)
-                            foreach (var input in block.active_inputs)
-                            {
-                                input_sum += Convert.ToInt32(input);
-                            }
-                    }
-                if (input_sum == 0)
-                {
-                    index = i - 1;
-                }
-            }
-            return index;
-        }
         void KLayer(SPNetWay Way, int LIndex)
         {
             var kblock = Way.layers[LIndex].blocks[0];
@@ -56,11 +35,11 @@ namespace Allax
                 var WayBlock = Way.layers[LIndex].blocks[BIndex];
                 if (WayBlock.active_inputs.All(x=>!x))
                 {
-                    continue;
+                    continue;//clear inputs, so this block was not chosen, block is not active
                 }
                 if (!WayBlock.active_outputs.All(x => !x))
                 {
-                    continue; //already solved block
+                    continue; //skip already solved block
                 }
                 var NetBlock = this.Params.Net.GetLayers()[LIndex].GetBlocks()[BIndex];
                 var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, this.Params.Net.GetMultiThreadPrevalence(), CurrentPrevalence, true);
@@ -111,7 +90,7 @@ namespace Allax
             var layersCount = Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
-            int lastNotEmptyLayerIndex = SearchLastNotEmptyLayer(Way);
+            int lastNotEmptyLayerIndex = WayConverter.SearchLastNotEmptyLayer(Way);
             #endregion
             #region FullRounds
             if ((lastNotEmptyLayerIndex >= 0) && (lastNotEmptyLayerIndex / 3 < roundsCount - 1))

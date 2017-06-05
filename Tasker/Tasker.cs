@@ -23,7 +23,8 @@ namespace Allax
         ConcurrentQueue<Task> _tasks;
         SPNetWay _tempEmptyWay;
         InputsIterator Iter;
-        Dictionary<AvailableSolverTypes, ISolver> Solvers;
+        Dictionary<AvailableSolverTypes, Solver> Solvers;
+        private bool IsBruteForceTurnedOn;
         public Tasker(TaskerParams Params)
         {
             Init(Params);
@@ -37,6 +38,7 @@ namespace Allax
             this.Params = Params;
             _rounds_count = Params.Net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Params.Net);
+            IsBruteForceTurnedOn = false;
             Iter = new InputsIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
             _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
@@ -44,22 +46,29 @@ namespace Allax
         }
         void ProcessRules()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             for(int i=0;i<Params.Alg.Rules.Count;i++)
             {
                 var Rule = Params.Alg.Rules[i];
                 if (Rule.UseCustomInput==true)
                 {
-                    var T = new Task(WayConverter.ToWay(Params.Net, Rule.Input), Solvers[Rule.SolverType]);
+                    var T = new Task(WayConverter.ToWay(Params.Net, Rule.Input), Solvers[Rule.SolverType].S);
                     _tasks.Enqueue(new Task());
+                }
+                else
+                {
+                    var S = Solvers[Rule.SolverType];
+                    S.IsUsedForBruteForce = true;
+                    Solvers[Rule.SolverType] = S;
+                    IsBruteForceTurnedOn = true;
                 }
             }
         }
         void InitSolvers()
         {
-            Solvers = new Dictionary<AvailableSolverTypes, ISolver> {
-                { AvailableSolverTypes.BaseSolver, new BaseSolver(new SolverParams(Params.Net, AddTask)) },
-                { AvailableSolverTypes.HeuristicSolver, new HeuristicSolver() }
+            Solvers = new Dictionary<AvailableSolverTypes, Solver> {
+                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver(new SolverParams(Params.Net, AddTask))) },
+                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver(new SolverParams(Params.Net, AddTask))) }
             };
         }
         void AnalysePreviousTasks()
@@ -69,7 +78,7 @@ namespace Allax
         public List<Task> GetTasks(int count)
         {
             var ret = new List<Task>();
-            for (int i = 0; (i < count) && (!Iter.IsFinished() || _tasks.Count > 0); i++)
+            for (int i = 0; (i < count) && ((!Iter.IsFinished() && IsBruteForceTurnedOn) || _tasks.Count > 0);)
             {
                 if (_tasks != null)
                     if (_tasks.Count > 0)
@@ -82,16 +91,27 @@ namespace Allax
                         else
                         {
                             ret.Add(T);
+                            i++;
                             continue;
                         }
                     }
-                SolverInputs NextInput;
-                lock (syncRoot)
+                if (IsBruteForceTurnedOn)
                 {
-                    NextInput = Iter.NextState();
+                    SolverInputs NextInput;
+                    lock (syncRoot)
+                    {
+                        NextInput = Iter.NextState();
+                    }
+                    var ws = WayConverter.ToWay(Params.Net, NextInput);
+                    foreach (var S in Solvers)
+                    {
+                        //ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver].S));
+                        if (S.Value.IsUsedForBruteForce)
+                        {
+                            _tasks.Enqueue(new Task(ws, S.Value.S));
+                        }
+                    }
                 }
-                SPNetWay ws = WayConverter.ToWay(Params.Net, NextInput);
-                ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver]));
             }
             return ret;
         }

@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-
+    struct Solver
+    {
+        public Solver(ISolver s, bool isUsedForBruteForce = false)
+        {
+            this.S = s;
+            this.IsUsedForBruteForce = isUsedForBruteForce;
+        }
+        public ISolver S;
+        public bool IsUsedForBruteForce;
+    }
     public delegate void CallbackAddTask(Task T);
     public struct MultiTime
     {
@@ -37,7 +46,7 @@ namespace Allax
         {
             this.Way = Way;
             this.Solver = Solver;
-            P = new Prevalence();
+            P = new Prevalence(0,0,Way.layers[1].blocks[0].active_inputs.Count);
             Params = new ExtraParams();
             //this.CurrentCorrelation = CurrentCorrelation;
         }
