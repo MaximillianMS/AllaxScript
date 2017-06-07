@@ -90,18 +90,25 @@ namespace Allax
         }
         public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             var ret = new List<List<short>>();
-            ret.AddRange(Enumerable.Repeat(new List<short>(), funcMatrix.Count));
+            ret.AddRange(Enumerable.Repeat(new List<short>(funcMatrix.Count), funcMatrix.Count));
             for(int a=0; a<funcMatrix.Count;a++)
             {
                 for(int b=0;b<funcMatrix.Count;b++)
                 {
                     int Counter = 0;
-                    
+                    foreach(var x in Enumerable.Range(0, funcMatrix.Count))
+                    { 
+                        if((WayConverter.ToLong(funcMatrix[x]) ^ WayConverter.ToLong(funcMatrix[x ^ a]))==b)
+                        {
+                            Counter++;
+                        }
+                    }
+                    ret[a].Add((short)Counter);
                 }
             }
-
+            return ret;
         }
     }
     abstract class Block : IBlock
@@ -226,7 +233,7 @@ namespace Allax
                 for (int col = 1; col < CorMatrix[0].Count; col++)
                 {
                     LStates.Add(new BlockState(CorMatrix[row][col], col, row, _length));
-                    DStates.Add(new BlockState(DifMatrix[row][col], col, row, _length));
+                    DStates.Add(new BlockState(DifMatrix[row][col], row, col, _length));
                 }
             }
             LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
@@ -475,7 +482,7 @@ namespace Allax
         {
             return AddSolution;
         }
-        public void PerformLinearAnalisys(AnalisysParams Params)
+        public void PerformAnalisys(AnalisysParams Params)
         {
             //throw new NotImplementedException();
             try

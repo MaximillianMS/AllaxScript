@@ -63,12 +63,33 @@ namespace Allax
                     IsBruteForceTurnedOn = true;
                 }
             }
+            //Warning! Unoptimized code!!!
+            if (IsBruteForceTurnedOn)
+            {
+                var temp = Iter;
+                SolverInputs NextInput;
+                foreach (var S in Solvers)
+                {
+                    if (S.Value.IsUsedForBruteForce)
+                    {
+                        Iter = new InputsIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
+                        while (!Iter.IsFinished())
+                        {
+                            NextInput = Iter.NextState();
+                            var ws = WayConverter.ToWay(Params.Net, NextInput);
+
+                            _tasks.Enqueue(new Task(ws, S.Value.S));
+                        }
+                    }
+                }
+                Iter = temp;
+            }
         }
         void InitSolvers()
         {
             Solvers = new Dictionary<AvailableSolverTypes, Solver> {
-                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver(new SolverParams(Params.Net, AddTask))) },
-                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver(new SolverParams(Params.Net, AddTask))) }
+                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver(new SolverParams(Params.Net, Params.Alg.Type, AddTask))) },
+                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver(new SolverParams(Params.Net, Params.Alg.Type, AddTask))) }
             };
         }
         void AnalysePreviousTasks()
@@ -78,7 +99,7 @@ namespace Allax
         public List<Task> GetTasks(int count)
         {
             var ret = new List<Task>();
-            for (int i = 0; (i < count) && ((!Iter.IsFinished() && IsBruteForceTurnedOn) || _tasks.Count > 0);)
+            for (int i = 0; (i < count) && (_tasks.Count > 0);)
             {
                 if (_tasks != null)
                     if (_tasks.Count > 0)
@@ -95,23 +116,7 @@ namespace Allax
                             continue;
                         }
                     }
-                if (IsBruteForceTurnedOn)
-                {
-                    SolverInputs NextInput;
-                    lock (syncRoot)
-                    {
-                        NextInput = Iter.NextState();
-                    }
-                    var ws = WayConverter.ToWay(Params.Net, NextInput);
-                    foreach (var S in Solvers)
-                    {
-                        //ret.Add(new Task(ws, Solvers[AvailableSolverTypes.BaseSolver].S));
-                        if (S.Value.IsUsedForBruteForce)
-                        {
-                            _tasks.Enqueue(new Task(ws, S.Value.S));
-                        }
-                    }
-                }
+
             }
             return ret;
         }
@@ -134,7 +139,7 @@ namespace Allax
             this.BlockLength = BlockLength;
             if (this.BlocksCount <= 0 || this.BlockLength <= 0)
             {
-                Logger.UltraLogger.Instance.AddToLog("OTIWIterator: Wrong init params.", Logger.MsgType.Error);
+                Logger.UltraLogger.Instance.AddToLog("Iterator: Wrong init params.", Logger.MsgType.Error);
                 throw new NotImplementedException();
             }
             Blocks = new List<InputsIteratorBlock>(this.BlocksCount);
@@ -161,7 +166,7 @@ namespace Allax
         }
         public bool IsFinished()
         {
-            throw new NotImplementedException();
+            return Enumerable.Range(0, BlocksCount).All(x => Blocks[x].IsFinished());
         }
     }
     class InputsIteratorBlock

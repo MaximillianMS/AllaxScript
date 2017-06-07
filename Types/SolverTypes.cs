@@ -8,11 +8,13 @@ namespace Allax
 {
     public struct SolverParams
     {
-        public SolverParams(ISPNet Net, CallbackAddTask AddTaskFunc)
+        public SolverParams(ISPNet Net, AnalisysType Type, CallbackAddTask AddTaskFunc)
         {
             this.Net = Net;
+            this.Type = Type;
             this.AddTaskFunc = AddTaskFunc;
         }
+        public AnalisysType Type;
         public ISPNet Net;
         public CallbackAddTask AddTaskFunc;
     }

@@ -32,7 +32,7 @@ namespace Allax
 		void AddLayer(LayerType type);
 		void DeleteLayer(byte number);
 		List<ILayer> GetLayers();	
-		void PerformLinearAnalisys(AnalisysParams Params);
+		void PerformAnalisys(AnalisysParams Params);
         SPNetSettings GetSettings();
         CallbackAddSolution GetCallbackAddSolution();
         Prevalence GetMultiThreadPrevalence();
