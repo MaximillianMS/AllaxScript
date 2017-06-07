@@ -49,11 +49,11 @@ namespace Allax
                     CurrentPrevalence.ActiveBlocksCount++;
                     if (CurrentPrevalence.Mul == 0)
                     {
-                        CurrentPrevalence.Mul = State._cor;
+                        CurrentPrevalence.Mul = State.MatrixValue;
                     }
                     else
                     {
-                        CurrentPrevalence.Mul *= State._cor;
+                        CurrentPrevalence.Mul *= State.MatrixValue;
                     }
                     NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
                     Solve(NewWay, CurrentPrevalence);

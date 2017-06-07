@@ -8,10 +8,27 @@ namespace Allax
 	public delegate bool CallbackAddSolution(Solution s);
     public struct Prevalence
     {
+        /// <summary>
+        /// This is not prevalence, this is probability already
+        /// </summary>
+        /// <param name="P">If P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0 returns 0.5</param>
         public static explicit operator double(Prevalence P)
         {
-            return (0.5 + 0.5 * (double)());
+            if(P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0)
+            {
+                return 0.5;
+            }
+            var D = BigInteger.Pow(2, P.BlockSize);
+            var GCD = BigInteger.GreatestCommonDivisor(P.Numerator, D);
+            var N = BigInteger.Divide(P.Numerator, GCD);
+            D = BigInteger.Divide(D, GCD);
+            return (0.5 + 0.5 * ((long)N)/(double)(D));
         }
+        public static explicit operator long(Prevalence P)
+        {
+            return (long)P.Numerator;
+        }
+        public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         public static Prevalence operator *(Prevalence L, long R)
         {
             var ret = L;
@@ -51,22 +68,24 @@ namespace Allax
             {
                 var tempL = L.Numerator;
                 var tempR = R.Numerator;
-                var Diff = Math.Abs(L.ActiveBlocksCount - R.ActiveBlocksCount);
+                var Mul = new BigInteger(1 << L.BlockSize);
+                var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
                 for (int i=0;i<Diff;i++)
                 {
                     if(Diff>0)
                     {
-                        tempR *= 1 << L.BlockSize;
+                        tempR *= Mul;
                     }
                     else
                     {
-                        tempR *= 1 << L.BlockSize;
+                        tempR *= Mul;
                     }
                 }
                 return tempL > tempR;
             }
         }
         public static bool operator <(Prevalence L, Prevalence R) { return R > L;  }
+
     }
 	public enum AnalisysType
 	{
@@ -123,6 +142,9 @@ namespace Allax
         public List<bool> input;
         public int weight;
     }
+    /// <summary>
+    /// If UseCustomInput = false then the chosen Solver participates in bruteforce, so Inputs isn't needed.
+    /// </summary>
     public struct Rule
     {
         public Rule(AvailableSolverTypes SolverType, SolverInputs Input=new SolverInputs(), bool UseCustomInput=false)
@@ -154,7 +176,8 @@ namespace Allax
     }
     public struct BlockStateExtrParams
     {
-        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Prevalence MIN, Prevalence CurrentPrevalence, bool CheckCorrelation=true)
+        public AnalisysType Type;
+        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Prevalence MIN, Prevalence CurrentPrevalence, AnalisysType Type, bool CheckPrevalence = true)
         {
             if (Inputs == null)
             {
@@ -166,28 +189,36 @@ namespace Allax
                 Outputs = new List<bool>();
             }
             this.Outputs = Outputs;
-            this.CheckCorrelation = CheckCorrelation;
+            this.CheckPrevalence = CheckPrevalence;
             this.CurrentPrevalence = CurrentPrevalence;
             this.MIN = MIN;
+            this.Type = Type;
         }
         public Prevalence MIN;
         public List<bool> Inputs;
         public List<bool> Outputs;
-        public bool CheckCorrelation;
+        public bool CheckPrevalence;
         public Prevalence CurrentPrevalence;
     }
     public struct BlockState
     {
-        public BlockState(Int64 cor, int inputs, int outputs, int length)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Param">Value from Cor or Dif Matrix</param>
+        /// <param name="inputs"></param>
+        /// <param name="outputs"></param>
+        /// <param name="length"></param>
+        public BlockState(Int64 MatrixValue, int inputs, int outputs, int length)
         {
             _length = length;
-            _cor = cor;
+            this.MatrixValue = MatrixValue;
             _inputs = WayConverter.ToList(inputs, _length);
             _outputs = WayConverter.ToList(outputs, _length);
         }
         public BlockState(List<bool> Inputs)
         {
-            _cor = 0;
+            MatrixValue = 0;
             if (Inputs != null)
                 _length = Inputs.Count;
             else
@@ -197,7 +228,7 @@ namespace Allax
             _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
         }
         public int _length;
-        public Int64 _cor; // Abs(value) from Matrix
+        public Int64 MatrixValue; // Abs(value) from Matrix
         public List<bool> _inputs;
         public List<bool> _outputs;
     }

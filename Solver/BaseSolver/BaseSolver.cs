@@ -51,15 +51,7 @@ namespace Allax
                     var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
-                    CurrentPrevalence.ActiveBlocksCount++;
-                    if (CurrentPrevalence.Mul == 0)
-                    {
-                        CurrentPrevalence.Mul = State._cor;
-                    }
-                    else
-                    {
-                        CurrentPrevalence.Mul *= State._cor;
-                    }
+                    CurrentPrevalence *= State.MatrixValue;
                     NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
                     Solve(NewWay, CurrentPrevalence);
                 }

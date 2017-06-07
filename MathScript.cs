@@ -73,10 +73,9 @@ namespace Allax
         }
         public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
-            int LinCombo = 0;
             var CorMatrix = new List<List<short>>();
-            CorMatrix.AddRange(Enumerable.Repeat<List<short>>(new List<short>(), funcMatrix.Count));
-            for (LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
+            CorMatrix.AddRange(Enumerable.Repeat(new List<short>(), funcMatrix.Count));
+            for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
                 var f_spectrum = new List<short>();
@@ -88,6 +87,21 @@ namespace Allax
                 CorMatrix[LinCombo] = f_spectrum;
             }
             return CorMatrix;
+        }
+        public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
+        {
+            throw new NotImplementedException();
+            var ret = new List<List<short>>();
+            ret.AddRange(Enumerable.Repeat(new List<short>(), funcMatrix.Count));
+            for(int a=0; a<funcMatrix.Count;a++)
+            {
+                for(int b=0;b<funcMatrix.Count;b++)
+                {
+                    int Counter = 0;
+                    
+                }
+            }
+
         }
     }
     abstract class Block : IBlock
@@ -162,8 +176,10 @@ namespace Allax
     {
         ISBlockDB _database;
         List<List<short>> CorMatrix;
+        List<List<short>> DifMatrix;
         List<List<bool>> FuncMatrix;
-        public List<BlockState> _states;
+        public List<BlockState> LStates;
+        public List<BlockState> DStates;
         int VarCount;
         byte _length;
         public List<List<short>> GetCorMatrix()
@@ -174,18 +190,24 @@ namespace Allax
         {
             return FuncMatrix;
         }
+        public List<List<short>> GetDifMatrix()
+        {
+            return DifMatrix;
+        }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
-            var States = new List<BlockState>();
-            for (int i = 0; i < _states.Count; i++)
+            var ret = new List<BlockState>();
+            var States = (Params.Type == AnalisysType.Linear) ? LStates : DStates;
+            var Count = States.Count;
+            for (int i = 0; i < Count; i++)
             {
                 var state = States[i];
-                var P = new Prevalence((state._cor * Params.CurrentPrevalence.Mul), Params.CurrentPrevalence.ActiveBlocksCount + 1);
-                if ((Params.CurrentPrevalence.Numerator == 0) || (P > Params.MIN))
+                var P = state.MatrixValue * Params.CurrentPrevalence;
+                if ((Params.CurrentPrevalence.Numerator == 0) || ((P > Params.MIN) || (!Params.CheckPrevalence)))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
-                        States.Add(state);
+                        ret.Add(state);
                     }
                 }
                 else
@@ -193,19 +215,22 @@ namespace Allax
                     break;
                 }
             }
-            return States;
+            return ret;
         }
         public void Sort()
         {
-            _states = new List<BlockState>(1 << (2 * VarCount));
+            LStates = new List<BlockState>(1 << (2 * VarCount));
+            DStates = new List<BlockState>(1 << (2 * VarCount));
             for (int row = 1; row < CorMatrix.Count; row++)
             {
                 for (int col = 1; col < CorMatrix[0].Count; col++)
                 {
-                    _states.Add(new BlockState(Math.Abs(CorMatrix[row][col]), col, row, _length));
+                    LStates.Add(new BlockState(CorMatrix[row][col], col, row, _length));
+                    DStates.Add(new BlockState(DifMatrix[row][col], col, row, _length));
                 }
             }
-            _states = _states.OrderByDescending(o => Math.Abs(o._cor)).ToList();
+            LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+            DStates = DStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
         }
         short GetCorrelation(int inputs, int outputs)
         {
@@ -220,7 +245,7 @@ namespace Allax
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
                 if (VarCount == this._length)
                 {
-                    FuncMatrix.AddRange(Enumerable.Repeat(new List<bool>(), arg.Count - bias));
+                    FuncMatrix.AddRange(Enumerable.Repeat(new List<bool>(VarCount), arg.Count - bias));
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
                     //....................
@@ -240,12 +265,13 @@ namespace Allax
                             }
                         }
                     }
-                    if (_database != null)
-                        CorMatrix = _database.GetCorMatrix(FuncMatrix);
-                    else
+                    if (_database == null)
                     {
                         _database = new SBlockDB();
                     }
+
+                    CorMatrix = _database.GetCorMatrix(FuncMatrix);
+                    DifMatrix = _database.GetDifMatrix(FuncMatrix);
                     Sort();
                 }
                 else
@@ -270,6 +296,7 @@ namespace Allax
             _database = database;
             CorMatrix.Clear();
             FuncMatrix.Clear();
+            DifMatrix.Clear();
             VarCount = 0;
             _length = block_length;
         }
