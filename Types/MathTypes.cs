@@ -120,7 +120,7 @@ namespace Allax
         public bool ASync;
         public Algorithm Alg;
         public CallbackAddSolution AddSolution;
-        AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution)
+        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution)
         {
             ASync = true;
             this.Alg = Alg;

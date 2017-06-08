@@ -7,6 +7,7 @@ namespace AllaxScript
 {
     public class Program
     {
+        private object syncRoot = new object();
         public static void Main()
         {
             Allax.IEngine E= new Engine();
@@ -19,6 +20,21 @@ namespace AllaxScript
             foreach(var B in Net.GetLayers()[1].GetBlocks())
             {
                 B.Init(SBlockInit);
+            }
+            var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
+            Net.GetLayers()[2].GetBlocks()[0].Init(PBlockInit);
+            var R1 = new Rule(AvailableSolverTypes.BaseSolver);
+            var R2 = new Rule(AvailableSolverTypes.HeuristicSolver);
+            var AP = new AnalisysParams(new Algorithm(, MyAddSolution);
+
+            Net.PerformAnalisys(new AnalisysParams());
+        }
+        void MyAddSolution(Solution S)
+        {
+            lock(syncRoot)
+            {
+                var W = S.Way;
+                var P = S.P;
             }
         }
         static void AddFullRound(Allax.ISPNet Net)
