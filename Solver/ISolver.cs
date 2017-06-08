@@ -8,7 +8,7 @@ namespace Allax
 {
     public interface ISolver
     {
-        void Init(SolverParams Params);
-        void Solve(SPNetWay Way, Prevalence CurrentPrevalence);
+        //void Init(SolverParams Params);
+        void Solve(SolverParams SolParams);
     }
 }

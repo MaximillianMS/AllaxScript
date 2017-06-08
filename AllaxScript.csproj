@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A7240CD1-B08D-43D0-9685-9B5741DCF221}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AllaxScript</RootNamespace>
     <AssemblyName>AllaxScript</AssemblyName>
@@ -48,6 +48,7 @@
     <Compile Include="Solver\HeuristicSolver\HeuristicSolver.cs" />
     <Compile Include="Solver\ISolver.cs" />
     <Compile Include="Tasker\Tasker.cs" />
+    <Compile Include="TESTING.cs" />
     <Compile Include="Types\MathTypes.cs" />
     <Compile Include="Types\LoggerTypes.cs" />
     <Compile Include="Types\SolverTypes.cs" />

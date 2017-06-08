@@ -9,68 +9,75 @@ namespace Allax
     //almost static
     public class BaseSolver:ISolver
     {
-        SolverParams Params;
-        public virtual void Init(SolverParams Params)
+        //SolverParams Params;
+//         public virtual void Init(SolverParams Params)
+//         {
+//             this.Params = Params;
+//         }
+//         /// <summary>
+//         /// Automatically calls "init" func
+//         /// </summary>
+//         /// <param name="Params"></param>
+//         public BaseSolver(SolverParams Params)
+//         {
+//             Init(Params);
+//         }
+        protected virtual void KLayer(SolverParams SolParams, int LIndex)
         {
-            this.Params = Params;
-        }
-        /// <summary>
-        /// Automatically calls "init" func
-        /// </summary>
-        /// <param name="Params"></param>
-        public BaseSolver(SolverParams Params)
-        {
-            Init(Params);
-        }
-        protected virtual void KLayer(SPNetWay Way, int LIndex)
-        {
-            var kblock = Way.layers[LIndex].blocks[0];
+            var kblock = SolParams.Way.layers[LIndex].blocks[0];
             kblock.active_outputs = kblock.active_inputs;
-            Way.layers[LIndex].blocks[0] = kblock;
+            SolParams.Way.layers[LIndex].blocks[0] = kblock;
         }
-        protected virtual bool SLayer(SPNetWay Way, int LIndex, ref Prevalence CurrentPrevalence, int BIndex=0)
+        protected virtual bool SLayer(SolverParams SolParams, int LIndex, int BIndex=0)
         {
-            bool ret = true;
-            for (; BIndex < Way.layers[LIndex].blocks.Count; BIndex++)
+            bool ret = true; //just checking mode
+            int ActiveBlocksCount = 0;
+            for (; BIndex < SolParams.Way.layers[LIndex].blocks.Count; BIndex++)
             {
-                var WayBlock = Way.layers[LIndex].blocks[BIndex];
+                var WayBlock = SolParams.Way.layers[LIndex].blocks[BIndex];
                 if (WayBlock.active_inputs.All(x=>!x))
                 {
                     continue;//clear inputs, so this block was not chosen, block is not active
                 }
                 if (!WayBlock.active_outputs.All(x => !x))
                 {
+                    ActiveBlocksCount++;
                     continue; //skip already solved block
                 }
-                ret = false;//producing new solves
-                var NetBlock = this.Params.Net.GetLayers()[LIndex].GetBlocks()[BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, this.Params.Net.GetMultiThreadPrevalence(), CurrentPrevalence, this.Params.Type, true);
+                ret = false;//producing new solves mode
+                if(ActiveBlocksCount+1>=SolParams.MaxActiveBlocksOnLayer)
+                {
+                    break;
+                }
+                var NetBlock = SolParams.Net.GetLayers()[LIndex].GetBlocks()[BIndex];
+                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Net.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 for(int i=0;i<States.Count;i++)
                 {
                     var State = States[i];
-                    var NewWay = WayConverter.CloneWay(Way);
+                    var NewWay = WayConverter.CloneWay(SolParams.Way);
                     var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
-                    CurrentPrevalence *= State.MatrixValue;
+                    SolParams.P *= State.MatrixValue;
                     NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
-                    Solve(NewWay, CurrentPrevalence);
+                    SolParams.Way = NewWay;
+                    Solve(SolParams);
                 }
             }
             return ret;
         }
-        protected virtual void PLayer(SPNetWay Way, int LIndex)
+        protected virtual void PLayer(SolverParams SolParams, int LIndex)
         {
-            var Params = new BlockStateExtrParams(Way.layers[LIndex].blocks[0].active_inputs, null,
-                                                                new Prevalence(), new Prevalence(), this.Params.Type);
-            var States = this.Params.Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
+            var Params = new BlockStateExtrParams(SolParams.Way.layers[LIndex].blocks[0].active_inputs, null,
+                                                                new Prevalence(), new Prevalence(), SolParams.Type);
+            var States = SolParams.Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if (States.Count == 1)
             {
                 //deep copying
-                foreach (var j in Enumerable.Range(0, Way.layers[LIndex].blocks[0].active_outputs.Count))
+                foreach (var j in Enumerable.Range(0, SolParams.Way.layers[LIndex].blocks[0].active_outputs.Count))
                 {
-                    Way.layers[LIndex].blocks[0].active_outputs[j] = States[0]._outputs[j];
+                   SolParams.Way.layers[LIndex].blocks[0].active_outputs[j] = States[0]._outputs[j];
                 }
             }
             else
@@ -79,12 +86,12 @@ namespace Allax
                 throw new NotImplementedException();
             }
         }
-        public virtual void Solve(SPNetWay Way, Prevalence CurrentPrevalence)
+        public virtual void Solve(SolverParams SolParams)
         {
-            var layersCount = Way.layers.Count();
+            var layersCount = SolParams.Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
-            int lastNotEmptyLayerIndex = WayConverter.SearchLastNotEmptyLayer(Way);
+            int lastNotEmptyLayerIndex = WayConverter.SearchLastNotEmptyLayer(SolParams.Way);
             #endregion
             #region FullRounds
             if ((lastNotEmptyLayerIndex >= 0) && (lastNotEmptyLayerIndex / 3 < roundsCount - 1))
@@ -92,29 +99,29 @@ namespace Allax
                 for (int i = lastNotEmptyLayerIndex / 3; i < roundsCount - 1; i++)
                 {
                     #region K-layer
-                    if (Way.layers[i].type==LayerType.KLayer)
+                    if (SolParams.Way.layers[i].type==LayerType.KLayer)
                     {
-                        KLayer(Way, lastNotEmptyLayerIndex);
-                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        KLayer(SolParams, lastNotEmptyLayerIndex);
+                        WayConverter.CopyOutToIn(SolParams.Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
                     #region S-layer
-                    if (Way.layers[i].type == LayerType.SLayer)
+                    if (SolParams.Way.layers[i].type == LayerType.SLayer)
                     {
-                        if (!SLayer(Way, lastNotEmptyLayerIndex, ref CurrentPrevalence))
+                        if (!(SLayer(SolParams, lastNotEmptyLayerIndex)))
                         {
                             return;
                         }
-                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        WayConverter.CopyOutToIn(SolParams.Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
                     #region P-layer
-                    if (Way.layers[i].type == LayerType.PLayer)
+                    if (SolParams.Way.layers[i].type == LayerType.PLayer)
                     {
-                        PLayer(Way, lastNotEmptyLayerIndex);
-                        WayConverter.CopyOutToIn(Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
+                        PLayer(SolParams, lastNotEmptyLayerIndex);
+                        WayConverter.CopyOutToIn(SolParams.Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
                         lastNotEmptyLayerIndex++;
                     }
                     #endregion
@@ -124,7 +131,7 @@ namespace Allax
             #region LastRound
             //No need to process LastRound, because LastRound must be reversed.
             #endregion
-            Params.Net.GetCallbackAddSolution()(new Solution(CurrentPrevalence, Way));
+            SolParams.Net.GetCallbackAddSolution()(new Solution(SolParams.P, SolParams.Way));
         }
     }
 }

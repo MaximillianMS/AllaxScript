@@ -52,13 +52,15 @@ namespace Allax
                 var Rule = Params.Alg.Rules[i];
                 if (Rule.UseCustomInput==true)
                 {
-                    var T = new Task(WayConverter.ToWay(Params.Net, Rule.Input), Solvers[Rule.SolverType].S);
+                    var SolParam = new SolverParams(WayConverter.ToWay(Params.Net, Rule.Input), Params.Net, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
+                    var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
                     _tasks.Enqueue(new Task());
                 }
                 else
                 {
                     var S = Solvers[Rule.SolverType];
                     S.IsUsedForBruteForce = true;
+                    S.MaxActiveBlocksOnLayer = Rule.MaxActiveBlocksOnLayer;
                     Solvers[Rule.SolverType] = S;
                     IsBruteForceTurnedOn = true;
                 }
@@ -78,7 +80,7 @@ namespace Allax
                             NextInput = Iter.NextState();
                             var ws = WayConverter.ToWay(Params.Net, NextInput);
 
-                            _tasks.Enqueue(new Task(ws, S.Value.S));
+                            _tasks.Enqueue(new Task(S.Value.S, new SolverParams(ws, Params.Net, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
                         }
                     }
                 }
@@ -88,8 +90,8 @@ namespace Allax
         void InitSolvers()
         {
             Solvers = new Dictionary<AvailableSolverTypes, Solver> {
-                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver(new SolverParams(Params.Net, Params.Alg.Type, AddTask))) },
-                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver(new SolverParams(Params.Net, Params.Alg.Type, AddTask))) }
+                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver()) },
+                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver()) }
             };
         }
         void AnalysePreviousTasks()
@@ -143,7 +145,7 @@ namespace Allax
                 throw new NotImplementedException();
             }
             Blocks = new List<InputsIteratorBlock>(this.BlocksCount);
-            Blocks.AddRange(Enumerable.Repeat(new InputsIteratorBlock(this.BlockLength), this.BlocksCount));
+            Blocks.AddRange(Enumerable.Repeat(0, this.BlocksCount).Select(i=> new InputsIteratorBlock(this.BlockLength)).ToList());
             CurrentBlock = 0;
         }
         public SolverInputs NextState()

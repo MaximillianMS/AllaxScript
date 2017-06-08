@@ -8,13 +8,15 @@ namespace Allax
 {
     struct Solver
     {
-        public Solver(ISolver s, bool isUsedForBruteForce = false)
+        public Solver(ISolver s, bool isUsedForBruteForce = false, int MaxActiveBlocksOnLayer = 2)
         {
+            this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.S = s;
             this.IsUsedForBruteForce = isUsedForBruteForce;
         }
         public ISolver S;
         public bool IsUsedForBruteForce;
+        public int MaxActiveBlocksOnLayer;
     }
     public delegate void CallbackAddTask(Task T);
     public struct MultiTime
@@ -24,35 +26,53 @@ namespace Allax
     }
     public struct ExtraParams
     {
+        public ExtraParams(int Weight = 0)
+        {
+            this.Weight = Weight;
+            //this.Time = Time;
+        }
         public int Weight;
-        public MultiTime Time;
+        //public MultiTime Time;
     }
     public struct Task
     {
-        SPNetWay Way;
         public ISolver Solver;
         //long CurrentCorrelation;
         ExtraParams Params;
-        Prevalence P;
-        public Task(SPNetWay Way, ISolver Solver, Prevalence P, ExtraParams Params)
+        SolverParams SolParams;
+        public Task(ISolver Solver, SolverParams SolParams, ExtraParams Params)
         {
-            this.Way = Way;
             this.Solver = Solver;
-            this.P = P;
+            this.SolParams = SolParams;
             this.Params = Params;
             //this.CurrentCorrelation = CurrentCorrelation;
         }
-        public Task(SPNetWay Way, ISolver Solver)
+        public Task(ISolver Solver, SolverParams SolParams)
         {
-            this.Way = Way;
             this.Solver = Solver;
-            P = new Prevalence(0,0,Way.layers[1].blocks[0].active_inputs.Count);
-            Params = new ExtraParams();
+            this.SolParams = SolParams;
+            this.Params = new ExtraParams();
             //this.CurrentCorrelation = CurrentCorrelation;
         }
+        //         public Task(SPNetWay Way, ISolver Solver, ExtraParams Params)
+        //         {
+        //             this.Way = Way;
+        //             this.Solver = Solver;
+        //             this.P = new Prevalence(0, 0, Way.layers[1].blocks[0].active_inputs.Count);
+        //             this.Params = Params;
+        //             //this.CurrentCorrelation = CurrentCorrelation;
+        //         }
+        //         public Task(SPNetWay Way, ISolver Solver)
+        //         {
+        //             this.Way = Way;
+        //             this.Solver = Solver;
+        //             P = new Prevalence(0,0,Way.layers[1].blocks[0].active_inputs.Count);
+        //             Params = new ExtraParams();
+        //             //this.CurrentCorrelation = CurrentCorrelation;
+        //         }
         public void Exec()
         {
-            Solver.Solve(WayConverter.CloneWay(Way), P);
+            Solver.Solve(SolParams);
         }
     }
     public struct TaskerParams

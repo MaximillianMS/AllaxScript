@@ -147,12 +147,14 @@ namespace Allax
     /// </summary>
     public struct Rule
     {
-        public Rule(AvailableSolverTypes SolverType, SolverInputs Input=new SolverInputs(), bool UseCustomInput=false)
+        public Rule(AvailableSolverTypes SolverType, SolverInputs Input=new SolverInputs(), int MaxActiveBlocksOnLayer = 2, bool UseCustomInput=false)
         {
+            this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.SolverType = SolverType;
             this.Input = Input;
             this.UseCustomInput = UseCustomInput;
         }
+        public int MaxActiveBlocksOnLayer;
         public AvailableSolverTypes SolverType;
         public bool UseCustomInput;
         public SolverInputs Input;
@@ -169,8 +171,14 @@ namespace Allax
     }
     public struct SPNetSettings
 	{
+        public SPNetSettings(byte WordLength, byte SBlockCount, ISBlockDB DB)
+        {
+            this.word_length = WordLength;
+            this.sblock_count = SBlockCount;
+            this.db = DB;
+        }
 		public byte word_length;
-		public byte round_count;
+		//public byte round_count;
 		public byte sblock_count;
 		public ISBlockDB db;
     }

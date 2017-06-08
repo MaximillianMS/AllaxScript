@@ -62,7 +62,7 @@ namespace Allax
                 {
                     for (int j = 0; j < funcMatrix[0].Count; j++)
                     {
-                        if ((LinCombo & (1 << (funcMatrix.Count - 1 - j))) != 0)
+                        if ((LinCombo & (1 << (funcMatrix[0].Count - 1 - j))) != 0)
                             combo[i] += (short)((funcMatrix[i][j]) ? 1 : 0);
                     }
                     combo[i] = (short)(combo[i] & 1);
@@ -71,17 +71,26 @@ namespace Allax
             }
             return null;
         }
+        List<short> GetFuncAnalog(List<short> func)
+        {
+            var ret = new List<short>(func.Count);
+            for(int i=0;i<func.Count;i++)
+            {
+                ret.Add((short)((func[i] == 0) ? 1 : -1));
+            }
+            return ret;
+        }
         public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
             var CorMatrix = new List<List<short>>();
-            CorMatrix.AddRange(Enumerable.Repeat(new List<short>(), funcMatrix.Count));
+            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>()).ToList());
             for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
                 var f_spectrum = new List<short>();
                 if (!FuncDB.TryGetValue(CorMatrix[LinCombo], out f_spectrum))
                 {
-                    f_spectrum = FourierTransform(CorMatrix[LinCombo]);
+                    f_spectrum = FourierTransform(GetFuncAnalog(CorMatrix[LinCombo]));
                     AddToFuncDB(CorMatrix[LinCombo], f_spectrum);
                 }
                 CorMatrix[LinCombo] = f_spectrum;
@@ -92,7 +101,7 @@ namespace Allax
         {
             //throw new NotImplementedException();
             var ret = new List<List<short>>();
-            ret.AddRange(Enumerable.Repeat(new List<short>(funcMatrix.Count), funcMatrix.Count));
+            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
             for(int a=0; a<funcMatrix.Count;a++)
             {
                 for(int b=0;b<funcMatrix.Count;b++)
@@ -252,7 +261,7 @@ namespace Allax
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
                 if (VarCount == this._length)
                 {
-                    FuncMatrix.AddRange(Enumerable.Repeat(new List<bool>(VarCount), arg.Count - bias));
+                    FuncMatrix.AddRange(Enumerable.Range(0, arg.Count - bias).Select(i=>new List<bool>(VarCount).ToList()));
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
                     //....................
@@ -301,9 +310,24 @@ namespace Allax
         public SBlock(ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
+            if(CorMatrix!=null)
             CorMatrix.Clear();
+            else
+            {
+                CorMatrix = new List<List<short>>();
+            }
+            if(FuncMatrix!=null)
             FuncMatrix.Clear();
+            else
+            {
+                FuncMatrix = new List<List<bool>>();
+            }
+            if(DifMatrix!=null)
             DifMatrix.Clear();
+            else
+            {
+                DifMatrix = new List<List<short>>();
+            }
             VarCount = 0;
             _length = block_length;
         }
@@ -373,7 +397,8 @@ namespace Allax
         public SLayer(ISBlockDB db, byte block_length, byte blocks_count)
         {
             type = LayerType.SLayer;
-            Blocks.AddRange(Enumerable.Repeat(new SBlock(db, block_length), blocks_count));
+            Blocks = new List<Block>(blocks_count);
+            Blocks.AddRange(Enumerable.Range(0, blocks_count).Select(i=>new SBlock(db, block_length)).ToList());
         }
     }
     class PLayer : Layer
@@ -381,6 +406,7 @@ namespace Allax
         public PLayer(byte word_length)
         {
             type = LayerType.PLayer;
+            Blocks = new List<Block>(1);
             Blocks.Add(new PBlock(word_length));
         }
         int GetOutputNumber(int InputNumber) // Global Numeration 1-16
