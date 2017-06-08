@@ -515,7 +515,9 @@ namespace Allax
             {
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
-                _worker = new Worker(new WorkerParams(Environment.ProcessorCount, TaskerParams));
+                var WP = new WorkerParams(Environment.ProcessorCount, TaskerParams);
+                _worker = new Worker(WP);
+                ;
                 if (!Params.ASync)
                 {
                     _worker.Run();

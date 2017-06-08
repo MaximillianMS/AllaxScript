@@ -49,9 +49,9 @@ namespace Allax
                 {
                     var tmp = new SPNetWayLayer();
                     tmp.type = Layers[i].GetLayerType();
+                    tmp.blocks = new List<SPNetWayBlock>();
                     if (tmp.type != LayerType.SLayer)
                     {
-                        tmp.blocks = new List<SPNetWayBlock>();
                         var tmp_block = new SPNetWayBlock();
                         tmp_block.active_inputs = new List<bool>();
                         tmp_block.active_outputs = new List<bool>();

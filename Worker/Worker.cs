@@ -46,6 +46,7 @@ namespace Allax
 
             public WorkerThread(int ExternalId)
             {
+                if(Tr!=null)
                 Tr.Abort();
                 Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
                 ID = ExternalId;
@@ -173,7 +174,8 @@ namespace Allax
 
         ~Worker()
         {
-            foreach(var T in Threads)
+            if(Threads!=null)
+            foreach (var T in Threads)
             {
                 T.Abort();
             }
