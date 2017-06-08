@@ -99,6 +99,7 @@ namespace Allax
                     tmp_layer.type = Way.layers[i].type;
                     if (Way.layers[i].blocks != null)
                     {
+                        tmp_layer.blocks = new List<SPNetWayBlock>(Way.layers[i].blocks.Count);
                         for (int j = 0; j < Way.layers[i].blocks.Count; j++)
                         {
                             var tmp_block = new SPNetWayBlock();

@@ -42,6 +42,10 @@ namespace AllaxScript
             var F = new Allax.CallbackAddSolution(OUT.MyAddSolution);
             var AP = new AnalisysParams(new Algorithm(new List<Rule> { R1, R2 }, AnalisysType.Linear), F);
             Net.PerformAnalisys(AP);
+            while(true)
+            {
+                ;
+            }
         }
 
         static void AddFullRound(Allax.ISPNet Net)

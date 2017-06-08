@@ -493,7 +493,6 @@ namespace Allax
                     {
                         var layer = new SLayer(_settings.db, (byte)(_settings.word_length / _settings.sblock_count), _settings.sblock_count);
                         AddLayer(layer);
-
                         break;
                     }
                 case LayerType.PLayer:
@@ -515,7 +514,7 @@ namespace Allax
             {
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
-                var WP = new WorkerParams(Environment.ProcessorCount, TaskerParams);
+                var WP = new WorkerParams(1, TaskerParams);
                 _worker = new Worker(WP);
                 ;
                 if (!Params.ASync)
