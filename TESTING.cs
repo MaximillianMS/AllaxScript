@@ -20,9 +20,14 @@ namespace AllaxScript
     }
     public class Program
     {
-
+        static void CheckSMTH()
+        {
+            
+            ;
+        }
         public static void Main()
         {
+            CheckSMTH();
             Allax.IEngine E= new Engine();
             var OUT = new OutPut();
             var SBDB = E.GetSBlockDBInstance();
@@ -40,12 +45,9 @@ namespace AllaxScript
             var R1 = new Rule(AvailableSolverTypes.BaseSolver);
             var R2 = new Rule(AvailableSolverTypes.HeuristicSolver);
             var F = new Allax.CallbackAddSolution(OUT.MyAddSolution);
-            var AP = new AnalisysParams(new Algorithm(new List<Rule> { R1, R2 }, AnalisysType.Linear), F);
+            var AP = new AnalisysParams(new Algorithm(new List<Rule> { R1, R2 }, AnalisysType.Linear), F, 1);
             Net.PerformAnalisys(AP);
-            while(true)
-            {
-                ;
-            }
+            Console.ReadLine();
         }
 
         static void AddFullRound(Allax.ISPNet Net)

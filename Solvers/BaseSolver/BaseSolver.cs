@@ -9,19 +9,6 @@ namespace Allax
     //almost static
     public class BaseSolver:ISolver
     {
-        //SolverParams Params;
-//         public virtual void Init(SolverParams Params)
-//         {
-//             this.Params = Params;
-//         }
-//         /// <summary>
-//         /// Automatically calls "init" func
-//         /// </summary>
-//         /// <param name="Params"></param>
-//         public BaseSolver(SolverParams Params)
-//         {
-//             Init(Params);
-//         }
         protected virtual void KLayer(SolverParams SolParams, int LIndex)
         {
             var kblock = SolParams.Way.layers[LIndex].blocks[0];
@@ -60,7 +47,6 @@ namespace Allax
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
                     SolParams.P *= State.MatrixValue;
-                    NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
                     SolParams.Way = NewWay;
                     Solve(SolParams);
                 }
@@ -99,7 +85,7 @@ namespace Allax
                 for (int i = lastNotEmptyLayerIndex / 3; i < roundsCount - 1; i++)
                 {
                     #region K-layer
-                    if (SolParams.Way.layers[i].type==LayerType.KLayer)
+                    if (SolParams.Way.layers[lastNotEmptyLayerIndex].type==LayerType.KLayer)
                     {
                         KLayer(SolParams, lastNotEmptyLayerIndex);
                         WayConverter.CopyOutToIn(SolParams.Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
@@ -107,7 +93,7 @@ namespace Allax
                     }
                     #endregion
                     #region S-layer
-                    if (SolParams.Way.layers[i].type == LayerType.SLayer)
+                    if (SolParams.Way.layers[lastNotEmptyLayerIndex].type == LayerType.SLayer)
                     {
                         if (!(SLayer(SolParams, lastNotEmptyLayerIndex)))
                         {
@@ -118,7 +104,7 @@ namespace Allax
                     }
                     #endregion
                     #region P-layer
-                    if (SolParams.Way.layers[i].type == LayerType.PLayer)
+                    if (SolParams.Way.layers[lastNotEmptyLayerIndex].type == LayerType.PLayer)
                     {
                         PLayer(SolParams, lastNotEmptyLayerIndex);
                         WayConverter.CopyOutToIn(SolParams.Way, lastNotEmptyLayerIndex, lastNotEmptyLayerIndex + 1);
@@ -132,6 +118,10 @@ namespace Allax
             //No need to process LastRound, because LastRound must be reversed.
             #endregion
             SolParams.Net.GetCallbackAddSolution()(new Solution(SolParams.P, SolParams.Way));
+            if (SolParams.P > SolParams.Net.GetMultiThreadPrevalence())
+            {
+                SolParams.Net.SetMultiThreadPrevalence(SolParams.P);
+            }
         }
     }
 }

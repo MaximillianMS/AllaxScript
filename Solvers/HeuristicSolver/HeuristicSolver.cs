@@ -8,15 +8,6 @@ namespace Allax
 {
     class HeuristicSolver : BaseSolver
     {
-        //         SolverParams Params;
-        //         public override void Init(SolverParams Params)
-        //         {
-        //             this.Params = Params;
-        //         }
-        //         public HeuristicSolver(SolverParams Params):base(Params)
-        //         {
-        //             Init(Params);
-        //         }
         protected override bool SLayer(SolverParams SolParams, int LIndex, int BIndex = 0)
         {
             var ret = true;
@@ -49,7 +40,6 @@ namespace Allax
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
                     SolParams.P *= State.MatrixValue;
-                    NewWay.layers[LIndex].blocks[BIndex] = WayBlock;
                     SolParams.Way = NewWay;
                     Solve(SolParams);
                 }

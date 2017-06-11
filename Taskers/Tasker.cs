@@ -8,13 +8,6 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public interface ITasker
-    {
-        List<Task> GetTasks(int Count);
-        void AddTask(Task T);
-        void Init(TaskerParams Params);
-        bool IsFinished();
-    }
     public class Tasker:ITasker
     {
         private object syncRoot = new object();
@@ -173,7 +166,7 @@ namespace Allax
     }
     class InputsIteratorBlock
     {
-        private object syncRoot = new object();
+        //private object syncRoot = new object();
         //List<bool> input;
         int weight;
         bool finished;

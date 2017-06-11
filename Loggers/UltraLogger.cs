@@ -14,7 +14,7 @@ namespace Allax.Logger
         System.Collections.Concurrent.ConcurrentBag<Note> Notes = new System.Collections.Concurrent.ConcurrentBag<Note>();
         private static volatile UltraLogger instance;
         private UltraLogger() { }
-        private static object syncRoot = new object();
+        private static readonly object syncRoot = new object();
         public static UltraLogger Instance
         {
             get

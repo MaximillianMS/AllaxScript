@@ -219,7 +219,7 @@ namespace Allax
             {
                 var state = States[i];
                 var P = state.MatrixValue * Params.CurrentPrevalence;
-                if ((Params.CurrentPrevalence.Numerator == 0) || ((P > Params.MIN) || (!Params.CheckPrevalence)))
+                if ((Params.CurrentPrevalence.Numerator == 0) || (state.MatrixValue == 0) || ((P >= Params.MIN) || (!Params.CheckPrevalence)))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
@@ -435,7 +435,7 @@ namespace Allax
         private static Prevalence MultiThreadParam1; //correlation
         private static long MultiThreadParam2;
         private static double MultiThreadParam3;
-        private object syncRoot = new object();
+        private static readonly object syncRoot = new object();
         public Prevalence GetMultiThreadPrevalence()
         {
             lock(syncRoot)
@@ -516,7 +516,6 @@ namespace Allax
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 var WP = new WorkerParams(1, TaskerParams);
                 _worker = new Worker(WP);
-                ;
                 if (!Params.ASync)
                 {
                     _worker.Run();

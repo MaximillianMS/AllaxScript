@@ -9,26 +9,66 @@ namespace Allax
     public struct Prevalence
     {
         /// <summary>
-        /// This is not prevalence, this is probability already
+        /// This is not prevalence, this is probability already.
+        /// To get prevalence subtract 0.5.
+        /// To get delta multiply doubled prevalence(!) by 2.
         /// </summary>
         /// <param name="P">If P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0 returns 0.5</param>
         public static explicit operator double(Prevalence P)
         {
-            if(P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0)
+            if (P.BlockSize == 0 || P.ActiveBlocksCount == 0 || P.Numerator == 0)
             {
                 return 0.5;
             }
-            var D = BigInteger.Pow(2, P.BlockSize);
+            var Mul = new BigInteger(1 << P.BlockSize);
+            var D = BigInteger.Pow(Mul, P.ActiveBlocksCount);
             var GCD = BigInteger.GreatestCommonDivisor(P.Numerator, D);
             var N = BigInteger.Divide(P.Numerator, GCD);
             D = BigInteger.Divide(D, GCD);
-            return (0.5 + 0.5 * ((long)N)/(double)(D));
+            return 0.5 * ((long)N) / (double)(D);
         }
-        public static explicit operator long(Prevalence P)
+        /// <summary>
+        /// If P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0 returns 0.5.
+        /// </summary>
+        /// <returns></returns>
+        public double ToProbability()
         {
-            return (long)P.Numerator;
+            return 0.5 + 0.5 * ToDelta();
+        }
+        /// <summary>
+        /// If P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0 returns 0.       
+        /// Carefully, signed value.
+        /// </summary>
+        /// <returns></returns>
+        public double ToPrevalence()
+        {
+            return 0.5 * ToDelta();
+        }
+        /// <summary>
+        /// If P.BlockSize==0||P.ActiveBlocksCount==0||P.Numerator==0 returns 0.
+        /// Carefully, signed value.
+        /// </summary>
+        /// <returns></returns>
+        public double ToDelta()
+        {
+            if (BlockSize == 0 || ActiveBlocksCount == 0 || Numerator == 0)
+            {
+                return 0.5;
+            }
+            var Mul = new BigInteger(1 << BlockSize);
+            var D = BigInteger.Pow(Mul, ActiveBlocksCount);
+            var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
+            var N = BigInteger.Divide(Numerator, GCD);
+            D = BigInteger.Divide(D, GCD);
+            return ((long)N) / (double)(D);
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
+        /// <summary>
+        /// Adding new Matrix value from new block
+        /// </summary>
+        /// <param name="L">Current Prevalence</param>
+        /// <param name="R">Value from Matrix for new block</param>
+        /// <returns></returns>
         public static Prevalence operator *(Prevalence L, long R)
         {
             var ret = L;
@@ -44,7 +84,7 @@ namespace Allax
             ret.ActiveBlocksCount++;
             return ret;
         }
-        public Prevalence(long Numerator, int ActiveBlocksCount, int BlockSize)
+        public Prevalence(BigInteger Numerator, int ActiveBlocksCount, int BlockSize)
         {
             this.Numerator = Numerator;
             this.ActiveBlocksCount = ActiveBlocksCount;
@@ -53,16 +93,20 @@ namespace Allax
         public BigInteger Numerator;
         public int ActiveBlocksCount;
         public int BlockSize;
-        public static bool operator >(Prevalence L, Prevalence R)
+        public static bool operator >=(Prevalence L, Prevalence R)
         {
             Debug.Assert(L.BlockSize == R.BlockSize);
             if(L.ActiveBlocksCount==R.ActiveBlocksCount)
             {
-                return L.Numerator > R.Numerator;
+                return BigInteger.Abs(L.Numerator) >= BigInteger.Abs(R.Numerator);
             }
-            if(R.ActiveBlocksCount==0)
+            if(R.ActiveBlocksCount == 0)
             {
                 return true;
+            }
+            if(L.ActiveBlocksCount==0)
+            {
+                return false;
             }
             else
             {
@@ -81,11 +125,46 @@ namespace Allax
                         tempR *= Mul;
                     }
                 }
-                return tempL > tempR;
+                return BigInteger.Abs(tempL) >= BigInteger.Abs(tempR);
             }
         }
-        public static bool operator <(Prevalence L, Prevalence R) { return R > L;  }
-
+        public static bool operator <=(Prevalence L, Prevalence R) { return R >= L;  }
+        public static bool operator >(Prevalence L, Prevalence R)
+        {
+            Debug.Assert(L.BlockSize == R.BlockSize);
+            if (L.ActiveBlocksCount == R.ActiveBlocksCount)
+            {
+                return BigInteger.Abs(L.Numerator) > BigInteger.Abs(R.Numerator);
+            }
+            if (R.ActiveBlocksCount == 0)
+            {
+                return true;
+            }
+            if (L.ActiveBlocksCount == 0)
+            {
+                return false;
+            }
+            else
+            {
+                var tempL = L.Numerator;
+                var tempR = R.Numerator;
+                var Mul = new BigInteger(1 << L.BlockSize);
+                var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
+                for (int i = 0; i < Diff; i++)
+                {
+                    if (Diff > 0)
+                    {
+                        tempR *= Mul;
+                    }
+                    else
+                    {
+                        tempR *= Mul;
+                    }
+                }
+                return BigInteger.Abs(tempL) > BigInteger.Abs(tempR);
+            }
+        }
+        public static bool operator <(Prevalence L, Prevalence R) { return R > L; }
     }
 	public enum AnalisysType
 	{
@@ -118,13 +197,26 @@ namespace Allax
     public struct AnalisysParams
     {
         public bool ASync;
+        public int MaxThreads;
         public Algorithm Alg;
         public CallbackAddSolution AddSolution;
-        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution)
+        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution, int MaxThreads = -1)
         {
-            ASync = true;
+            this.ASync = true;
             this.Alg = Alg;
             this.AddSolution = AddSolution;
+            if (MaxThreads == -1)
+            {
+                this.MaxThreads = System.Environment.ProcessorCount;
+                if (MaxThreads > 32)
+                {
+                    throw new Exception("Seems incorrect processor count value. Maximum is 32 (hardcoded value).");
+                }
+            }
+            else
+            {
+                this.MaxThreads = MaxThreads;
+            }
         }
     }
     public struct SolverInputs

@@ -148,7 +148,7 @@ namespace Allax
                     {
                         for (int j = 0; j < Way.layers[SrcLIndex].blocks[i].active_outputs.Count; j++)
                         {
-                            Way.layers[DestLIndex].blocks[0].active_inputs.Add(Way.layers[SrcLIndex].blocks[i].active_inputs[j]);
+                            Way.layers[DestLIndex].blocks[0].active_inputs.Add(Way.layers[SrcLIndex].blocks[i].active_outputs[j]);
                         }
                     }
                 }
