@@ -22,7 +22,36 @@ namespace AllaxScript
     {
         static void CheckSMTH()
         {
-            
+            int MaxIter = 0;
+            foreach (var bl in Enumerable.Range(4, 5))
+            {
+                var Iter1 = new InputsIterator(64/bl, bl);
+                int CurIter = 0;
+                while(!Iter1.IsFinished())
+                {
+                    Iter1.NextState();
+                    CurIter++;
+                }
+                Console.WriteLine(String.Format("Block Length: {0}. Block Count: {1}. Total Iterations: {2}.", bl, 64 / bl, CurIter));
+                if(MaxIter<CurIter)
+                {
+                    MaxIter = CurIter;
+                }
+
+            }
+            Console.WriteLine(MaxIter);
+            return;
+            var Iter = new InputsIterator(4, 4);
+            while (!Iter.IsFinished())
+            {
+                var I = Iter.NextState();
+                for (int i = 0; i < I.input.Count; i++)
+                {
+                    Console.Write((I.input[i]) ? 1 : 0);
+                }
+                Console.WriteLine();
+                Console.ReadLine();
+            }
             ;
         }
         public static void Main()

@@ -205,7 +205,7 @@ namespace Allax
         }
         public bool IsFinished()
         {
-            if(StatesPassed>=(1<<Length))
+            if(StatesPassed>=((1<<Length)-1))
             {
                 finished = true;
             }
