@@ -53,7 +53,7 @@ namespace Allax
         {
             if (BlockSize == 0 || ActiveBlocksCount == 0 || Numerator == 0)
             {
-                return 0.5;
+                return 0;
             }
             var Mul = new BigInteger(1 << BlockSize);
             var D = BigInteger.Pow(Mul, ActiveBlocksCount);
@@ -122,7 +122,7 @@ namespace Allax
                     }
                     else
                     {
-                        tempR *= Mul;
+                        tempL *= Mul;
                     }
                 }
                 return BigInteger.Abs(tempL) >= BigInteger.Abs(tempR);
@@ -158,7 +158,7 @@ namespace Allax
                     }
                     else
                     {
-                        tempR *= Mul;
+                        tempL *= Mul;
                     }
                 }
                 return BigInteger.Abs(tempL) > BigInteger.Abs(tempR);

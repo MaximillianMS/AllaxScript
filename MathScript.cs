@@ -219,7 +219,7 @@ namespace Allax
             {
                 var state = States[i];
                 var P = state.MatrixValue * Params.CurrentPrevalence;
-                if ((Params.CurrentPrevalence.Numerator == 0) || (state.MatrixValue == 0) || ((P >= Params.MIN) || (!Params.CheckPrevalence)))
+                if ((P >= Params.MIN) || (!Params.CheckPrevalence))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
@@ -512,6 +512,7 @@ namespace Allax
             //throw new NotImplementedException();
             try
             {
+                this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().word_length / this.GetSettings().sblock_count));
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 var WP = new WorkerParams(1, TaskerParams);

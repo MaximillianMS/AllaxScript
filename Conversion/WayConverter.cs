@@ -167,7 +167,7 @@ namespace Allax
                     var srcBIndex = 0;
                     for (int i = 0; i < Way.layers[DestLIndex].blocks.Count; i++)
                     {
-                        for (int j = 0; (j < Way.layers[DestLIndex].blocks[i].active_outputs.Count) && (srcBIndex < Way.layers[srcBIndex].blocks[0].active_outputs.Count); j++, srcBIndex++)
+                        for (int j = 0; (j < Way.layers[DestLIndex].blocks[i].active_inputs.Count) && (srcBIndex < Way.layers[SrcLIndex].blocks[0].active_outputs.Count); j++, srcBIndex++)
                         {
                             Way.layers[DestLIndex].blocks[i].active_inputs[j] = Way.layers[SrcLIndex].blocks[0].active_outputs[srcBIndex];
                         }

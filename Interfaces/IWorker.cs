@@ -5,8 +5,10 @@ using System.Text;
 
 namespace Allax
 {
+    public delegate void JOBSDONEHANDLER(IWorkerThread Thread);
     public interface IWorkerThread
     {
+        event JOBSDONEHANDLER JOBSDONE;
         void Init(WorkerThreadParams Params);
         void Start();
         void Suspend();

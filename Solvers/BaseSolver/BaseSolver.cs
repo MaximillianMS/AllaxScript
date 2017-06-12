@@ -74,6 +74,10 @@ namespace Allax
         }
         public virtual void Solve(SolverParams SolParams)
         {
+            if(WayConverter.ToLong(SolParams.Way.layers[0].blocks[0].active_inputs)==15)
+            {
+                ;
+            }
             var layersCount = SolParams.Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer

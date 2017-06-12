@@ -25,7 +25,7 @@ namespace Allax
                     continue; //already solved block
                 }
                 ret = false;
-                if (ActiveBlocksCount + 1 >= SolParams.MaxActiveBlocksOnLayer)
+                if (ActiveBlocksCount + 1 > SolParams.MaxActiveBlocksOnLayer)
                 {
                     break;
                 }

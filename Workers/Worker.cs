@@ -10,7 +10,7 @@ namespace Allax
 {
     public class WorkerThread : IWorkerThread
     {
-        private delegate void JOBSDONEHANDLER();
+        public event JOBSDONEHANDLER JOBSDONE;
         WorkerThreadParams Params;
         public int ID;
         System.Threading.Thread Tr;
@@ -63,12 +63,7 @@ namespace Allax
         {
             Params.T.Exec();
             Params.State = WorkerThreadState.Free;
-            new JOBSDONEHANDLER(
-                () =>
-            {
-                W.InitThread(this);
-            }
-            ).BeginInvoke(null, null);
+            JOBSDONE.BeginInvoke(this, null, null);
         }
         public void Init(WorkerThreadParams Params)
         {
@@ -82,7 +77,7 @@ namespace Allax
         {
             if (Tr != null)
             {
-                if (Tr.IsAlive || Params.State == WorkerThreadState.Started)
+                if (Params.State == WorkerThreadState.Started)
                 {
                     Logger.UltraLogger.Instance.AddToLog(String.Format("Worker: Thread {0} has already been started.",
                                                                     ID), Logger.MsgType.Error);
@@ -157,8 +152,6 @@ namespace Allax
         ConcurrentQueue<Task> TaskQueue;
         List<IWorkerThread> Threads;
 
-        //public event JOBSDONEHANDLER JOBSDONE;
-
         ~Worker()
         {
             if(Threads!=null)
@@ -185,6 +178,7 @@ namespace Allax
             for(int i=0; i<Params.MaxThreads;i++)
             {
                 Threads.Add(new WorkerThread(i, this));
+                Threads[i].JOBSDONE += InitAndRunFreeThreads;
             }
         }
         void AddTasks(int Count=1)
