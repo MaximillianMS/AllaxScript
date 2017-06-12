@@ -145,6 +145,7 @@ namespace Allax
             else
             {
                 Logger.UltraLogger.Instance.AddToLog("Worker: Thread is not free. Cant init thread after end of previous task.", Logger.MsgType.Error);
+                throw new NotImplementedException();
             }
         }
         WorkerParams Params;

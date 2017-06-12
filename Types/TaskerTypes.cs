@@ -52,24 +52,7 @@ namespace Allax
             this.Solver = Solver;
             this.SolParams = SolParams;
             this.Params = new ExtraParams();
-            //this.CurrentCorrelation = CurrentCorrelation;
         }
-        //         public Task(SPNetWay Way, ISolver Solver, ExtraParams Params)
-        //         {
-        //             this.Way = Way;
-        //             this.Solver = Solver;
-        //             this.P = new Prevalence(0, 0, Way.layers[1].blocks[0].active_inputs.Count);
-        //             this.Params = Params;
-        //             //this.CurrentCorrelation = CurrentCorrelation;
-        //         }
-        //         public Task(SPNetWay Way, ISolver Solver)
-        //         {
-        //             this.Way = Way;
-        //             this.Solver = Solver;
-        //             P = new Prevalence(0,0,Way.layers[1].blocks[0].active_inputs.Count);
-        //             Params = new ExtraParams();
-        //             //this.CurrentCorrelation = CurrentCorrelation;
-        //         }
         public void Exec()
         {
             Solver.Solve(SolParams);

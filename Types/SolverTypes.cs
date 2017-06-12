@@ -8,13 +8,12 @@ namespace Allax
 {
     public struct SolverParams
     {
-        public SolverParams(SPNetWay Way, ISPNet Net, AnalisysType Type, int MaxActiveBlocksOnLayer/*, CallbackAddTask AddTaskFunc*/)
+        public SolverParams(SPNetWay Way, ISPNet Net, AnalisysType Type, int MaxActiveBlocksOnLayer)
         {
             this.Net = Net;
             this.Type=Type;
-            //this.AddTaskFunc = AddTaskFunc;
             this.Way = Way;
-            this.P = new Prevalence(0, 0, Way.layers[1].blocks[0].active_inputs.Count);
+            this.P = new Prevalence(0, 0, Net.GetSettings().word_length / Net.GetSettings().sblock_count);
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
         }
         public SPNetWay Way;
@@ -22,6 +21,5 @@ namespace Allax
         public int MaxActiveBlocksOnLayer;
         public AnalisysType Type;
         public ISPNet Net;
-        //public CallbackAddTask AddTaskFunc;
     }
 }

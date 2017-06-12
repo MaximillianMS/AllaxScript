@@ -145,6 +145,7 @@ namespace Allax
             {
                 if (arg.Count - bias == _length)
                 {
+                    outputNumber.Clear();
                     outputNumber.AddRange(Enumerable.Repeat(0, _length));
                     for (int i = bias; i < arg.Count; i++)
                     {
@@ -219,7 +220,7 @@ namespace Allax
             {
                 var state = States[i];
                 var P = state.MatrixValue * Params.CurrentPrevalence;
-                if ((P >= Params.MIN) || (!Params.CheckPrevalence))
+                if (((P >= Params.MIN)&&(P.Numerator!=0)) || (!Params.CheckPrevalence))
                 {
                     if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
                     {
@@ -261,6 +262,7 @@ namespace Allax
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
                 if (VarCount == this._length)
                 {
+                    FuncMatrix.Clear();
                     FuncMatrix.AddRange(Enumerable.Range(0, arg.Count - bias).Select(i=>new List<bool>(VarCount).ToList()));
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
@@ -539,7 +541,7 @@ namespace Allax
         ISBlockDB TheDB;
         public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
         {
-            if (TheNet == null)
+            if (TheNet == null||(TheNet.GetSettings()!=settings))
                 TheNet = new SPNet(settings);
             return TheNet;
         }

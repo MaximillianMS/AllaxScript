@@ -47,7 +47,7 @@ namespace Allax
                 {
                     var SolParam = new SolverParams(WayConverter.ToWay(Params.Net, Rule.Input), Params.Net, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
                     var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
-                    _tasks.Enqueue(new Task());
+                    _tasks.Enqueue(T);
                 }
                 else
                 {

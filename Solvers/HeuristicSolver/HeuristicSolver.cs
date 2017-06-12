@@ -39,9 +39,10 @@ namespace Allax
                     var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
-                    SolParams.P *= State.MatrixValue;
-                    SolParams.Way = NewWay;
-                    Solve(SolParams);
+                    var NewSolParams = SolParams;
+                    NewSolParams.P *= State.MatrixValue;
+                    NewSolParams.Way = NewWay;
+                    Solve(NewSolParams);
                 }
                 break;
             }

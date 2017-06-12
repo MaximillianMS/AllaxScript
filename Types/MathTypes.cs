@@ -75,7 +75,10 @@ namespace Allax
             if (L.Numerator==0)
             {
                 ret.Numerator = R;
-                Debug.Assert(L.ActiveBlocksCount == 0);
+                if(L.ActiveBlocksCount != 0)
+                {
+                    ;
+                }
             }
             else
             {
@@ -193,7 +196,27 @@ namespace Allax
 	{
 		public List<SPNetWayLayer> layers; // Input-Output on every layer 
 	}
-    public enum AvailableSolverTypes { BaseSolver, HeuristicSolver }
+    public sealed class AvailableSolverTypes
+    {
+
+        private readonly String name;
+        private readonly int value;
+
+        public static readonly AvailableSolverTypes BaseSolver = new AvailableSolverTypes(1, "BaseSolver");
+        public static readonly AvailableSolverTypes HeuristicSolver = new AvailableSolverTypes(2, "HeuristicSolver");
+
+        private AvailableSolverTypes(int value, String name)
+        {
+            this.name = name;
+            this.value = value;
+        }
+
+        public override String ToString()
+        {
+            return name;
+        }
+
+    }
     public struct AnalisysParams
     {
         public bool ASync;
@@ -239,7 +262,7 @@ namespace Allax
     /// </summary>
     public struct Rule
     {
-        public Rule(AvailableSolverTypes SolverType, SolverInputs Input=new SolverInputs(), int MaxActiveBlocksOnLayer = 2, bool UseCustomInput=false)
+        public Rule(AvailableSolverTypes SolverType, int MaxActiveBlocksOnLayer = 2, bool UseCustomInput=false, SolverInputs Input = new SolverInputs())
         {
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.SolverType = SolverType;
@@ -250,6 +273,23 @@ namespace Allax
         public AvailableSolverTypes SolverType;
         public bool UseCustomInput;
         public SolverInputs Input;
+        public override string ToString()
+        {
+            string ret = "";
+            ret += "Solver Type:\t"+SolverType + "\n";
+            ret += "Maximum of active S-boxes in one layer:\t" + MaxActiveBlocksOnLayer + "\n";
+            ret += "Is custom input used:\t" + ((UseCustomInput) ? "True" : "False") + "\n";
+            if (UseCustomInput)
+            {
+                ret += "Custom input:\t";
+                for (int i = 0; i < Input.input.Count; i++)
+                {
+                    ret += (Input.input[i]) ? "1" : "0";
+                }
+                ret += "\n";
+            }
+            return ret;
+        }
     }
     public struct Algorithm
     {
@@ -263,6 +303,22 @@ namespace Allax
     }
     public struct SPNetSettings
 	{
+        public static bool operator ==(SPNetSettings L, SPNetSettings R)
+        {
+            if((L.sblock_count==R.sblock_count)||(L.word_length==R.word_length)||(R.db==L.db))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static bool operator !=(SPNetSettings L, SPNetSettings R)
+        {
+            return !(L == R);
+        }
         public SPNetSettings(byte WordLength, byte SBlockCount, ISBlockDB DB)
         {
             this.word_length = WordLength;

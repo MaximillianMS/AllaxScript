@@ -32,7 +32,7 @@ namespace Allax
                     continue; //skip already solved block
                 }
                 ret = false;//producing new solves mode
-                if(ActiveBlocksCount+1>=SolParams.MaxActiveBlocksOnLayer)
+                if (ActiveBlocksCount + 1 > SolParams.MaxActiveBlocksOnLayer)
                 {
                     break;
                 }
@@ -46,10 +46,12 @@ namespace Allax
                     var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
                     NewBLock.active_outputs = State._outputs;
                     NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
-                    SolParams.P *= State.MatrixValue;
-                    SolParams.Way = NewWay;
-                    Solve(SolParams);
+                    var NewSolParams = SolParams;
+                    NewSolParams.P *= State.MatrixValue;
+                    NewSolParams.Way = NewWay;
+                    Solve(NewSolParams);
                 }
+                break;
             }
             return ret;
         }
