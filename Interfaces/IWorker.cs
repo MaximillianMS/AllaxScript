@@ -14,6 +14,7 @@ namespace Allax
         void Suspend();
         void Abort();
         void Resume();
+        Task GetCurrentTask();
         WorkerThreadState GetState();
     }
     public interface IWorker

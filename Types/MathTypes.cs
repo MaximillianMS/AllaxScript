@@ -6,6 +6,7 @@ using System.Diagnostics;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
+    public delegate void TaskFinishedHandler(Task T);
     public struct Prevalence
     {
         /// <summary>
@@ -223,8 +224,10 @@ namespace Allax
         public int MaxThreads;
         public Algorithm Alg;
         public CallbackAddSolution AddSolution;
-        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution, int MaxThreads = -1)
+        public TaskFinishedHandler TaskFinishedFunc;
+        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution, TaskFinishedHandler TaskFinishedFunc, int MaxThreads = -1)
         {
+            this.TaskFinishedFunc = TaskFinishedFunc;
             this.ASync = true;
             this.Alg = Alg;
             this.AddSolution = AddSolution;

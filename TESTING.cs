@@ -15,9 +15,69 @@ namespace AllaxScript
         {
             private object syncRoot = new object();
             int counter = 0;
+            int TaskCounter = 0;
+            public void TaskFinished(Task T)
+            {
+                lock(syncRoot)
+                {
+                    Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
+                    Console.WriteLine(PrintWay(T.GetWay()));
+                }
+            }
             public void ClearCounter()
             {
                 counter = 0;
+                TaskCounter = 0;
+            }
+            public string PrintWay(SPNetWay W)
+            {
+                var FullOut = "";
+                for (int i = 0; i < W.layers.Count; i++)
+                {
+                    string O = "";
+                    string I = "";
+
+                    switch (W.layers[i].type)
+                    {
+                        case LayerType.KLayer:
+                            {
+                                I += string.Format("K-Layer {0, 2}  IN:\t", i + 1);
+                                O += string.Format("K-Layer {0,2} OUT:\t", i + 1);
+                                break;
+                            }
+                        case LayerType.SLayer:
+                            {
+                                I += string.Format("S-Layer {0, 2}  IN:\t", i + 1);
+                                O += string.Format("S-Layer {0, 2} OUT:\t", i + 1);
+                                break;
+                            }
+                        case LayerType.PLayer:
+                            {
+                                I += string.Format("P-Layer {0, 2}  IN:\t", i + 1);
+                                O += string.Format("P-Layer {0, 2} OUT:\t", i + 1);
+                                break;
+                            }
+                    }
+                    for (int j = 0; j < W.layers[i].blocks.Count; j++)
+                    {
+                        var i_ = W.layers[i].blocks[j].active_inputs;
+                        var o_ = W.layers[i].blocks[j].active_outputs;
+                        for (int k = 0; k < i_.Count; k++)
+                        {
+                            I += (i_[k]) ? '1' : '0';
+                            if ((k + 1) % W.layers[1].blocks[0].active_inputs.Count == 0)
+                                I += "\t";
+                        }
+                        for (int k = 0; k < i_.Count; k++)
+                        {
+                            O += (o_[k]) ? '1' : '0';
+                            if ((k + 1) % W.layers[1].blocks[0].active_outputs.Count == 0)
+                                O += "\t";
+                        }
+                    }
+                    FullOut += I + "\n" + O + "\n\n";
+                }
+                return FullOut;
             }
             public bool MyAddSolution(Solution S)
             {
@@ -27,51 +87,7 @@ namespace AllaxScript
                     var P = S.P;
                     var FullOut = String.Format("Solution {0}. Prevalence: {1}. Active blocks count: {2}.", ++counter, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
                     FullOut += "\n\n";
-                    for (int i = 0; i < W.layers.Count; i++)
-                    {
-                        string O = "";
-                        string I = "";
-
-                        switch (W.layers[i].type)
-                        {
-                            case LayerType.KLayer:
-                                {
-                                    I += string.Format("K-Layer {0, 2}  IN:\t", i+1);
-                                    O += string.Format("K-Layer {0,2} OUT:\t", i+1);
-                                    break;
-                                }
-                            case LayerType.SLayer:
-                                {
-                                    I += string.Format("S-Layer {0, 2}  IN:\t", i+1);
-                                    O += string.Format("S-Layer {0, 2} OUT:\t", i+1);
-                                    break;
-                                }
-                            case LayerType.PLayer:
-                                {
-                                    I += string.Format("P-Layer {0, 2}  IN:\t", i+1);
-                                    O += string.Format("P-Layer {0, 2} OUT:\t", i+1);
-                                    break;
-                                }
-                        }
-                        for (int j = 0; j < W.layers[i].blocks.Count; j++)
-                        {
-                            var i_ = W.layers[i].blocks[j].active_inputs;
-                            var o_ = W.layers[i].blocks[j].active_outputs;
-                            for (int k = 0; k < i_.Count; k++)
-                            {
-                                I += (i_[k]) ? '1' : '0';
-                                if ((k+1) % W.layers[1].blocks[0].active_inputs.Count == 0)
-                                    I += "\t";
-                            }
-                            for (int k = 0; k < i_.Count; k++)
-                            {
-                                O += (o_[k]) ? '1' : '0';
-                                if ((k+1) % W.layers[1].blocks[0].active_outputs.Count == 0)
-                                    O += "\t";
-                            }
-                        }
-                        FullOut+=I+"\n"+O+"\n\n";
-                    }
+                    FullOut += PrintWay(W);
                     Console.WriteLine(FullOut);
                     return true;
                 }
@@ -205,6 +221,7 @@ namespace AllaxScript
         public static AnalisysParams GetAnalisysParams(AnalisysType Type)
         {
             var ret = new AnalisysParams();
+            ret.TaskFinishedFunc = output.TaskFinished;
             ret.AddSolution = output.MyAddSolution;
             ret.MaxThreads = 0;
             while(!((ret.MaxThreads>0)&&(ret.MaxThreads<32)))

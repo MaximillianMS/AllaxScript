@@ -133,13 +133,20 @@ namespace Allax
                 }
             }
         }
+
+        public Task GetCurrentTask()
+        {
+            return this.Params.T;
+        }
     }
     public class Worker : IWorker
     {
+        public event TaskFinishedHandler TaskFinished;
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {
             if(Thread.GetState()==WorkerThreadState.Free)
             {
+                TaskFinished.BeginInvoke(Thread.GetCurrentTask(), null, null);
                 InitThread(Thread);
             }
             else
@@ -171,6 +178,8 @@ namespace Allax
             this.Params = Params;
             Tasker = new Tasker(Params.TaskerParams);
             TaskQueue = new ConcurrentQueue<Task>();
+            if(Params.TaskFinishedFunc!=null)
+            TaskFinished += Params.TaskFinishedFunc;
             CreateTheads();
         }
         void CreateTheads()

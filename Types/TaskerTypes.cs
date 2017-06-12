@@ -36,6 +36,10 @@ namespace Allax
     }
     public struct Task
     {
+        public SPNetWay GetWay()
+        {
+            return SolParams.Way;
+        }
         public ISolver Solver;
         //long CurrentCorrelation;
         ExtraParams Params;

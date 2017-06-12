@@ -517,7 +517,7 @@ namespace Allax
                 this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().word_length / this.GetSettings().sblock_count));
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
-                var WP = new WorkerParams(1, TaskerParams);
+                var WP = new WorkerParams(1, TaskerParams, Params.TaskFinishedFunc);
                 _worker = new Worker(WP);
                 if (!Params.ASync)
                 {

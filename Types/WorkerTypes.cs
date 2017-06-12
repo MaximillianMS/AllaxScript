@@ -8,11 +8,13 @@ namespace Allax
 {
     public struct WorkerParams
     {
-        public WorkerParams(int MaxThreads, TaskerParams TaskerParams)
+        public WorkerParams(int MaxThreads, TaskerParams TaskerParams, TaskFinishedHandler TaskFinishedFunc)
         {
             this.TaskerParams = TaskerParams;
             this.MaxThreads = MaxThreads;
+            this.TaskFinishedFunc = TaskFinishedFunc;
         }
+        public TaskFinishedHandler TaskFinishedFunc;
         public int MaxThreads;
         public TaskerParams TaskerParams;
     }
