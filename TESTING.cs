@@ -276,7 +276,7 @@ namespace AllaxScript
             () =>
             {
                 int MaxActive = 0;
-                while (!(MaxActive > 0 && MaxActive < Net.GetSettings().sblock_count))
+                while (!(MaxActive > 0 && MaxActive < (Net.GetSettings().sblock_count+1)))
                 {
                     Console.WriteLine("Enter maximum of active S-boxes in one layer:");
                     MaxActive = Convert.ToInt32(Console.ReadLine());
