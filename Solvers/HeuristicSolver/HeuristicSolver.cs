@@ -43,6 +43,7 @@ namespace Allax
                     SolParams.Way = NewWay;
                     Solve(SolParams);
                 }
+                break;
             }
             return ret;
         }
