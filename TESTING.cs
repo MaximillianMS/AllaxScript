@@ -468,8 +468,6 @@ namespace AllaxScript
                 Console.WriteLine("Enter whole word length which must be divisible by S-box length: ");
                 WL = Convert.ToInt32(Console.ReadLine());
             }
-            if (E == null)
-                E = new Engine();
             if(SBDB==null)
             {
                 SBDB = E.GetSBlockDBInstance();
@@ -564,6 +562,7 @@ namespace AllaxScript
                         var AP = new AnalisysParams(new Algorithm(new List<Rule> { / *R1,* / R2 }, AnalisysType.Linear), F, 1);
                         //Net.PerformAnalisys(AP);*/
             output = new OutPut();
+            E = new Engine();
             Menu1();
         }
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)
