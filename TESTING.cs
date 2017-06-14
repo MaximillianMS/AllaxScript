@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Allax;
-using System.IO;
 
 namespace Allax
 {
@@ -31,16 +30,16 @@ namespace AllaxScript
                 SolveCounter = 0;
                 TaskCounter = 0;
             }
-            public string PrintWay(SPNetWay W, int MaxLayers=-1)
+            public string PrintWay(SPNetWay W, int MaxLayers = -1)
             {
-                if (MaxLayers==-1)
+                if (MaxLayers == -1)
                 {
                     MaxLayers = W.layers.Count;
                 }
                 var FullOut = "";
                 for (int i = 0; i < W.layers.Count; i++)
                 {
-                    if(i>MaxLayers)
+                    if (i > MaxLayers)
                     {
                         break;
                     }
@@ -51,20 +50,20 @@ namespace AllaxScript
                     {
                         case LayerType.KLayer:
                             {
-                                I += string.Format("K-Layer {0, 2}  IN:\t", i/3 + 1);
-                                O += string.Format("K-Layer {0,2} OUT:\t", i/3 + 1);
+                                I += string.Format("K-Layer {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("K-Layer {0,2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                         case LayerType.SLayer:
                             {
-                                I += string.Format("S-Layer {0, 2}  IN:\t", i/3 + 1);
-                                O += string.Format("S-Layer {0, 2} OUT:\t", i/3 + 1);
+                                I += string.Format("S-Layer {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("S-Layer {0, 2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                         case LayerType.PLayer:
                             {
-                                I += string.Format("P-Layer {0, 2}  IN:\t", i/3 + 1);
-                                O += string.Format("P-Layer {0, 2} OUT:\t", i/3 + 1);
+                                I += string.Format("P-Layer {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("P-Layer {0, 2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                     }
@@ -102,11 +101,56 @@ namespace AllaxScript
                     return true;
                 }
             }
+            public void ExportDB()
+            {
+                if (E != null && SBDB != null)
+                {
+                    Console.WriteLine("Enter the file name:");
+                    var Path = Console.ReadLine();
+                    Path = "SBOXDB_" + Path;
+                    Path = @"C:\Windows\Temp\" + Path + ".TimVoiMax";
+                    using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                    using (var sw = new System.IO.StreamWriter(aFile))
+                    {
+                        lock (syncRoot)
+                        {
+                            sw.WriteLine(E.GetSBlockDBInstance().Serialize());
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Engine and DB have not been created.");
+                }
+            }
+            public void ImportDB()
+            {
+                if (E != null && SBDB != null)
+                {
+                    Console.WriteLine("Enter the file name:");
+                    var Path = Console.ReadLine();
+                    Path = "SBOXDB_" + Path;
+                    Path = @"C:\Windows\Temp\" + Path + ".TimVoiMax";
+                    using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    using (var sw = new System.IO.StreamReader(aFile))
+                    {
+                        lock (syncRoot)
+                        {
+                            SBDB = E.GetSBlockDBInstance(sw.ReadToEnd());
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Engine and DB have not been created.");
+                }
+            }
+
         }
         private static string ReadLine()
         {
             int READLINE_BUFFER_SIZE = 2048;
-            Stream inputStream = Console.OpenStandardInput(READLINE_BUFFER_SIZE);
+            var inputStream = Console.OpenStandardInput(READLINE_BUFFER_SIZE);
             byte[] bytes = new byte[READLINE_BUFFER_SIZE];
             int outputLength = inputStream.Read(bytes, 0, READLINE_BUFFER_SIZE);
             //Console.WriteLine(outputLength);
@@ -426,8 +470,12 @@ namespace AllaxScript
                 Console.WriteLine("Enter whole word length which must be divisible by S-box length: ");
                 WL = Convert.ToInt32(Console.ReadLine());
             }
-            E = new Engine();
-            SBDB = new SBlockDB();
+            if (E == null)
+                E = new Engine();
+            if(SBDB==null)
+            {
+                SBDB = E.GetSBlockDBInstance();
+            }
             var Settings = new Allax.SPNetSettings((byte)WL, (byte)(WL/SL), SBDB);
             Net = E.GetSPNetInstance(Settings);
             AddFullRound(Net);
@@ -442,7 +490,9 @@ namespace AllaxScript
                 {
                     string M = "1 - Create Net\n" +
                                 "2 - Manage Net\n" +
-                                "3 - Exit\n";
+                                "3 - Export DB to file\n" +
+                                "4 - Import DB\n"+
+                                "5 - Exit\n";
                     Console.WriteLine(M);
                     var K = Convert.ToInt32(Console.ReadLine());
                     Console.WriteLine();
@@ -460,6 +510,16 @@ namespace AllaxScript
                                 break;
                             }
                         case 3:
+                            {
+                                output.ExportDB();
+                                break;
+                            }
+                        case 4:
+                            {
+                                output.ImportDB();
+                                break;
+                            }
+                        case 5:
                             {
                                 exit = true;
                                 break;
@@ -506,7 +566,7 @@ namespace AllaxScript
                         var AP = new AnalisysParams(new Algorithm(new List<Rule> { / *R1,* / R2 }, AnalisysType.Linear), F, 1);
                         //Net.PerformAnalisys(AP);*/
             output = new OutPut();
-                Menu1();
+            Menu1();
         }
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)
         {

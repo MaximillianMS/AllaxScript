@@ -1,15 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
-using System.Threading;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace Allax
 {
-    class SBlockDB : ISBlockDB
+    [Serializable()]
+    public class SBlockDB : ISBlockDB
     {
         //Fourier Transform DB
-        Dictionary<string, DBNote> FuncDB;
+        [XmlElement(ElementName = "FuncDB")]
+        public SerializableDictionary<string, DBNote> FuncDB;
         public DBNote GetNoteFromDB(List<List<bool>> funcMatrix)
         {
             DBNote Note;
@@ -24,19 +28,19 @@ namespace Allax
             }
             return Note;
         }
-        public Dictionary<string, DBNote> Export()
+        public SBlockDB()
         {
-            return FuncDB;
+            FuncDB = new SerializableDictionary<string, DBNote>();
         }
-        public SBlockDB(Dictionary<string, DBNote> FourierTransformDB=null)
+        public SBlockDB(SerializableDictionary<string, DBNote> DB=null)
         {
-            if (FourierTransformDB != null)
+            if (DB != null)
             {
-                FuncDB = FourierTransformDB;
+                FuncDB = DB;
             }
             else
             {
-                FuncDB = new Dictionary<string, DBNote>();
+                FuncDB = new SerializableDictionary<string, DBNote>();
             }
         }
         DBNote AddToFuncDB(string key, List<List<bool>> funcMatrix)
@@ -137,6 +141,13 @@ namespace Allax
         public DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount)
         {
             return GetNoteFromDB(WayConverter.ListToMatrix(funcMatrix, VarCount));
+        }
+        public string Serialize()
+        {
+            var xmlSerializer = new XmlSerializer(typeof(SBlockDB));
+            StringWriter stringWriter = new StringWriter();
+            xmlSerializer.Serialize(stringWriter, this);
+            return stringWriter.ToString();
         }
     }
     abstract class Block : IBlock
@@ -532,16 +543,53 @@ namespace Allax
     {
         ISPNet TheNet;
         ISBlockDB TheDB;
+        public static byte[] Zip(string str)
+        {
+            var bytes = Encoding.UTF8.GetBytes(str);
+
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                {
+                    msi.CopyTo(gs);
+                }
+
+                return mso.ToArray();
+            }
+        }
+        public static string Unzip(byte[] bytes)
+        {
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                {
+                    gs.CopyTo(mso);
+                }
+
+                return Encoding.UTF8.GetString(mso.ToArray());
+            }
+        }
         public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
         {
             if (TheNet == null||(TheNet.GetSettings()!=settings))
                 TheNet = new SPNet(settings);
             return TheNet;
         }
-        public virtual ISBlockDB GetSBlockDBInstance(Dictionary<string, DBNote> db=null) //from interfaces
+        public virtual ISBlockDB GetSBlockDBInstance(string xmlSerializedDB="") //from interfaces
         {
-            if (TheDB == null)
-                TheDB = new SBlockDB(db);
+            if (TheDB == null||xmlSerializedDB!="")
+            {
+                if (xmlSerializedDB == "")
+                    TheDB = new SBlockDB();
+                else
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(SBlockDB));
+                    var stringReader = new StringReader(xmlSerializedDB);
+                    TheDB = (SBlockDB) xmlSerializer.Deserialize(stringReader);
+                }
+            }
             return TheDB;
         }
     }

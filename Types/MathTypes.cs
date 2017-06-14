@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Diagnostics;
+using System.Xml.Serialization;
+
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
     public delegate void TaskFinishedHandler(Task T);
+    [Serializable()]
     public struct DBNote
     {
         /// <summary>
@@ -17,22 +20,22 @@ namespace Allax
         /// <param name="DifMatrix"></param>
         public DBNote(List<List<bool>> FuncMatrix, List<List<short>> CorMatrix, List<List<short>> DifMatrix)
         {
-            this.FuncMatrix = new List<List<bool>>(FuncMatrix.Count);
+            /*this.FuncMatrix = new List<List<bool>>(FuncMatrix.Count);
             this.CorMatrix = new List<List<short>>(CorMatrix.Count);
             this.DifMatrix = new List<List<short>>(DifMatrix.Count);
-            //             for (int i = 0; i < FuncMatrix.Count; i++)
-            //             {
-            //                 this.FuncMatrix.Add(new List<bool>(FuncMatrix[i]));
-            //             }
-            //             for (int i = 0; i < CorMatrix.Count; i++)
-            //             {
-            //                 this.CorMatrix.Add(new List<short>(CorMatrix[i]));
-            // 
-            //             }
-            //             for (int i = 0; i < DifMatrix.Count; i++)
-            //             {
-            //                 this.DifMatrix.Add(new List<short>(DifMatrix[i]));
-            //             }
+                        for (int i = 0; i < FuncMatrix.Count; i++)
+            {
+                this.FuncMatrix.Add(new List<bool>(FuncMatrix[i]));
+            }
+            for (int i = 0; i < CorMatrix.Count; i++)
+            {
+                this.CorMatrix.Add(new List<short>(CorMatrix[i]));
+
+            }
+            for (int i = 0; i < DifMatrix.Count; i++)
+            {
+                this.DifMatrix.Add(new List<short>(DifMatrix[i]));
+            }*/
             this.FuncMatrix = FuncMatrix;
             this.DifMatrix = DifMatrix;
             this.CorMatrix = CorMatrix;
@@ -78,6 +81,43 @@ namespace Allax
         public List<List<short>> DifMatrix;
         public List<BlockState> LStates;
         public List<BlockState> DStates;
+    }
+    [Serializable()]
+    public struct BlockState
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Param">Value from Cor or Dif Matrix</param>
+        /// <param name="inputs"></param>
+        /// <param name="outputs"></param>
+        /// <param name="length"></param>
+        public BlockState(Int64 MatrixValue, int inputs, int outputs, int length)
+        {
+            _length = length;
+            this.MatrixValue = MatrixValue;
+            _inputs = WayConverter.ToList(inputs, _length);
+            _outputs = WayConverter.ToList(outputs, _length);
+        }
+        public BlockState(List<bool> Inputs)
+        {
+            MatrixValue = 0;
+            if (Inputs != null)
+                _length = Inputs.Count;
+            else
+                _length = 0;
+            _inputs = Inputs;
+            _outputs = new List<bool>(_length);
+            _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
+        }
+        [XmlElement(ElementName = "length")]
+        public int _length;
+        [XmlElement(ElementName = "MatrixValue")]
+        public Int64 MatrixValue; // Abs(value) from Matrix
+        [XmlElement(ElementName = "ListOfInputs")]
+        public List<bool> _inputs;
+        [XmlElement(ElementName = "ListOfOutputs")]
+        public List<bool> _outputs;
     }
     public struct Prevalence
     {
@@ -430,38 +470,6 @@ namespace Allax
         public List<bool> Outputs;
         public bool CheckPrevalence;
         public Prevalence CurrentPrevalence;
-    }
-    public struct BlockState
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="Param">Value from Cor or Dif Matrix</param>
-        /// <param name="inputs"></param>
-        /// <param name="outputs"></param>
-        /// <param name="length"></param>
-        public BlockState(Int64 MatrixValue, int inputs, int outputs, int length)
-        {
-            _length = length;
-            this.MatrixValue = MatrixValue;
-            _inputs = WayConverter.ToList(inputs, _length);
-            _outputs = WayConverter.ToList(outputs, _length);
-        }
-        public BlockState(List<bool> Inputs)
-        {
-            MatrixValue = 0;
-            if (Inputs != null)
-                _length = Inputs.Count;
-            else
-                _length = 0;
-            _inputs = Inputs;
-            _outputs = new List<bool>(_length);
-            _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
-        }
-        public int _length;
-        public Int64 MatrixValue; // Abs(value) from Matrix
-        public List<bool> _inputs;
-        public List<bool> _outputs;
     }
     public struct Solution
 	{
