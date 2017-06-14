@@ -110,7 +110,6 @@ namespace AllaxScript
                     Path = "SBOXDB_" + Path;
                     Path = @"D:\" + Path + ".TimVoiMaxDB";
                     using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
-                    using (var sw = new System.IO.StreamWriter(aFile))
                     {
                         lock (syncRoot)
                         {
@@ -125,18 +124,17 @@ namespace AllaxScript
             }
             public void ImportDB()
             {
-                if (E != null && SBDB != null)
+                if (E != null)
                 {
                     Console.WriteLine("Enter the file name:");
                     var Path = Console.ReadLine();
                     Path = "SBOXDB_" + Path;
-                    Path = @"C:\Windows\Temp\" + Path + ".TimVoiMax";
+                    Path = @"D:\" + Path + ".TimVoiMaxDB";
                     using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    using (var sw = new System.IO.StreamReader(aFile))
                     {
                         lock (syncRoot)
                         {
-                            SBDB = E.GetSBlockDBInstance(sw.ReadToEnd());
+                            SBDB = E.GetSBlockDBInstance(aFile);
                         }
                     }
                 }

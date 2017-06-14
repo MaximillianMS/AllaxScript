@@ -8,8 +8,10 @@ namespace Allax
     //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();" or "Engine E=new Engine();"
     public interface IEngine
     {
-        ISPNet GetSPNetInstance(SPNetSettings settings, bool NewNet=false);
-        ISBlockDB GetSBlockDBInstance(string xmlSerializedDB="");
+        ISPNet GetSPNetInstance(SPNetSettings settings);
+        ISPNet GetSPNetInstance();
+        ISBlockDB GetSBlockDBInstance(FileStream FS, bool xml = false);
+        ISBlockDB GetSBlockDBInstance();
         void SerializeDB(FileStream FS, bool xml=false);
     }
     public interface IBlock

@@ -580,40 +580,51 @@ namespace Allax
                 {
                     var formatter = new BinaryFormatter();
                     formatter.Serialize(stream, TheDB);
-                    //                     stream.Flush();
-                    //                     stream.Position = 0;
-                    //                     return Convert.ToBase64String(stream.ToArray());
-
+                    stream.Flush();
+                    stream.Position = 0;
                     var arr = stream.ToArray();
                     arr = Zip(Zip(arr));
                     FS.Write(arr, 0, arr.Length);
                 }
             }
         }
-        public virtual ISPNet Get
-        public virtual ISPNet GetSPNetInstance(SPNetSettings settings, bool NewNet=false) //from interfaces
+        public virtual ISPNet GetSPNetInstance()
         {
-            if (NewNet ||TheNet == null)
-            {
-                if(TheDB ==null||settings.db==null)
-                {
-                    TheDB = new SBlockDB();
-                }
-                TheNet = new SPNet(settings);
-            }
             return TheNet;
         }
-        public virtual ISBlockDB GetSBlockDBInstance(string xmlSerializedDB="") //from interfaces
+        public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
         {
-            if (TheDB == null||xmlSerializedDB!="")
+            if (settings.db == null)
             {
-                if (xmlSerializedDB == "")
-                    TheDB = new SBlockDB();
-                else
-                {
+                TheDB = new SBlockDB();
+            }
+            TheNet = new SPNet(settings);
+            return TheNet;
+        }
+        public virtual ISBlockDB GetSBlockDBInstance()
+        {
+            if(TheDB == null)
+            {
+                TheDB = new SBlockDB();
+            }
+            return TheDB;
+        }
+        public virtual ISBlockDB GetSBlockDBInstance(FileStream FS, bool xml = false) //from interfaces
+        {
+            var arr = new byte[FS.Length - FS.Position];
+            FS.Read(arr, (int)FS.Position, arr.Length);
+            arr = Unzip(Unzip(arr));
+            if (xml)
+            {
                     var xmlSerializer = new XmlSerializer(typeof(SBlockDB));
-                    var stringReader = new StringReader(xmlSerializedDB);
-                    TheDB = (SBlockDB) xmlSerializer.Deserialize(stringReader);
+                    TheDB = (SBlockDB)xmlSerializer.Deserialize(FS);
+            }
+            else
+            {
+                using (var stream = new MemoryStream(arr))
+                {
+                    var formatter = new BinaryFormatter();
+                    TheDB = (SBlockDB) formatter.Deserialize(stream);
                 }
             }
             return TheDB;

@@ -434,7 +434,7 @@ namespace Allax
         {
             return !(L == R);
         }
-        public SPNetSettings(byte WordLength, byte SBoxSize, ISBlockDB DB)
+        public SPNetSettings(byte WordLength, byte SBoxSize, ISBlockDB DB = null)
         {
             this.WordLength = WordLength;
             this.SBoxSize = SBoxSize;
