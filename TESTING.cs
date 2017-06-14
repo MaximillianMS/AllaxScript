@@ -16,19 +16,19 @@ namespace AllaxScript
         public class OutPut
         {
             private object syncRoot = new object();
-            int counter = 0;
+            int SolveCounter = 0;
             int TaskCounter = 0;
             public void TaskFinished(Task T)
             {
-                lock(syncRoot)
+                //lock(syncRoot)
                 {
                     Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
                 }
             }
-            public void ClearCounter()
+            public void ClearCounters()
             {
-                counter = 0;
+                SolveCounter = 0;
                 TaskCounter = 0;
             }
             public string PrintWay(SPNetWay W, int MaxLayers=-1)
@@ -95,7 +95,7 @@ namespace AllaxScript
                 {
                     var W = S.Way;
                     var P = S.P;
-                    var FullOut = String.Format("Solution {0}. Prevalence: {1}. Active blocks count: {2}.", ++counter, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
+                    var FullOut = String.Format("Solution {0}. Prevalence: {1}. Active blocks count: {2}.", ++SolveCounter, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
                     FullOut += "\n\n";
                     FullOut += PrintWay(W);
                     Console.WriteLine(FullOut);
@@ -395,13 +395,13 @@ namespace AllaxScript
                     }
                 case "4":
                     {
-                        output.ClearCounter();
+                        output.ClearCounters();
                         Net.PerformAnalisys(GetAnalisysParams(AnalisysType.Linear));
                         break;
                     }
                 case "5":
                     {
-                        output.ClearCounter();
+                        output.ClearCounters();
                         Net.PerformAnalisys(GetAnalisysParams(AnalisysType.Differencial));
                         break;
                     }

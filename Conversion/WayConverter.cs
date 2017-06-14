@@ -8,6 +8,25 @@ namespace Allax
 {
     public static class WayConverter
     {
+        public static List<byte> MatrixToList(List<List<bool>> FuncMatrix)
+        {
+            var ret = new List<byte>(FuncMatrix.Count);
+            for(int i=0;i<FuncMatrix.Count;i++)
+            {
+                ret.Add((byte)ToLong(FuncMatrix[i]));
+            }
+            return ret;
+        }
+        public static List<List<bool>> ListToMatrix(List<byte> arg, int VarCount)
+        {
+            var FuncMatrix = new  List<List<bool>>(arg.Count);
+            FuncMatrix.AddRange(Enumerable.Range(0, arg.Count).Select(i => new List<bool>().ToList()));
+            for (int i =0; i < arg.Count; i++)
+            {
+                FuncMatrix[i] = ToList(arg[i], VarCount);
+            }
+            return FuncMatrix;
+        }
         public static string MatrixToString(List<List<bool>> funcMatrix)
         {
             var ret = "";
@@ -204,7 +223,7 @@ namespace Allax
         }
         public static List<bool> ToList(long Input, int length)
         {
-            List<bool> ret = new List<bool>();
+            List<bool> ret = new List<bool>(length);
             for (int i = 0; i < length; i++)
             {
                 if (Input % 2 == 0)

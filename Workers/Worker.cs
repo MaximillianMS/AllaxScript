@@ -141,6 +141,44 @@ namespace Allax
         {
             return this.Params.T;
         }
+        ~WorkerThread()
+        {
+            Dispose();
+        }
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.Abort();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~WorkerThread() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
     public class Worker : IWorker
     {
@@ -162,15 +200,6 @@ namespace Allax
         ITasker Tasker;
         ConcurrentQueue<Task> TaskQueue;
         List<IWorkerThread> Threads;
-
-        ~Worker()
-        {
-            if(Threads!=null)
-            foreach (var T in Threads)
-            {
-                T.Abort();
-            }
-        }
         public Worker(WorkerParams Params)
         {
             Init(Params);
@@ -266,5 +295,43 @@ namespace Allax
                 Thread.Resume();
             }
         }
+        ~Worker()
+        {
+            Dispose();
+        }
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (Threads != null)
+                        foreach (var T in Threads)
+                        {
+                            T.Dispose();
+                        }
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

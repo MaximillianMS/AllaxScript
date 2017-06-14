@@ -10,7 +10,7 @@ namespace Allax
     {
         //Fourier Transform DB
         Dictionary<string, DBNote> FuncDB;
-        public DBNote GetFromFuncDB(List<List<bool>> funcMatrix)
+        public DBNote GetNoteFromDB(List<List<bool>> funcMatrix)
         {
             DBNote Note;
             var key = WayConverter.MatrixToString(funcMatrix);
@@ -41,7 +41,9 @@ namespace Allax
         }
         DBNote AddToFuncDB(string key, List<List<bool>> funcMatrix)
         {
-            var Note = new DBNote(funcMatrix, GetCorMatrix(funcMatrix), GetDifMatrix(funcMatrix));
+            var CM = GetCorMatrix(funcMatrix);
+            var DM = GetDifMatrix(funcMatrix);
+            var Note = new DBNote(funcMatrix, CM, DM);
             FuncDB.Add(key, Note);
             return Note;
         }
@@ -108,8 +110,10 @@ namespace Allax
             }
             return CorMatrix;
         }
+
         public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
         {
+            var funcList = WayConverter.MatrixToList(funcMatrix);
             var ret = new List<List<short>>();
             ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
             for(int a=0; a<funcMatrix.Count;a++)
@@ -119,7 +123,7 @@ namespace Allax
                     int Counter = 0;
                     foreach(var x in Enumerable.Range(0, funcMatrix.Count))
                     { 
-                        if((WayConverter.ToLong(funcMatrix[x]) ^ WayConverter.ToLong(funcMatrix[x ^ a]))==b)
+                        if((funcList[x] ^ funcList[x^a])==b)
                         {
                             Counter++;
                         }
@@ -128,6 +132,11 @@ namespace Allax
                 }
             }
             return ret;
+        }
+
+        public DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount)
+        {
+            return GetNoteFromDB(WayConverter.ListToMatrix(funcMatrix, VarCount));
         }
     }
     abstract class Block : IBlock
@@ -257,32 +266,16 @@ namespace Allax
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
                 if (VarCount == this._length)
                 {
-                    FuncMatrix.Clear();
-                    FuncMatrix.AddRange(Enumerable.Range(0, arg.Count - bias).Select(i=>new List<bool>(VarCount).ToList()));
+                    FuncMatrix = WayConverter.ListToMatrix(arg.Skip(bias).ToList(), VarCount);
                     //Line0: 		y0..yn
                     //Line1: 		y0..yn
                     //....................
                     //Line2**n-1: 	y0..yn
-                    for (int i = bias; i < arg.Count; i++)
-                    {
-                        //FuncMatrix[i - bias].AddRange(Enumerable.Repeat<byte>(0, VarCount));
-                        for (int j = VarCount - 1; j >= 0; j--)
-                        {
-                            if ((arg[i] & (1 << j)) == 0)
-                            {
-                                FuncMatrix[i - bias].Add(false);
-                            }
-                            else
-                            {
-                                FuncMatrix[i - bias].Add(true);
-                            }
-                        }
-                    }
                     if (_database == null)
                     {
                         _database = new SBlockDB();
                     }
-                    var Note = _database.GetFromFuncDB(FuncMatrix);
+                    var Note = _database.GetNoteFromDB(FuncMatrix);
                     CorMatrix = Note.CorMatrix;
                     DifMatrix = Note.DifMatrix;
                     LStates = Note.LStates;
@@ -336,7 +329,7 @@ namespace Allax
             FuncMatrix.Clear();
             FuncMatrix = Matrix;
             VarCount = 0;
-            var Note = _database.GetFromFuncDB(FuncMatrix);
+            var Note = _database.GetNoteFromDB(FuncMatrix);
             CorMatrix = Note.CorMatrix;
             DifMatrix = Note.DifMatrix;
         }
@@ -517,13 +510,15 @@ namespace Allax
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 var WP = new WorkerParams(Params.MaxThreads, TaskerParams, Params.TaskFinishedFunc);
                 _worker = new Worker(WP);
-                if (!Params.ASync)
                 {
-                    _worker.Run();
-                }
-                else
-                {
-                    _worker.AsyncRun();
+                    if (!Params.ASync)
+                    {
+                        _worker.Run();
+                    }
+                    else
+                    {
+                        _worker.AsyncRun();
+                    }
                 }
             }
             catch

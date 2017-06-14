@@ -6,7 +6,7 @@ using System.Text;
 namespace Allax
 {
     public delegate void JOBSDONEHANDLER(IWorkerThread Thread);
-    public interface IWorkerThread
+    public interface IWorkerThread:IDisposable
     {
         event JOBSDONEHANDLER JOBSDONE;
         void Init(WorkerThreadParams Params);
@@ -17,7 +17,7 @@ namespace Allax
         Task GetCurrentTask();
         WorkerThreadState GetState();
     }
-    public interface IWorker
+    public interface IWorker:IDisposable
     {
         void Init(WorkerParams Params);
         bool InitThread(IWorkerThread Thread);

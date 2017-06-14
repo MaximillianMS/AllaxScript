@@ -23,7 +23,8 @@ namespace Allax
 	}
 	public interface ISBlockDB
     {
-        DBNote GetFromFuncDB(List<List<bool>> funcMatrix);
+        DBNote GetNoteFromDB(List<List<bool>> funcMatrix);
+        DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount);
         /// <summary>
         /// Get Dictionary from DB
         /// </summary>
