@@ -5,7 +5,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 namespace Allax
 {
     [Serializable()]
@@ -141,13 +142,6 @@ namespace Allax
         public DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount)
         {
             return GetNoteFromDB(WayConverter.ListToMatrix(funcMatrix, VarCount));
-        }
-        public string Serialize()
-        {
-            var xmlSerializer = new XmlSerializer(typeof(SBlockDB));
-            StringWriter stringWriter = new StringWriter();
-            xmlSerializer.Serialize(stringWriter, this);
-            return stringWriter.ToString();
         }
     }
     abstract class Block : IBlock
@@ -436,9 +430,7 @@ namespace Allax
     }
     class SPNet : ISPNet
     {
-        private static Prevalence MultiThreadParam1; //correlation
-        private static long MultiThreadParam2;
-        private static double MultiThreadParam3;
+        private static Prevalence MultiThreadParam1; //Prevalence
         private static readonly object syncRoot = new object();
         public Prevalence GetMultiThreadPrevalence()
         {
@@ -495,13 +487,13 @@ namespace Allax
                     }
                 case LayerType.SLayer:
                     {
-                        var layer = new SLayer(_settings.db, (byte)(_settings.word_length / _settings.sblock_count), _settings.sblock_count);
+                        var layer = new SLayer(_settings.db, _settings.SBoxSize, _settings.SBoxCount);
                         AddLayer(layer);
                         break;
                     }
                 case LayerType.PLayer:
                     {
-                        var layer = new PLayer(_settings.word_length);
+                        var layer = new PLayer(_settings.WordLength);
                         AddLayer(layer);
                         break;
                     }
@@ -516,7 +508,7 @@ namespace Allax
             //throw new NotImplementedException();
             try
             {
-                this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().word_length / this.GetSettings().sblock_count));
+                this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().WordLength / this.GetSettings().SBoxCount));
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 var WP = new WorkerParams(Params.MaxThreads, TaskerParams, Params.TaskFinishedFunc);
@@ -546,7 +538,10 @@ namespace Allax
         public static byte[] Zip(string str)
         {
             var bytes = Encoding.UTF8.GetBytes(str);
-
+            return Zip(bytes);
+        }
+        public static byte[] Zip(byte[] bytes)
+        {
             using (var msi = new MemoryStream(bytes))
             using (var mso = new MemoryStream())
             {
@@ -558,7 +553,7 @@ namespace Allax
                 return mso.ToArray();
             }
         }
-        public static string Unzip(byte[] bytes)
+        public static byte[] Unzip(byte[] bytes)
         {
             using (var msi = new MemoryStream(bytes))
             using (var mso = new MemoryStream())
@@ -567,14 +562,45 @@ namespace Allax
                 {
                     gs.CopyTo(mso);
                 }
-
-                return Encoding.UTF8.GetString(mso.ToArray());
+                return mso.ToArray();
             }
         }
-        public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
+        public void SerializeDB(FileStream FS, bool xml=false)
         {
-            if (TheNet == null||(TheNet.GetSettings()!=settings))
+            if (TheDB == null)
+                return;
+            if (xml)
+            {
+                var xmlSerializer = new XmlSerializer(typeof(SBlockDB));
+                xmlSerializer.Serialize(FS, TheDB);
+            }
+            else
+            {
+                using (var stream = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, TheDB);
+                    //                     stream.Flush();
+                    //                     stream.Position = 0;
+                    //                     return Convert.ToBase64String(stream.ToArray());
+
+                    var arr = stream.ToArray();
+                    arr = Zip(Zip(arr));
+                    FS.Write(arr, 0, arr.Length);
+                }
+            }
+        }
+        public virtual ISPNet Get
+        public virtual ISPNet GetSPNetInstance(SPNetSettings settings, bool NewNet=false) //from interfaces
+        {
+            if (NewNet ||TheNet == null)
+            {
+                if(TheDB ==null||settings.db==null)
+                {
+                    TheDB = new SBlockDB();
+                }
                 TheNet = new SPNet(settings);
+            }
             return TheNet;
         }
         public virtual ISBlockDB GetSBlockDBInstance(string xmlSerializedDB="") //from interfaces

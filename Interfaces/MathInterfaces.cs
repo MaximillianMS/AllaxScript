@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace Allax
@@ -7,8 +8,9 @@ namespace Allax
     //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();" or "Engine E=new Engine();"
     public interface IEngine
     {
-        ISPNet GetSPNetInstance(SPNetSettings settings);
+        ISPNet GetSPNetInstance(SPNetSettings settings, bool NewNet=false);
         ISBlockDB GetSBlockDBInstance(string xmlSerializedDB="");
+        void SerializeDB(FileStream FS, bool xml=false);
     }
     public interface IBlock
 	{
@@ -27,11 +29,6 @@ namespace Allax
     {
         DBNote GetNoteFromDB(List<List<bool>> funcMatrix);
         DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount);
-        /// <summary>
-        /// Returns xml-string
-        /// </summary>
-        /// <returns></returns>
-        string Serialize();
     }
 	public interface ISPNet
 	{

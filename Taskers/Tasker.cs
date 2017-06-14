@@ -32,7 +32,7 @@ namespace Allax
             _rounds_count = Params.Net.GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Params.Net);
             IsBruteForceTurnedOn = false;
-            Iter = new InputsIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
+            Iter = new InputsIterator(Params.Net.GetSettings().SBoxCount, Params.Net.GetSettings().SBoxSize);
             _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
             ProcessRules();
@@ -67,7 +67,7 @@ namespace Allax
                 {
                     if (S.Value.IsUsedForBruteForce)
                     {
-                        Iter = new InputsIterator(Params.Net.GetSettings().sblock_count, Params.Net.GetSettings().word_length / Params.Net.GetSettings().sblock_count);
+                        Iter = new InputsIterator(Params.Net.GetSettings().SBoxCount, Params.Net.GetSettings().SBoxSize);
                         while (!Iter.IsFinished())
                         {
                             NextInput = Iter.NextState();

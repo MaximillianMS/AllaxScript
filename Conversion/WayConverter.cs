@@ -83,19 +83,19 @@ namespace Allax
                         var tmp_block = new SPNetWayBlock();
                         tmp_block.active_inputs = new List<bool>();
                         tmp_block.active_outputs = new List<bool>();
-                        tmp_block.active_inputs.AddRange(Enumerable.Repeat(false, Settings.word_length));
-                        tmp_block.active_outputs.AddRange(Enumerable.Repeat(false, Settings.word_length));
+                        tmp_block.active_inputs.AddRange(Enumerable.Repeat(false, Settings.WordLength));
+                        tmp_block.active_outputs.AddRange(Enumerable.Repeat(false, Settings.WordLength));
                         tmp.blocks.Add(tmp_block);
                     }
                     else
                     {
-                        foreach (var j in Enumerable.Range(0, Settings.sblock_count))
+                        foreach (var j in Enumerable.Range(0, Settings.SBoxCount))
                         {
                             var tmp_sblock = new SPNetWayBlock();
                             tmp_sblock.active_inputs = new List<bool>();
                             tmp_sblock.active_outputs = new List<bool>();
-                            tmp_sblock.active_inputs.AddRange(Enumerable.Repeat(false, Settings.word_length / Settings.sblock_count));
-                            tmp_sblock.active_outputs.AddRange(Enumerable.Repeat(false, Settings.word_length / Settings.sblock_count));
+                            tmp_sblock.active_inputs.AddRange(Enumerable.Repeat(false, Settings.SBoxSize));
+                            tmp_sblock.active_outputs.AddRange(Enumerable.Repeat(false, Settings.SBoxSize));
                             tmp.blocks.Add(tmp_sblock);
                         }
                     }

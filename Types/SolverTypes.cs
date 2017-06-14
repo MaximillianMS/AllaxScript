@@ -13,7 +13,7 @@ namespace Allax
             this.Net = Net;
             this.Type=Type;
             this.Way = Way;
-            this.P = new Prevalence(0, 0, Net.GetSettings().word_length / Net.GetSettings().sblock_count);
+            this.P = new Prevalence(0, 0, Net.GetSettings().SBoxSize);
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.BIndex = -1;
             this.lastNotEmptyLayerIndex = -1;

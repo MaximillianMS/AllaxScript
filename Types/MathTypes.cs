@@ -417,10 +417,10 @@ namespace Allax
         public AnalisysType Type;
     }
     public struct SPNetSettings
-	{
+    {
         public static bool operator ==(SPNetSettings L, SPNetSettings R)
         {
-            if((L.sblock_count==R.sblock_count)||(L.word_length==R.word_length)||(R.db==L.db))
+            if((L.SBoxCount==R.SBoxCount)||(L.WordLength==R.WordLength)||(R.db==L.db))
             {
                 return true;
             }
@@ -434,15 +434,17 @@ namespace Allax
         {
             return !(L == R);
         }
-        public SPNetSettings(byte WordLength, byte SBlockCount, ISBlockDB DB)
+        public SPNetSettings(byte WordLength, byte SBoxSize, ISBlockDB DB)
         {
-            this.word_length = WordLength;
-            this.sblock_count = SBlockCount;
+            this.WordLength = WordLength;
+            this.SBoxSize = SBoxSize;
+            this.SBoxCount = (byte)(this.WordLength / this.SBoxSize);
             this.db = DB;
         }
-		public byte word_length;
-		//public byte round_count;
-		public byte sblock_count;
+		public byte WordLength;
+        //public byte round_count;
+        public byte SBoxSize;
+		public byte SBoxCount;
 		public ISBlockDB db;
     }
     public struct BlockStateExtrParams

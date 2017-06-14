@@ -108,13 +108,13 @@ namespace AllaxScript
                     Console.WriteLine("Enter the file name:");
                     var Path = Console.ReadLine();
                     Path = "SBOXDB_" + Path;
-                    Path = @"C:\Windows\Temp\" + Path + ".TimVoiMax";
+                    Path = @"D:\" + Path + ".TimVoiMaxDB";
                     using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                     using (var sw = new System.IO.StreamWriter(aFile))
                     {
                         lock (syncRoot)
                         {
-                            sw.WriteLine(E.GetSBlockDBInstance().Serialize());
+                            E.SerializeDB(aFile);
                         }
                     }
                 }
@@ -193,7 +193,7 @@ namespace AllaxScript
         }
         public static void Menu1_2_2_1()
         {
-            var SBL= Net.GetSettings().word_length / Net.GetSettings().sblock_count;
+            var SBL= Net.GetSettings().WordLength / Net.GetSettings().SBoxCount;
             List<byte> SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
             int mode = 0;
             while (mode != 1 && mode != 2)
@@ -227,7 +227,7 @@ namespace AllaxScript
         }
         public static void Menu1_2_2_2()
         {
-            var SBL = Net.GetSettings().word_length;
+            var SBL = Net.GetSettings().WordLength;
             List<byte> BlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
             int mode = 0;
             while (mode != 1 && mode != 2)
@@ -358,7 +358,7 @@ namespace AllaxScript
             () =>
             {
                 int MaxActive = 0;
-                while (!(MaxActive > 0 && MaxActive < (Net.GetSettings().sblock_count+1)))
+                while (!(MaxActive > 0 && MaxActive < (Net.GetSettings().SBoxCount+1)))
                 {
                     Console.WriteLine("Enter maximum of active S-boxes in one layer:");
                     MaxActive = Convert.ToInt32(Console.ReadLine());
@@ -376,7 +376,7 @@ namespace AllaxScript
             if(mode==1)
             {
                 R.UseCustomInput = true;
-                R.Input = new SolverInputs(GetInitialSequence(Net.GetSettings().word_length).ConvertAll(x=>(x==1)));
+                R.Input = new SolverInputs(GetInitialSequence(Net.GetSettings().WordLength).ConvertAll(x=>(x==1)));
             }
             return R;
         }
@@ -412,7 +412,7 @@ namespace AllaxScript
                     }
                 case "3":
                     {
-                        Console.WriteLine("Word length: {1}. S-box size: {2}. S-box count: {0}. Full rounds : {3}.\n", Net.GetSettings().sblock_count, Net.GetSettings().word_length, Net.GetSettings().word_length / Net.GetSettings().sblock_count, Net.GetLayers().Count/3-1);
+                        Console.WriteLine("Word length: {1}. S-box size: {2}. S-box count: {0}. Full rounds : {3}.\n", Net.GetSettings().SBoxCount, Net.GetSettings().WordLength, Net.GetSettings().SBoxSize, Net.GetLayers().Count/3-1);
                         Console.WriteLine("Layer stack:");
                         for(int i=0;i<Net.GetLayers().Count;i++)
                         {
@@ -476,7 +476,7 @@ namespace AllaxScript
             {
                 SBDB = E.GetSBlockDBInstance();
             }
-            var Settings = new Allax.SPNetSettings((byte)WL, (byte)(WL/SL), SBDB);
+            var Settings = new Allax.SPNetSettings((byte)WL, (byte)SL, SBDB);
             Net = E.GetSPNetInstance(Settings);
             AddFullRound(Net);
             AddLastRound(Net);
