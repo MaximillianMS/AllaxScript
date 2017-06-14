@@ -7,6 +7,78 @@ namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
     public delegate void TaskFinishedHandler(Task T);
+    public struct DBNote
+    {
+        /// <summary>
+        /// Deep copy constructor
+        /// </summary>
+        /// <param name="FuncMatrix"></param>
+        /// <param name="CorMatrix"></param>
+        /// <param name="DifMatrix"></param>
+        public DBNote(List<List<bool>> FuncMatrix, List<List<short>> CorMatrix, List<List<short>> DifMatrix)
+        {
+            this.FuncMatrix = new List<List<bool>>(FuncMatrix.Count);
+            this.CorMatrix = new List<List<short>>(CorMatrix.Count);
+            this.DifMatrix = new List<List<short>>(DifMatrix.Count);
+            //             for (int i = 0; i < FuncMatrix.Count; i++)
+            //             {
+            //                 this.FuncMatrix.Add(new List<bool>(FuncMatrix[i]));
+            //             }
+            //             for (int i = 0; i < CorMatrix.Count; i++)
+            //             {
+            //                 this.CorMatrix.Add(new List<short>(CorMatrix[i]));
+            // 
+            //             }
+            //             for (int i = 0; i < DifMatrix.Count; i++)
+            //             {
+            //                 this.DifMatrix.Add(new List<short>(DifMatrix[i]));
+            //             }
+            this.FuncMatrix = FuncMatrix;
+            this.DifMatrix = DifMatrix;
+            this.CorMatrix = CorMatrix;
+            this.DStates = new List<BlockState>(this.DifMatrix.Count * this.DifMatrix.Count);
+            this.LStates = new List<BlockState>(this.CorMatrix.Count * this.CorMatrix.Count);
+            for (int row = 1; row < CorMatrix.Count; row++)
+            {
+                for (int col = 1; col < CorMatrix[0].Count; col++)
+                {
+                    LStates.Add(new BlockState(CorMatrix[row][col], col, row, (int)Math.Log(CorMatrix.Count, 2)));
+                    DStates.Add(new BlockState(DifMatrix[row][col], row, col, (int)Math.Log(DifMatrix.Count, 2)));
+                }
+            }
+            LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+            DStates = DStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+        }
+        public DBNote(DBNote N)
+        {
+            this.DStates = N.DStates;
+            this.LStates = N.LStates;
+            this.FuncMatrix = new List<List<bool>>(N.FuncMatrix.Count);
+            this.CorMatrix = new List<List<short>>(N.CorMatrix.Count);
+            this.DifMatrix = new List<List<short>>(N.DifMatrix.Count);
+            //             for (int i = 0; i < N.FuncMatrix.Count; i++)
+            //             {
+            //                 this.FuncMatrix.Add(new List<bool>(N.FuncMatrix[i]));
+            //             }
+            //             for (int i = 0; i < N.CorMatrix.Count; i++)
+            //             {
+            //                 this.CorMatrix.Add(new List<short>(N.CorMatrix[i]));
+            // 
+            //             }
+            //             for (int i = 0; i < N.DifMatrix.Count; i++)
+            //             {
+            //                 this.DifMatrix.Add(new List<short>(N.DifMatrix[i]));
+            //             }
+            this.FuncMatrix = N.FuncMatrix;
+            this.CorMatrix = N.CorMatrix;
+            this.DifMatrix = N.DifMatrix;
+        }
+        public List<List<bool>> FuncMatrix;
+        public List<List<short>> CorMatrix;
+        public List<List<short>> DifMatrix;
+        public List<BlockState> LStates;
+        public List<BlockState> DStates;
+    }
     public struct Prevalence
     {
         /// <summary>

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Allax;
+using System.IO;
+
 namespace Allax
 {
 
@@ -21,7 +23,7 @@ namespace AllaxScript
                 lock(syncRoot)
                 {
                     Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
-                    Console.WriteLine(PrintWay(T.GetWay()));
+                    //Console.WriteLine(PrintWay(T.GetWay(), 2));
                 }
             }
             public void ClearCounter()
@@ -29,11 +31,19 @@ namespace AllaxScript
                 counter = 0;
                 TaskCounter = 0;
             }
-            public string PrintWay(SPNetWay W)
+            public string PrintWay(SPNetWay W, int MaxLayers=-1)
             {
+                if (MaxLayers==-1)
+                {
+                    MaxLayers = W.layers.Count;
+                }
                 var FullOut = "";
                 for (int i = 0; i < W.layers.Count; i++)
                 {
+                    if(i>MaxLayers)
+                    {
+                        break;
+                    }
                     string O = "";
                     string I = "";
 
@@ -41,20 +51,20 @@ namespace AllaxScript
                     {
                         case LayerType.KLayer:
                             {
-                                I += string.Format("K-Layer {0, 2}  IN:\t", i + 1);
-                                O += string.Format("K-Layer {0,2} OUT:\t", i + 1);
+                                I += string.Format("K-Layer {0, 2}  IN:\t", i/3 + 1);
+                                O += string.Format("K-Layer {0,2} OUT:\t", i/3 + 1);
                                 break;
                             }
                         case LayerType.SLayer:
                             {
-                                I += string.Format("S-Layer {0, 2}  IN:\t", i + 1);
-                                O += string.Format("S-Layer {0, 2} OUT:\t", i + 1);
+                                I += string.Format("S-Layer {0, 2}  IN:\t", i/3 + 1);
+                                O += string.Format("S-Layer {0, 2} OUT:\t", i/3 + 1);
                                 break;
                             }
                         case LayerType.PLayer:
                             {
-                                I += string.Format("P-Layer {0, 2}  IN:\t", i + 1);
-                                O += string.Format("P-Layer {0, 2} OUT:\t", i + 1);
+                                I += string.Format("P-Layer {0, 2}  IN:\t", i/3 + 1);
+                                O += string.Format("P-Layer {0, 2} OUT:\t", i/3 + 1);
                                 break;
                             }
                     }
@@ -93,13 +103,24 @@ namespace AllaxScript
                 }
             }
         }
+        private static string ReadLine()
+        {
+            int READLINE_BUFFER_SIZE = 2048;
+            Stream inputStream = Console.OpenStandardInput(READLINE_BUFFER_SIZE);
+            byte[] bytes = new byte[READLINE_BUFFER_SIZE];
+            int outputLength = inputStream.Read(bytes, 0, READLINE_BUFFER_SIZE);
+            //Console.WriteLine(outputLength);
+            char[] chars = Encoding.UTF7.GetChars(bytes, 0, outputLength);
+            return new string(chars);
+        }
         public static List<byte> GetInitialSequence(int length)
         {
             var ret = new List<byte>();
             while (ret.Count != length)
             {
+                ret.Clear();
                 Console.WriteLine("Enter initial sequence: ");
-                var Seq = Console.ReadLine();
+                var Seq = ReadLine();
                 Console.WriteLine();
                 Seq = Seq.Trim();
                 string[] Values;
@@ -330,7 +351,14 @@ namespace AllaxScript
             {
                 case "1":
                     {
-                        AddRound(Net);
+                        int count = 0;
+                        while (!(count > 0 && count <= 64))
+                        {
+                            Console.WriteLine("Enter how much rounds you want to add:");
+                            count = Convert.ToInt16((Console.ReadLine()));
+                        }
+                        foreach (var i in Enumerable.Range(0, count))
+                            AddRound(Net);
                         break;
                     }
                 case "2":

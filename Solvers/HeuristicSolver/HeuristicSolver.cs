@@ -8,40 +8,57 @@ namespace Allax
 {
     class HeuristicSolver : BaseSolver
     {
-        protected override bool SLayer(SolverParams SolParams, int LIndex, int BIndex = 0)
+        protected override bool SLayer(SolverParams SolParams)
         {
+            //var LIndex = SolParams.lastNotEmptyLayerIndex;
             var ret = true;
             int ActiveBlocksCount = 0;
-            for (; BIndex < SolParams.Way.layers[LIndex].blocks.Count; BIndex++)
+            //var BIndex = SolParams.BIndex;
+            if(SolParams.BIndex == -1)
             {
-                var WayBlock = SolParams.Way.layers[LIndex].blocks[BIndex];
+                SolParams.BIndex = 0;
+                for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
+                {
+                    var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
+                    if (!WayBlock.active_inputs.All(x => !x))
+                    {
+                        ActiveBlocksCount++;
+                        continue;
+                    }
+                }
+                if (ActiveBlocksCount > SolParams.MaxActiveBlocksOnLayer)
+                {
+                    return false;
+                }
+                SolParams.BIndex = 0;
+            }
+            for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
+            {
+                var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
                 if (WayBlock.active_inputs.All(x => !x))
                 {
                     continue;
                 }
                 if (!WayBlock.active_outputs.All(x => !x))
                 {
-                    ActiveBlocksCount++;
+                    //ActiveBlocksCount++;
                     continue; //already solved block
                 }
                 ret = false;
-                if (ActiveBlocksCount + 1 > SolParams.MaxActiveBlocksOnLayer)
-                {
-                    break;
-                }
-                var NetBlock = SolParams.Net.GetLayers()[LIndex].GetBlocks()[BIndex];
+                var NetBlock = SolParams.Net.GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
                 var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Net.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 if(States.Count>0)
                 {
                     var State = States[0];
                     var NewWay = WayConverter.CloneWay(SolParams.Way);
-                    var NewBLock = NewWay.layers[LIndex].blocks[BIndex];
+                    var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
                     NewBLock.active_outputs = State._outputs;
-                    NewWay.layers[LIndex].blocks[BIndex] = NewBLock;
+                    NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
                     var NewSolParams = SolParams;
                     NewSolParams.P *= State.MatrixValue;
                     NewSolParams.Way = NewWay;
+                    NewSolParams.BIndex++;
                     Solve(NewSolParams);
                 }
                 break;

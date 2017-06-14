@@ -9,12 +9,26 @@ namespace Allax
     class SBlockDB : ISBlockDB
     {
         //Fourier Transform DB
-        Dictionary<List<short>, List<short>> FuncDB;
-        public Dictionary<List<short>, List<short>> Export()
+        Dictionary<string, DBNote> FuncDB;
+        public DBNote GetFromFuncDB(List<List<bool>> funcMatrix)
+        {
+            DBNote Note;
+            var key = WayConverter.MatrixToString(funcMatrix);
+            if (!FuncDB.TryGetValue(key, out Note))
+            {
+                Note = AddToFuncDB(key, funcMatrix);
+            }
+            else
+            {
+                ;
+            }
+            return Note;
+        }
+        public Dictionary<string, DBNote> Export()
         {
             return FuncDB;
         }
-        public SBlockDB(Dictionary<List<short>, List<short>> FourierTransformDB=null)
+        public SBlockDB(Dictionary<string, DBNote> FourierTransformDB=null)
         {
             if (FourierTransformDB != null)
             {
@@ -22,12 +36,14 @@ namespace Allax
             }
             else
             {
-                FuncDB = new Dictionary<List<short>, List<short>>();
+                FuncDB = new Dictionary<string, DBNote>();
             }
         }
-        void AddToFuncDB(List<short> func, List<short> f_spectrum)
+        DBNote AddToFuncDB(string key, List<List<bool>> funcMatrix)
         {
-            FuncDB.Add(func, f_spectrum);
+            var Note = new DBNote(funcMatrix, GetCorMatrix(funcMatrix), GetDifMatrix(funcMatrix));
+            FuncDB.Add(key, Note);
+            return Note;
         }
         List<short> FourierTransform(List<short> func)
         {
@@ -82,24 +98,18 @@ namespace Allax
         }
         public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
-            var CorMatrix = new List<List<short>>();
+            var CorMatrix = new List<List<short>>(funcMatrix.Count);
             CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>()).ToList());
             for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
-                var f_spectrum = new List<short>();
-                if (!FuncDB.TryGetValue(CorMatrix[LinCombo], out f_spectrum))
-                {
-                    f_spectrum = FourierTransform(GetFuncAnalog(CorMatrix[LinCombo]));
-                    AddToFuncDB(CorMatrix[LinCombo], f_spectrum);
-                }
+                var f_spectrum = FourierTransform(GetFuncAnalog(CorMatrix[LinCombo]));
                 CorMatrix[LinCombo] = f_spectrum;
             }
             return CorMatrix;
         }
         public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
         {
-            //throw new NotImplementedException();
             var ret = new List<List<short>>();
             ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
             for(int a=0; a<funcMatrix.Count;a++)
@@ -234,21 +244,6 @@ namespace Allax
             }
             return ret;
         }
-        public void Sort()
-        {
-            LStates = new List<BlockState>(1 << (2 * VarCount));
-            DStates = new List<BlockState>(1 << (2 * VarCount));
-            for (int row = 1; row < CorMatrix.Count; row++)
-            {
-                for (int col = 1; col < CorMatrix[0].Count; col++)
-                {
-                    LStates.Add(new BlockState(CorMatrix[row][col], col, row, _length));
-                    DStates.Add(new BlockState(DifMatrix[row][col], row, col, _length));
-                }
-            }
-            LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
-            DStates = DStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
-        }
         short GetCorrelation(int inputs, int outputs)
         {
             return CorMatrix[outputs][inputs];
@@ -287,10 +282,11 @@ namespace Allax
                     {
                         _database = new SBlockDB();
                     }
-
-                    CorMatrix = _database.GetCorMatrix(FuncMatrix);
-                    DifMatrix = _database.GetDifMatrix(FuncMatrix);
-                    Sort();
+                    var Note = _database.GetFromFuncDB(FuncMatrix);
+                    CorMatrix = Note.CorMatrix;
+                    DifMatrix = Note.DifMatrix;
+                    LStates = Note.LStates;
+                    DStates = Note.DStates;
                 }
                 else
                 {
@@ -340,7 +336,9 @@ namespace Allax
             FuncMatrix.Clear();
             FuncMatrix = Matrix;
             VarCount = 0;
-            CorMatrix = _database.GetCorMatrix(FuncMatrix);
+            var Note = _database.GetFromFuncDB(FuncMatrix);
+            CorMatrix = Note.CorMatrix;
+            DifMatrix = Note.DifMatrix;
         }
     }
     abstract class Layer : ILayer
@@ -517,7 +515,7 @@ namespace Allax
                 this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().word_length / this.GetSettings().sblock_count));
                 this.AddSolution = Params.AddSolution;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
-                var WP = new WorkerParams(1, TaskerParams, Params.TaskFinishedFunc);
+                var WP = new WorkerParams(Params.MaxThreads, TaskerParams, Params.TaskFinishedFunc);
                 _worker = new Worker(WP);
                 if (!Params.ASync)
                 {
@@ -545,7 +543,7 @@ namespace Allax
                 TheNet = new SPNet(settings);
             return TheNet;
         }
-        public virtual ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null) //from interfaces
+        public virtual ISBlockDB GetSBlockDBInstance(Dictionary<string, DBNote> db=null) //from interfaces
         {
             if (TheDB == null)
                 TheDB = new SBlockDB(db);

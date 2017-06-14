@@ -15,7 +15,11 @@ namespace Allax
             this.Way = Way;
             this.P = new Prevalence(0, 0, Net.GetSettings().word_length / Net.GetSettings().sblock_count);
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
+            this.BIndex = -1;
+            this.lastNotEmptyLayerIndex = -1;
         }
+        public int BIndex;
+        public int lastNotEmptyLayerIndex;
         public SPNetWay Way;
         public Prevalence P;
         public int MaxActiveBlocksOnLayer;

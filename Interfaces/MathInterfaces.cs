@@ -6,7 +6,7 @@ namespace Allax
     public interface IEngine
     {
         ISPNet GetSPNetInstance(SPNetSettings settings);
-        ISBlockDB GetSBlockDBInstance(Dictionary<List<short>, List<short>> db=null);
+        ISBlockDB GetSBlockDBInstance(Dictionary<string, DBNote> db=null);
     }
     public interface IBlock
 	{
@@ -23,9 +23,12 @@ namespace Allax
 	}
 	public interface ISBlockDB
     {
-        List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix);
-        List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix);
-        Dictionary<List<short>,List<short>> Export();
+        DBNote GetFromFuncDB(List<List<bool>> funcMatrix);
+        /// <summary>
+        /// Get Dictionary from DB
+        /// </summary>
+        /// <returns>string is result of WayConverter.MatrixToString(funcMatrix)</returns>
+        Dictionary<string, DBNote> Export();
 	}
 	public interface ISPNet
 	{

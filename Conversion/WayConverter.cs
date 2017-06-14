@@ -8,6 +8,15 @@ namespace Allax
 {
     public static class WayConverter
     {
+        public static string MatrixToString(List<List<bool>> funcMatrix)
+        {
+            var ret = "";
+            for (int i = 0; i < funcMatrix.Count; i++)
+            {
+                ret += ToLong(funcMatrix[i]).ToString();
+            }
+            return ret;
+        }
         public static int SearchLastNotEmptyLayer(SPNetWay Way)
         {
             int index = -1;

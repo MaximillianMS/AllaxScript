@@ -81,21 +81,25 @@ namespace Allax
                 {
                     Logger.UltraLogger.Instance.AddToLog(String.Format("Worker: Thread {0} has already been started.",
                                                                     ID), Logger.MsgType.Error);
+                    throw new NotImplementedException();
                     return;
                 }
                 if (Params.State == WorkerThreadState.Free)
                 {
                     Logger.UltraLogger.Instance.AddToLog(String.Format("Worker: Thread {0} is not initialized.",
                                                                     ID), Logger.MsgType.Error);
+                    throw new NotImplementedException();
                     return;
                 }
                 try
                 {
                     Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
+                    Params.State = WorkerThreadState.Started;
                     Tr.Start();
                 }
                 catch (Exception e)
                 {
+                    Params.State = WorkerThreadState.Stopped;
                     Logger.UltraLogger.Instance.AddToLog(String.Format("Worker: Thread couldn't be started. {0}. Exception message: \"{1}\"",
                                                                                                               ID, e.Message),
                                                         Logger.MsgType.Error);
@@ -103,7 +107,6 @@ namespace Allax
                 }
                 finally
                 {
-                    Params.State = WorkerThreadState.Started;
                     Logger.UltraLogger.Instance.AddToLog(String.Format("Worker: Thread {0} has been started.",
                                                                     ID), Logger.MsgType.Action);
                 }
