@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
-    public delegate void TaskFinishedHandler(Task T);
+    public delegate void TASKDONEHANDLER(Task T);
     [Serializable()]
     public struct DBNote
     {
@@ -18,7 +18,7 @@ namespace Allax
         /// <param name="FuncMatrix"></param>
         /// <param name="CorMatrix"></param>
         /// <param name="DifMatrix"></param>
-        public DBNote(List<List<bool>> FuncMatrix, List<List<short>> CorMatrix, List<List<short>> DifMatrix)
+        public DBNote(List<List<bool>> FuncMatrix, List<List<byte>> CorMatrix, List<List<byte>> DifMatrix)
         {
             /*this.FuncMatrix = new List<List<bool>>(FuncMatrix.Count);
             this.CorMatrix = new List<List<short>>(CorMatrix.Count);
@@ -36,11 +36,11 @@ namespace Allax
             {
                 this.DifMatrix.Add(new List<short>(DifMatrix[i]));
             }*/
-            this.FuncMatrix = FuncMatrix;
+            /*this.FuncMatrix = FuncMatrix;
             this.DifMatrix = DifMatrix;
-            this.CorMatrix = CorMatrix;
-            this.DStates = new List<BlockState>(this.DifMatrix.Count * this.DifMatrix.Count);
-            this.LStates = new List<BlockState>(this.CorMatrix.Count * this.CorMatrix.Count);
+            this.CorMatrix = CorMatrix;*/
+            this.DStates = new List<BlockState>(DifMatrix.Count * DifMatrix.Count);
+            this.LStates = new List<BlockState>(CorMatrix.Count * CorMatrix.Count);
             for (int row = 1; row < CorMatrix.Count; row++)
             {
                 for (int col = 1; col < CorMatrix[0].Count; col++)
@@ -56,29 +56,29 @@ namespace Allax
         {
             this.DStates = N.DStates;
             this.LStates = N.LStates;
-            this.FuncMatrix = new List<List<bool>>(N.FuncMatrix.Count);
-            this.CorMatrix = new List<List<short>>(N.CorMatrix.Count);
-            this.DifMatrix = new List<List<short>>(N.DifMatrix.Count);
-            //             for (int i = 0; i < N.FuncMatrix.Count; i++)
-            //             {
-            //                 this.FuncMatrix.Add(new List<bool>(N.FuncMatrix[i]));
-            //             }
-            //             for (int i = 0; i < N.CorMatrix.Count; i++)
-            //             {
-            //                 this.CorMatrix.Add(new List<short>(N.CorMatrix[i]));
-            // 
-            //             }
-            //             for (int i = 0; i < N.DifMatrix.Count; i++)
-            //             {
-            //                 this.DifMatrix.Add(new List<short>(N.DifMatrix[i]));
-            //             }
-            this.FuncMatrix = N.FuncMatrix;
-            this.CorMatrix = N.CorMatrix;
-            this.DifMatrix = N.DifMatrix;
+//             this.FuncMatrix = new List<List<bool>>(N.FuncMatrix.Count);
+//             this.CorMatrix = new List<List<short>>(N.CorMatrix.Count);
+//             this.DifMatrix = new List<List<short>>(N.DifMatrix.Count);
+//             //             for (int i = 0; i < N.FuncMatrix.Count; i++)
+//             //             {
+//             //                 this.FuncMatrix.Add(new List<bool>(N.FuncMatrix[i]));
+//             //             }
+//             //             for (int i = 0; i < N.CorMatrix.Count; i++)
+//             //             {
+//             //                 this.CorMatrix.Add(new List<short>(N.CorMatrix[i]));
+//             // 
+//             //             }
+//             //             for (int i = 0; i < N.DifMatrix.Count; i++)
+//             //             {
+//             //                 this.DifMatrix.Add(new List<short>(N.DifMatrix[i]));
+//             //             }
+//             this.FuncMatrix = N.FuncMatrix;
+//             this.CorMatrix = N.CorMatrix;
+//             this.DifMatrix = N.DifMatrix;
         }
-        public List<List<bool>> FuncMatrix;
-        public List<List<short>> CorMatrix;
-        public List<List<short>> DifMatrix;
+//         public List<List<bool>> FuncMatrix;
+//         public List<List<short>> CorMatrix;
+//         public List<List<short>> DifMatrix;
         public List<BlockState> LStates;
         public List<BlockState> DStates;
     }
@@ -92,10 +92,12 @@ namespace Allax
         /// <param name="inputs"></param>
         /// <param name="outputs"></param>
         /// <param name="length"></param>
-        public BlockState(Int64 MatrixValue, int inputs, int outputs, int length)
+        public BlockState(byte MatrixValue, int inputs, int outputs, int length)
         {
             _length = length;
             this.MatrixValue = MatrixValue;
+            this.inputs = inputs;
+            this.outputs = outputs;
             _inputs = WayConverter.ToList(inputs, _length);
             _outputs = WayConverter.ToList(outputs, _length);
         }
@@ -109,14 +111,22 @@ namespace Allax
             _inputs = Inputs;
             _outputs = new List<bool>(_length);
             _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
+            inputs = WayConverter.ToLong(_inputs);
+            outputs = WayConverter.ToLong(_outputs);
         }
         [XmlElement(ElementName = "length")]
         public int _length;
         [XmlElement(ElementName = "MatrixValue")]
-        public Int64 MatrixValue; // Abs(value) from Matrix
-        [XmlElement(ElementName = "ListOfInputs")]
+        public byte MatrixValue; // value from Matrix
+        [XmlElement(ElementName = "Inputs")]
+        public long inputs;
+        [XmlElement(ElementName = "Outputs")]
+        public long outputs;
+        [XmlIgnore()]
+        [NonSerialized]
         public List<bool> _inputs;
-        [XmlElement(ElementName = "ListOfOutputs")]
+        [XmlIgnore()]
+        [NonSerialized]
         public List<bool> _outputs;
     }
     public struct Prevalence
@@ -335,14 +345,10 @@ namespace Allax
         public bool ASync;
         public int MaxThreads;
         public Algorithm Alg;
-        public CallbackAddSolution AddSolution;
-        public TaskFinishedHandler TaskFinishedFunc;
-        public AnalisysParams(Algorithm Alg, CallbackAddSolution AddSolution, TaskFinishedHandler TaskFinishedFunc, int MaxThreads = -1)
+        public AnalisysParams(Algorithm Alg, int MaxThreads = -1)
         {
-            this.TaskFinishedFunc = TaskFinishedFunc;
             this.ASync = true;
             this.Alg = Alg;
-            this.AddSolution = AddSolution;
             if (MaxThreads == -1)
             {
                 this.MaxThreads = System.Environment.ProcessorCount;
@@ -416,36 +422,46 @@ namespace Allax
         public List<Rule> Rules;
         public AnalisysType Type;
     }
+    public struct EngineSettings
+    {
+        public EngineSettings(CallbackAddSolution AddSolution/*, TaskFinishedHandler TaskFinishedFunc*/)
+        {
+            //this.TaskFinishedFunc = TaskFinishedFunc;
+            this.AddSolution = AddSolution;
+        }
+        public CallbackAddSolution AddSolution;
+        //public TaskFinishedHandler TaskFinishedFunc;
+    }
     public struct SPNetSettings
     {
-        public static bool operator ==(SPNetSettings L, SPNetSettings R)
-        {
-            if((L.SBoxCount==R.SBoxCount)||(L.WordLength==R.WordLength)||(R.db==L.db))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        public static bool operator !=(SPNetSettings L, SPNetSettings R)
-        {
-            return !(L == R);
-        }
-        public SPNetSettings(byte WordLength, byte SBoxSize, ISBlockDB DB = null)
+//         public static bool operator ==(SPNetSettings L, SPNetSettings R)
+//         {
+//             if((L.SBoxCount==R.SBoxCount)||(L.WordLength==R.WordLength)||(R.db==L.db))
+//             {
+//                 return true;
+//             }
+//             else
+//             {
+//                 return false;
+//             }
+//         }
+// 
+//         public static bool operator !=(SPNetSettings L, SPNetSettings R)
+//         {
+//             return !(L == R);
+//         }
+        public SPNetSettings(byte WordLength, byte SBoxSize/*, ISBlockDB DB = null*/)
         {
             this.WordLength = WordLength;
             this.SBoxSize = SBoxSize;
             this.SBoxCount = (byte)(this.WordLength / this.SBoxSize);
-            this.db = DB;
+            //this.db = DB;
         }
 		public byte WordLength;
         //public byte round_count;
         public byte SBoxSize;
 		public byte SBoxCount;
-		public ISBlockDB db;
+		//public ISBlockDB db;
     }
     public struct BlockStateExtrParams
     {

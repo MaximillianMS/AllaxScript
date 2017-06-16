@@ -8,12 +8,12 @@ namespace Allax
 {
     public struct SolverParams
     {
-        public SolverParams(SPNetWay Way, ISPNet Net, AnalisysType Type, int MaxActiveBlocksOnLayer)
+        public SolverParams(SPNetWay Way, IEngine Engine, AnalisysType Type, int MaxActiveBlocksOnLayer)
         {
-            this.Net = Net;
+            this.Engine = Engine;
             this.Type=Type;
             this.Way = Way;
-            this.P = new Prevalence(0, 0, Net.GetSettings().SBoxSize);
+            this.P = new Prevalence(0, 0, Engine.GetSPNetInstance().GetSettings().SBoxSize);
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.BIndex = -1;
             this.lastNotEmptyLayerIndex = -1;
@@ -24,6 +24,6 @@ namespace Allax
         public Prevalence P;
         public int MaxActiveBlocksOnLayer;
         public AnalisysType Type;
-        public ISPNet Net;
+        public IEngine Engine;
     }
 }

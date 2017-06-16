@@ -134,7 +134,7 @@ namespace AllaxScript
                     {
                         lock (syncRoot)
                         {
-                            SBDB = E.GetSBlockDBInstance(aFile);
+                            SBDB = E.InjectSBlockDB(aFile);
                         }
                     }
                 }
@@ -284,8 +284,6 @@ namespace AllaxScript
         public static AnalisysParams GetAnalisysParams(AnalisysType Type)
         {
             var ret = new AnalisysParams();
-            ret.TaskFinishedFunc = output.TaskFinished;
-            ret.AddSolution = output.MyAddSolution;
             ret.MaxThreads = 0;
             while(!((ret.MaxThreads>0)&&(ret.MaxThreads<32)))
             {
@@ -438,13 +436,13 @@ namespace AllaxScript
                 case "4":
                     {
                         output.ClearCounters();
-                        Net.PerformAnalisys(GetAnalisysParams(AnalisysType.Linear));
+                        E.PerformAnalisys(GetAnalisysParams(AnalisysType.Linear));
                         break;
                     }
                 case "5":
                     {
                         output.ClearCounters();
-                        Net.PerformAnalisys(GetAnalisysParams(AnalisysType.Differencial));
+                        E.PerformAnalisys(GetAnalisysParams(AnalisysType.Differencial));
                         break;
                     }
                 default:
@@ -468,12 +466,9 @@ namespace AllaxScript
                 Console.WriteLine("Enter whole word length which must be divisible by S-box length: ");
                 WL = Convert.ToInt32(Console.ReadLine());
             }
-            if(SBDB==null)
-            {
-                SBDB = E.GetSBlockDBInstance();
-            }
-            var Settings = new Allax.SPNetSettings((byte)WL, (byte)SL, SBDB);
-            Net = E.GetSPNetInstance(Settings);
+            var Settings = new Allax.SPNetSettings((byte)WL, (byte)SL);
+            Net = E.CreateSPNetInstance(Settings);
+            SBDB = E.GetSBlockDBInstance();
             AddFullRound(Net);
             AddLastRound(Net);
         }
@@ -536,8 +531,8 @@ namespace AllaxScript
 
         }
         public static IEngine E;
-        public static ISBlockDB SBDB;
         public static ISPNet Net;
+        public static ISBlockDB SBDB;
         public static OutPut output;
         public static void Main()
         {
@@ -562,7 +557,8 @@ namespace AllaxScript
                         var AP = new AnalisysParams(new Algorithm(new List<Rule> { / *R1,* / R2 }, AnalisysType.Linear), F, 1);
                         //Net.PerformAnalisys(AP);*/
             output = new OutPut();
-            E = new Engine();
+            E = new Engine(new EngineSettings(output.MyAddSolution));
+            E.TASKDONE += output.TaskFinished;
             Menu1();
         }
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)

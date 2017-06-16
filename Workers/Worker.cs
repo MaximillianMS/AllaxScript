@@ -182,12 +182,13 @@ namespace Allax
     }
     public class Worker : IWorker
     {
-        public event TaskFinishedHandler TaskFinished;
+        public event TASKDONEHANDLER TASKDONE;
+
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {
             if(Thread.GetState()==WorkerThreadState.Free)
             {
-                TaskFinished.BeginInvoke(Thread.GetCurrentTask(), null, null);
+                TASKDONE.BeginInvoke(Thread.GetCurrentTask(), null, null);
                 InitThread(Thread);
             }
             else
@@ -197,7 +198,6 @@ namespace Allax
             }
         }
         WorkerParams Params;
-        ITasker Tasker;
         ConcurrentQueue<Task> TaskQueue;
         List<IWorkerThread> Threads;
         public Worker(WorkerParams Params)
@@ -208,10 +208,7 @@ namespace Allax
         public void Init(WorkerParams Params)
         {
             this.Params = Params;
-            Tasker = new Tasker(Params.TaskerParams);
             TaskQueue = new ConcurrentQueue<Task>();
-            if(Params.TaskFinishedFunc!=null)
-            TaskFinished += Params.TaskFinishedFunc;
             CreateTheads();
         }
         void CreateTheads()
@@ -225,7 +222,7 @@ namespace Allax
         }
         void AddTasks(int Count=1)
         {
-            foreach (var T in Tasker.GetTasks(Count))
+            foreach (var T in Params.Engine.GetTaskerInstance().GetTasks(Count))
             {
                 TaskQueue.Enqueue(T);
             }
@@ -257,7 +254,7 @@ namespace Allax
         public void Run()
         {
             AddTasks(Params.MaxThreads - TaskQueue.Count);
-            if ((TaskQueue.Count != 0) && (!Tasker.IsFinished()))
+            if ((TaskQueue.Count != 0) && (!Params.Engine.GetTaskerInstance().IsFinished()))
             {
                 bool OK = true;
                 foreach (var Thread in Threads)

@@ -64,12 +64,12 @@ namespace Allax
     }
     public struct TaskerParams
     {
-        public TaskerParams(ISPNet Net, Algorithm Alg)
+        public TaskerParams(IEngine Engine, Algorithm Alg)
         {
-            this.Net = Net;
+            this.Engine = Engine;
             this.Alg = Alg;
         }
-        public ISPNet Net;
+        public IEngine Engine;
         public Algorithm Alg;
     }
 }

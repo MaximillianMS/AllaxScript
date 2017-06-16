@@ -8,9 +8,28 @@ namespace Allax
     //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();" or "Engine E=new Engine();"
     public interface IEngine
     {
-        ISPNet GetSPNetInstance(SPNetSettings settings);
+        event TASKDONEHANDLER TASKDONE;
+        void Init(EngineSettings Settings);
+        EngineSettings GetSettings(); 
+        IWorker GetWorkerInstance();
+        ITasker GetTaskerInstance();
+        Prevalence GetMultiThreadPrevalence();
+        void SetMultiThreadPrevalence(Prevalence P);
+        void PerformAnalisys(AnalisysParams Params);
+        /// <summary>
+        /// Engine will contains ISPNet instance
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        ISPNet CreateSPNetInstance(SPNetSettings Settings);
         ISPNet GetSPNetInstance();
-        ISBlockDB GetSBlockDBInstance(FileStream FS, bool xml = false);
+        /// <summary>
+        /// Engine will contains SBLockDB. Automatically ISPNet must know about new DB
+        /// </summary>
+        /// <param name="FS">FS with file to read</param>
+        /// <param name="xml">If xml format must be used</param>
+        /// <returns></returns>
+        ISBlockDB InjectSBlockDB(FileStream FS, bool xml = false);
         ISBlockDB GetSBlockDBInstance();
         void SerializeDB(FileStream FS, bool xml=false);
     }
@@ -31,16 +50,15 @@ namespace Allax
     {
         DBNote GetNoteFromDB(List<List<bool>> funcMatrix);
         DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount);
+        List<List<byte>> GetCorMatrix(List<List<bool>> funcMatrix);
+        List<List<byte>> GetDifMatrix(List<List<bool>> funcMatrix);
     }
 	public interface ISPNet
 	{
-		void AddLayer(LayerType type);
-		void DeleteLayer(byte number);
+		void AddLayer(LayerType Type);
+		void DeleteLayer(byte Number);
 		List<ILayer> GetLayers();	
-		void PerformAnalisys(AnalisysParams Params);
         SPNetSettings GetSettings();
-        CallbackAddSolution GetCallbackAddSolution();
-        Prevalence GetMultiThreadPrevalence();
-        void SetMultiThreadPrevalence(Prevalence P);
-	}
+        void SetSBlockDB(ISBlockDB DB);
+    }
 }

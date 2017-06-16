@@ -50,8 +50,8 @@ namespace Allax
                     continue; //already solved block
                 }
                 ret = false;
-                var NetBlock = SolParams.Net.GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Net.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
+                var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
+                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 for (int i=0;i<States.Count;i++)
                 {
@@ -75,7 +75,7 @@ namespace Allax
             var LIndex = SolParams.lastNotEmptyLayerIndex;
             var Params = new BlockStateExtrParams(SolParams.Way.layers[LIndex].blocks[0].active_inputs, null,
                                                                 new Prevalence(), new Prevalence(), SolParams.Type);
-            var States = SolParams.Net.GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
+            var States = SolParams.Engine.GetSPNetInstance().GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if (States.Count == 1)
             {
                 //deep copying
@@ -137,10 +137,11 @@ namespace Allax
             #region LastRound
             //No need to process LastRound, because LastRound must be reversed.
             #endregion
-            SolParams.Net.GetCallbackAddSolution()(new Solution(SolParams.P, SolParams.Way));
-            if (SolParams.P > SolParams.Net.GetMultiThreadPrevalence())
+            var Net = SolParams.Engine.GetSPNetInstance();
+            SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
+            if (SolParams.P > SolParams.Engine.GetMultiThreadPrevalence())
             {
-                SolParams.Net.SetMultiThreadPrevalence(SolParams.P);
+                SolParams.Engine.SetMultiThreadPrevalence(SolParams.P);
             }
         }
     }

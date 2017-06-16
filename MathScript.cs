@@ -52,18 +52,18 @@ namespace Allax
             FuncDB.Add(key, Note);
             return Note;
         }
-        List<short> FourierTransform(List<short> func)
+        List<byte> FourierTransform(List<byte> func)
         {
             if (func.Count > 1)
             {
-                var left = new List<short>();
-                var right = new List<short>();
-                left.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
-                right.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
+                var left = new List<byte>();
+                var right = new List<byte>();
+                left.AddRange(Enumerable.Repeat<byte>(0, func.Count / 2));
+                right.AddRange(Enumerable.Repeat<byte>(0, func.Count / 2));
                 for (int i = 0; i < func.Count / 2; i++)
                 {
-                    left[i] = (short)(func[i] + func[i + func.Count / 2]);
-                    right[i] = (short)(func[i] - func[i + func.Count / 2]);
+                    left[i] = (byte)(func[i] + func[i + func.Count / 2]);
+                    right[i] = (byte)(func[i] - func[i + func.Count / 2]);
                 }
                 left = FourierTransform(left);
                 right = FourierTransform(right);
@@ -75,38 +75,38 @@ namespace Allax
             }
             return func;
         }
-        List<short> GetLinCombo(List<List<bool>> funcMatrix, int LinCombo)
+        List<byte> GetLinCombo(List<List<bool>> funcMatrix, int LinCombo)
         {
             if (funcMatrix.Count > 0)
             {
-                var combo = new List<short>();
-                combo.AddRange(Enumerable.Repeat<short>(0, funcMatrix.Count));
+                var combo = new List<byte>();
+                combo.AddRange(Enumerable.Repeat<byte>(0, funcMatrix.Count));
                 for (int i = 0; i < funcMatrix.Count; i++)
                 {
                     for (int j = 0; j < funcMatrix[0].Count; j++)
                     {
                         if ((LinCombo & (1 << (funcMatrix[0].Count - 1 - j))) != 0)
-                            combo[i] += (short)((funcMatrix[i][j]) ? 1 : 0);
+                            combo[i] += (byte)((funcMatrix[i][j]) ? 1 : 0);
                     }
-                    combo[i] = (short)(combo[i] & 1);
+                    combo[i] = (byte)(combo[i] & 1);
                 }
                 return combo;
             }
             return null;
         }
-        List<short> GetFuncAnalog(List<short> func)
+        List<byte> GetFuncAnalog(List<byte> func)
         {
-            var ret = new List<short>(func.Count);
+            var ret = new List<byte>(func.Count);
             for(int i=0;i<func.Count;i++)
             {
-                ret.Add((short)((func[i] == 0) ? 1 : -1));
+                ret.Add((byte)((func[i] == 0) ? 1 : -1));
             }
             return ret;
         }
-        public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
+        public List<List<byte>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
-            var CorMatrix = new List<List<short>>(funcMatrix.Count);
-            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>()).ToList());
+            var CorMatrix = new List<List<byte>>(funcMatrix.Count);
+            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<byte>()).ToList());
             for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
@@ -116,11 +116,11 @@ namespace Allax
             return CorMatrix;
         }
 
-        public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
+        public List<List<byte>> GetDifMatrix(List<List<bool>> funcMatrix)
         {
             var funcList = WayConverter.MatrixToList(funcMatrix);
-            var ret = new List<List<short>>();
-            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
+            var ret = new List<List<byte>>();
+            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<byte>(funcMatrix.Count).ToList()));
             for(int a=0; a<funcMatrix.Count;a++)
             {
                 for(int b=0;b<funcMatrix.Count;b++)
@@ -133,7 +133,7 @@ namespace Allax
                             Counter++;
                         }
                     }
-                    ret[a].Add((short)Counter);
+                    ret[a].Add((byte)Counter);
                 }
             }
             return ret;
@@ -216,24 +216,22 @@ namespace Allax
     class SBlock : Block
     {
         ISBlockDB _database;
-        List<List<short>> CorMatrix;
-        List<List<short>> DifMatrix;
         List<List<bool>> FuncMatrix;
         public List<BlockState> LStates;
         public List<BlockState> DStates;
         int VarCount;
         byte _length;
-        public List<List<short>> GetCorMatrix()
+        public List<List<byte>> GetCorMatrix()
         {
-            return CorMatrix;
+            return _database.GetCorMatrix(FuncMatrix);
         }
         public List<List<bool>> GetFuncMatrix()
         {
             return FuncMatrix;
         }
-        public List<List<short>> GetDifMatrix()
+        public List<List<byte>> GetDifMatrix()
         {
-            return DifMatrix;
+            return _database.GetDifMatrix(FuncMatrix);
         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
@@ -258,10 +256,6 @@ namespace Allax
             }
             return ret;
         }
-        short GetCorrelation(int inputs, int outputs)
-        {
-            return CorMatrix[outputs][inputs];
-        }
         public override void Init(List<byte> arg) // from interfaces
         {
             const int bias = 0; //S-Block record type: 'some args, Line1, Line2, ..., LineN'. No some args => Bias=0.
@@ -281,8 +275,8 @@ namespace Allax
                         _database = new SBlockDB();
                     }
                     var Note = _database.GetNoteFromDB(FuncMatrix);
-                    CorMatrix = Note.CorMatrix;
-                    DifMatrix = Note.DifMatrix;
+//                     CorMatrix = Note.CorMatrix;
+//                     DifMatrix = Note.DifMatrix;
                     LStates = Note.LStates;
                     DStates = Note.DStates;
                 }
@@ -292,37 +286,24 @@ namespace Allax
                 }
             }
         }
-        void SetDB(SBlockDB database)
+        void SetDB(ref SBlockDB database)
         {
             _database = database;
         }
         public SBlock()
         {
             _database = null;
-            CorMatrix.Clear();
             FuncMatrix.Clear();
             VarCount = 0;
         }
-        public SBlock(ISBlockDB database, byte block_length) //!NOW USED
+        public SBlock(ref ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
-            if(CorMatrix!=null)
-            CorMatrix.Clear();
-            else
-            {
-                CorMatrix = new List<List<short>>();
-            }
             if(FuncMatrix!=null)
             FuncMatrix.Clear();
             else
             {
                 FuncMatrix = new List<List<bool>>();
-            }
-            if(DifMatrix!=null)
-            DifMatrix.Clear();
-            else
-            {
-                DifMatrix = new List<List<short>>();
             }
             VarCount = 0;
             _length = block_length;
@@ -330,13 +311,8 @@ namespace Allax
         public SBlock(List<List<bool>> Matrix, SBlockDB database)
         {
             _database = database;
-            CorMatrix.Clear();
-            FuncMatrix.Clear();
             FuncMatrix = Matrix;
             VarCount = 0;
-            var Note = _database.GetNoteFromDB(FuncMatrix);
-            CorMatrix = Note.CorMatrix;
-            DifMatrix = Note.DifMatrix;
         }
     }
     abstract class Layer : ILayer
@@ -349,7 +325,7 @@ namespace Allax
         public abstract void DeleteBlock(byte number);
         public abstract IBlock GetBlock(byte number);
         protected LayerType type;
-        protected List<Block> Blocks;
+        protected List<IBlock> Blocks;
     }
     class KLayer : Layer
     {
@@ -392,11 +368,14 @@ namespace Allax
         {
             throw new NotImplementedException();
         }
-        public SLayer(ISBlockDB db, byte block_length, byte blocks_count)
+        public SLayer(ref ISBlockDB db, byte block_length, byte blocks_count)
         {
             type = LayerType.SLayer;
-            Blocks = new List<Block>(blocks_count);
-            Blocks.AddRange(Enumerable.Range(0, blocks_count).Select(i=>new SBlock(db, block_length)).ToList());
+            Blocks = new List<IBlock>(blocks_count);
+            foreach(var i in Enumerable.Range(0, blocks_count))
+            {
+                Blocks.Add(new SBlock(ref db, block_length));
+            }
         }
     }
     class PLayer : Layer
@@ -404,7 +383,7 @@ namespace Allax
         public PLayer(byte word_length)
         {
             type = LayerType.PLayer;
-            Blocks = new List<Block>(1);
+            Blocks = new List<IBlock>(1);
             Blocks.Add(new PBlock(word_length));
         }
         int GetOutputNumber(int InputNumber) // Global Numeration 1-16
@@ -430,26 +409,9 @@ namespace Allax
     }
     class SPNet : ISPNet
     {
-        private static Prevalence MultiThreadParam1; //Prevalence
-        private static readonly object syncRoot = new object();
-        public Prevalence GetMultiThreadPrevalence()
-        {
-            lock(syncRoot)
-            {
-                return MultiThreadParam1;
-            }
-        }
-        public void SetMultiThreadPrevalence(Prevalence P)
-        {
-            lock(syncRoot)
-            {
-                MultiThreadParam1 = P;
-            }
-        }
-        List<Layer> Layers;
+        ISBlockDB DB;
+        List<ILayer> Layers;
         SPNetSettings _settings;
-        IWorker _worker;
-        CallbackAddSolution AddSolution; 
         public SPNetSettings GetSettings()
         {
             return _settings;
@@ -458,9 +420,9 @@ namespace Allax
         {
             Layers.Add(layer);
         }
-        public void SetSBlockDB(SBlockDB db)
+        public void SetSBlockDB(ISBlockDB db)
         {
-            _settings.db = db;
+            DB = db;
         }
         public List<ILayer> GetLayers()
         {
@@ -469,7 +431,7 @@ namespace Allax
         public SPNet(SPNetSettings settings)
         {
             _settings = settings;
-            Layers = new List<Layer>();
+            Layers = new List<ILayer>();
         }
         public void DeleteLayer(byte number)
         {
@@ -487,7 +449,7 @@ namespace Allax
                     }
                 case LayerType.SLayer:
                     {
-                        var layer = new SLayer(_settings.db, _settings.SBoxSize, _settings.SBoxCount);
+                        var layer = new SLayer(ref DB, _settings.SBoxSize, _settings.SBoxCount);
                         AddLayer(layer);
                         break;
                     }
@@ -499,42 +461,77 @@ namespace Allax
                     }
             }
         }
-        public CallbackAddSolution GetCallbackAddSolution()
+    }
+
+    public class Engine : IEngine
+    {
+        public event TASKDONEHANDLER TASKDONE;
+        IWorker TheWorker;
+        ISPNet TheNet;
+        ISBlockDB TheDB;
+        ITasker TheTasker;
+        EngineSettings Settings;
+        private static Prevalence MultiThreadParam1; //Prevalence
+        private static readonly object syncRoot = new object();
+        public Engine(EngineSettings Settings)
         {
-            return AddSolution;
+            TheWorker = null;
+            TheNet = null;
+            TheDB = null;
+            Init(Settings);
+        }
+        public void Init(EngineSettings Settings)
+        {
+            this.Settings = Settings;
+        }
+
+        public Prevalence GetMultiThreadPrevalence()
+        {
+            lock (syncRoot)
+            {
+                return MultiThreadParam1;
+            }
+        }
+        public void SetMultiThreadPrevalence(Prevalence P)
+        {
+            lock (syncRoot)
+            {
+                MultiThreadParam1 = P;
+            }
         }
         public void PerformAnalisys(AnalisysParams Params)
         {
-            //throw new NotImplementedException();
             try
             {
-                this.SetMultiThreadPrevalence(new Prevalence(0, 0, this.GetSettings().WordLength / this.GetSettings().SBoxCount));
-                this.AddSolution = Params.AddSolution;
+                this.SetMultiThreadPrevalence(new Prevalence(0, 0, TheNet.GetSettings().SBoxSize));
                 var TaskerParams = new TaskerParams(this, Params.Alg);
-                var WP = new WorkerParams(Params.MaxThreads, TaskerParams, Params.TaskFinishedFunc);
-                _worker = new Worker(WP);
+                TheTasker = new Tasker(TaskerParams);
+                var WorkerParams = new WorkerParams(this, Params.MaxThreads);
+                TheWorker = new Worker(WorkerParams);
+                TheWorker.TASKDONE += TheWorker_TASKDONE;
                 {
                     if (!Params.ASync)
                     {
-                        _worker.Run();
+                        TheWorker.Run();
                     }
                     else
                     {
-                        _worker.AsyncRun();
+                        TheWorker.AsyncRun();
                     }
                 }
             }
             catch
             {
                 Logger.UltraLogger.Instance.ExportToFile();
+                throw new NotImplementedException();
             }
         }
-    }
 
-    public class Engine : IEngine
-    {
-        ISPNet TheNet;
-        ISBlockDB TheDB;
+        private void TheWorker_TASKDONE(Task T)
+        {
+            TASKDONE.BeginInvoke(T, null, null);
+        }
+
         public static byte[] Zip(string str)
         {
             var bytes = Encoding.UTF8.GetBytes(str);
@@ -592,24 +589,33 @@ namespace Allax
         {
             return TheNet;
         }
-        public virtual ISPNet GetSPNetInstance(SPNetSettings settings) //from interfaces
+        public virtual ISPNet CreateSPNetInstance(SPNetSettings settings) //from interfaces
         {
-            if (settings.db == null)
-            {
-                TheDB = new SBlockDB();
-            }
             TheNet = new SPNet(settings);
+            if (TheDB ==null)
+            {
+                GetSBlockDBInstance();
+            }
+            UpdateSBlockDB();
             return TheNet;
+        }
+        private void UpdateSBlockDB()
+        {
+            TheNet.SetSBlockDB(TheDB);
         }
         public virtual ISBlockDB GetSBlockDBInstance()
         {
             if(TheDB == null)
             {
                 TheDB = new SBlockDB();
+                if(TheNet!=null)
+                {
+                    UpdateSBlockDB();
+                }
             }
             return TheDB;
         }
-        public virtual ISBlockDB GetSBlockDBInstance(FileStream FS, bool xml = false) //from interfaces
+        public virtual ISBlockDB InjectSBlockDB(FileStream FS, bool xml = false) //from interfaces
         {
             var arr = new byte[FS.Length - FS.Position];
             FS.Read(arr, (int)FS.Position, arr.Length);
@@ -625,9 +631,37 @@ namespace Allax
                 {
                     var formatter = new BinaryFormatter();
                     TheDB = (SBlockDB) formatter.Deserialize(stream);
+                    //UnpackDB();
                 }
             }
+            UpdateSBlockDB();
             return TheDB;
+        }
+        void UnpackDB()
+        {
+            foreach(var N in ((SBlockDB)TheDB).FuncDB)
+            {
+                
+                for(int i=0;i<N.Value.DStates.Count;i++)
+                {
+                    N.Value.DStates[i];
+                }
+            }
+        }
+
+        public IWorker GetWorkerInstance()
+        {
+            return TheWorker;
+        }
+
+        public ITasker GetTaskerInstance()
+        {
+            return TheTasker;
+        }
+
+        public EngineSettings GetSettings()
+        {
+            return Settings;
         }
     }
 }

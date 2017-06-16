@@ -29,23 +29,25 @@ namespace Allax
         public void Init(TaskerParams Params)
         {
             this.Params = Params;
-            _rounds_count = Params.Net.GetLayers().Count / 3;
-            _tempEmptyWay = WayConverter.ToWay(Params.Net);
+            var Net = this.Params.Engine.GetSPNetInstance();
+            _rounds_count = Params.Engine.GetSPNetInstance().GetLayers().Count / 3;
+            _tempEmptyWay = WayConverter.ToWay(Net);
             IsBruteForceTurnedOn = false;
-            Iter = new InputsIterator(Params.Net.GetSettings().SBoxCount, Params.Net.GetSettings().SBoxSize);
+            Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
             _tasks = new ConcurrentQueue<Task>();
             InitSolvers();
             ProcessRules();
         }
         void ProcessRules()
         {
+            var Net = Params.Engine.GetSPNetInstance();
             //throw new NotImplementedException();
-            for(int i=0;i<Params.Alg.Rules.Count;i++)
+            for (int i=0;i<Params.Alg.Rules.Count;i++)
             {
                 var Rule = Params.Alg.Rules[i];
                 if (Rule.UseCustomInput==true)
                 {
-                    var SolParam = new SolverParams(WayConverter.ToWay(Params.Net, Rule.Input), Params.Net, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
+                    var SolParam = new SolverParams(WayConverter.ToWay(Net, Rule.Input), Params.Engine, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
                     var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
                     _tasks.Enqueue(T);
                 }
@@ -67,13 +69,13 @@ namespace Allax
                 {
                     if (S.Value.IsUsedForBruteForce)
                     {
-                        Iter = new InputsIterator(Params.Net.GetSettings().SBoxCount, Params.Net.GetSettings().SBoxSize);
+                        Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
                         while (!Iter.IsFinished())
                         {
                             NextInput = Iter.NextState();
-                            var ws = WayConverter.ToWay(Params.Net, NextInput);
+                            var ws = WayConverter.ToWay(Net, NextInput);
 
-                            _tasks.Enqueue(new Task(S.Value.S, new SolverParams(ws, Params.Net, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
+                            _tasks.Enqueue(new Task(S.Value.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
                         }
                     }
                 }

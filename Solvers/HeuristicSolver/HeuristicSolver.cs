@@ -45,8 +45,8 @@ namespace Allax
                     continue; //already solved block
                 }
                 ret = false;
-                var NetBlock = SolParams.Net.GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Net.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
+                var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
+                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 if(States.Count>0)
                 {
