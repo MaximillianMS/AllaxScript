@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
-using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 namespace Allax
 {
@@ -148,29 +147,29 @@ namespace Allax
     {
         public abstract void Init(List<byte> arg); //SBlock size:4-8. Whole word: up to 64bit.
         public abstract List<BlockState> ExtractStates(BlockStateExtrParams Params);
+        public byte BlockSize;
     };
     class PBlock : Block
     {
-        int _length;
-        List<int> outputNumber=new List<int>();
+        List<int> outputNumber;
         public int GetOutputNumber(int InputNumber) // 
         {
             return outputNumber[InputNumber];
         }
         public PBlock(byte word_length)
         {
-            _length = word_length;
-            outputNumber.Clear();
+            BlockSize = word_length;
+            outputNumber = new List<int>(BlockSize);
         }
         public override void Init(List<byte> arg) // from interfaces
         {
             const int bias = 0; //P-Block record type: 'some args, Output1, Output1, ..., OutputN'. No some args => Bias=0. Output value starts with 1.
             if (arg.Count >= bias)
             {
-                if (arg.Count - bias == _length)
+                if (arg.Count - bias == BlockSize)
                 {
                     outputNumber.Clear();
-                    outputNumber.AddRange(Enumerable.Repeat(0, _length));
+                    outputNumber.AddRange(Enumerable.Repeat(0, BlockSize));
                     for (int i = bias; i < arg.Count; i++)
                     {
                         outputNumber[i - bias] = arg[i] - 1; // Convert from global numeration
@@ -180,16 +179,18 @@ namespace Allax
         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
-            var State = new BlockState(Params.Inputs);
+            var State = new BlockState(0, Params.Inputs, 0, this.BlockSize);
             var ret = new List<BlockState>(1);
-            foreach (var j in Enumerable.Range(0, _length))
+//          var Inputs = WayConverter.ToList(State.inputs, State.BlockSize);
+//          var Outputs = new List<bool>(Enumerable.Repeat(false, State.BlockSize));
+            for(int i= State.BlockSize-1; i>=0;i++)
             {
-                if (State._inputs[j] != false)
+                if ((State.inputs & (1 << i)) != 0)
                 {
-                    var Num = GetOutputNumber(j);
-                    if (Num < _length)
+                    var Num = GetOutputNumber(State.BlockSize - 1 - i);
+                    if (Num < BlockSize)
                     {
-                        State._outputs[Num] = true;
+                        State.outputs = State.outputs | ((long)1 << (State.BlockSize - 1 - Num));
                     }
                     else
                     {
@@ -198,6 +199,24 @@ namespace Allax
                     }
                 }
             }
+/*
+            foreach (var j in Enumerable.Range(0, BlockSize))
+            {
+                if (Inputs[j] != false)
+                {
+                    var Num = GetOutputNumber(j);
+                    if (Num < BlockSize)
+                    {
+                        Outputs[Num] = true;
+                    }
+                    else
+                    {
+                        Logger.UltraLogger.Instance.AddToLog("Net: Wrong pblock initializaion", Logger.MsgType.Error);
+                        throw new NotImplementedException();
+                    }
+                }
+            }
+            State.outputs = WayConverter.ToLong(Outputs);*/
             ret.Add(State);
             return ret;
         }
@@ -220,19 +239,18 @@ namespace Allax
         public List<BlockState> LStates;
         public List<BlockState> DStates;
         int VarCount;
-        byte _length;
-        public List<List<byte>> GetCorMatrix()
-        {
-            return _database.GetCorMatrix(FuncMatrix);
-        }
-        public List<List<bool>> GetFuncMatrix()
-        {
-            return FuncMatrix;
-        }
-        public List<List<byte>> GetDifMatrix()
-        {
-            return _database.GetDifMatrix(FuncMatrix);
-        }
+//         public List<List<byte>> GetCorMatrix()
+//         {
+//             return _database.GetCorMatrix(FuncMatrix);
+//         }
+//         public List<List<bool>> GetFuncMatrix()
+//         {
+//             return FuncMatrix;
+//         }
+//         public List<List<byte>> GetDifMatrix()
+//         {
+//             return _database.GetDifMatrix(FuncMatrix);
+//         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
             var ret = new List<BlockState>();
@@ -244,7 +262,7 @@ namespace Allax
                 var P = state.MatrixValue * Params.CurrentPrevalence;
                 if (((P >= Params.MIN)&&(P.Numerator!=0)) || (!Params.CheckPrevalence))
                 {
-                    if (Enumerable.Range(0, state._inputs.Count).All(x => (state._inputs[x] == Params.Inputs[x])))
+                    if (state.inputs == Params.Inputs)
                     {
                         ret.Add(state);
                     }
@@ -263,7 +281,7 @@ namespace Allax
             {
                 if (arg.Count - bias != 0)
                     VarCount = (int)Math.Log(arg.Count - bias, 2); // Matrix: 2**n x n
-                if (VarCount == this._length)
+                if (VarCount == this.BlockSize)
                 {
                     FuncMatrix = WayConverter.ListToMatrix(arg.Skip(bias).ToList(), VarCount);
                     //Line0: 		y0..yn
@@ -306,7 +324,7 @@ namespace Allax
                 FuncMatrix = new List<List<bool>>();
             }
             VarCount = 0;
-            _length = block_length;
+            BlockSize = block_length;
         }
         public SBlock(List<List<bool>> Matrix, SBlockDB database)
         {
@@ -465,7 +483,8 @@ namespace Allax
 
     public class Engine : IEngine
     {
-        public event TASKDONEHANDLER TASKDONE;
+        public event TASKHANDLER TASKDONE;
+        public event TASKHANDLER TASKADDED;
         IWorker TheWorker;
         ISPNet TheNet;
         ISBlockDB TheDB;
@@ -636,17 +655,6 @@ namespace Allax
             }
             UpdateSBlockDB();
             return TheDB;
-        }
-        void UnpackDB()
-        {
-            foreach(var N in ((SBlockDB)TheDB).FuncDB)
-            {
-                
-                for(int i=0;i<N.Value.DStates.Count;i++)
-                {
-                    N.Value.DStates[i];
-                }
-            }
         }
 
         public IWorker GetWorkerInstance()

@@ -182,7 +182,7 @@ namespace Allax
     }
     public class Worker : IWorker
     {
-        public event TASKDONEHANDLER TASKDONE;
+        public event TASKHANDLER TASKDONE;
 
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {

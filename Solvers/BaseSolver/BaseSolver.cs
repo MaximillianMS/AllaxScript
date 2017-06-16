@@ -19,28 +19,18 @@ namespace Allax
         protected virtual bool SLayer(SolverParams SolParams)
         {
             bool ret = true; //just checking mode
-            int ActiveBlocksCount = 0;
-            if(SolParams.BIndex == -1)
+            if(SolParams.BIndex == -1) // check MaxActiveBlocks condition
             {
                 SolParams.BIndex = 0;
-                for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
-                {
-                    var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                    if (!WayBlock.active_inputs.All(x => !x))
-                    {
-                        ActiveBlocksCount++;
-                        continue;
-                    }
-                }
-                if (ActiveBlocksCount > SolParams.MaxActiveBlocksOnLayer)
+                if (!CheckActiveBlocksCondition(SolParams))
                 {
                     return false;
                 }
-                SolParams.BIndex = 0;
             }
-            for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
+            var Blocks = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks;
+            for (; SolParams.BIndex <Blocks.Count; SolParams.BIndex++)
             {
-                var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
+                var WayBlock = Blocks[SolParams.BIndex];
                 if (WayBlock.active_inputs.All(x => !x))
                 {
                     continue;
@@ -49,40 +39,63 @@ namespace Allax
                 {
                     continue; //already solved block
                 }
-                ret = false;
+                ret = false; // Producing new branches mode.
                 var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
+                var Params = new BlockStateExtrParams(WayConverter.ToLong(WayBlock.active_inputs), SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
-                for (int i=0;i<States.Count;i++)
-                {
-                    var State = States[i];
-                    var NewWay = WayConverter.CloneWay(SolParams.Way);
-                    var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                    NewBLock.active_outputs = State._outputs;
-                    NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
-                    var NewSolParams = SolParams;
-                    NewSolParams.P *= State.MatrixValue;
-                    NewSolParams.Way = NewWay;
-                    NewSolParams.BIndex++;
-                    Solve(NewSolParams);
-                }
+                DepthFirstSearch(States, SolParams);
                 break;
             }
             return ret;
         }
+        protected virtual void DepthFirstSearch(List<BlockState> States, SolverParams SolParams)
+        {
+            for (int i = 0; i < States.Count; i++)
+            {
+                var State = States[i];
+                var NewWay = WayConverter.CloneWay(SolParams.Way);
+                var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
+                NewBLock.active_outputs = WayConverter.ToList(State.outputs, State.BlockSize);
+                NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
+                var NewSolParams = SolParams;
+                NewSolParams.P *= State.MatrixValue;
+                NewSolParams.Way = NewWay;
+                NewSolParams.BIndex++;
+                Solve(NewSolParams);
+            }
+
+        }
+        bool CheckActiveBlocksCondition(SolverParams SolParams)
+        {
+            int ActiveBlocksCount = 0;
+            SolParams.BIndex = 0;
+            for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
+            {
+                var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
+                if (!WayBlock.active_inputs.All(x => !x))
+                {
+                    ActiveBlocksCount++;
+                    continue;
+                }
+            }
+            return ActiveBlocksCount <= SolParams.MaxActiveBlocksOnLayer;
+        }
         protected virtual void PLayer(SolverParams SolParams)
         {
             var LIndex = SolParams.lastNotEmptyLayerIndex;
-            var Params = new BlockStateExtrParams(SolParams.Way.layers[LIndex].blocks[0].active_inputs, null,
+            var Block = SolParams.Way.layers[LIndex].blocks[0];
+            var Params = new BlockStateExtrParams(WayConverter.ToLong(Block.active_inputs),
                                                                 new Prevalence(), new Prevalence(), SolParams.Type);
             var States = SolParams.Engine.GetSPNetInstance().GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if (States.Count == 1)
             {
                 //deep copying
-                foreach (var j in Enumerable.Range(0, SolParams.Way.layers[LIndex].blocks[0].active_outputs.Count))
+                var Outputs = WayConverter.ToList(States[0].outputs, States[0].BlockSize);
+                foreach (var j in Enumerable.Range(0, Block.active_outputs.Count))
                 {
-                   SolParams.Way.layers[LIndex].blocks[0].active_outputs[j] = States[0]._outputs[j];
+                   Block.active_outputs[j] = Outputs[j];
                 }
+                SolParams.Way.layers[LIndex].blocks[0] = Block;
             }
             else
             {

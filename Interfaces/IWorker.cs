@@ -19,7 +19,7 @@ namespace Allax
     }
     public interface IWorker:IDisposable
     {
-        event TASKDONEHANDLER TASKDONE;
+        event TASKHANDLER TASKDONE;
         void Init(WorkerParams Params);
         bool InitThread(IWorkerThread Thread);
         void Run();

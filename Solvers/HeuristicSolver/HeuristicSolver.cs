@@ -8,7 +8,23 @@ namespace Allax
 {
     class HeuristicSolver : BaseSolver
     {
-        protected override bool SLayer(SolverParams SolParams)
+        protected override void DepthFirstSearch(List<BlockState> States, SolverParams SolParams)
+        {
+            if (States.Count > 0)
+            {
+                var State = States[0];
+                var NewWay = WayConverter.CloneWay(SolParams.Way);
+                var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
+                NewBLock.active_outputs = WayConverter.ToList(State.outputs, State.BlockSize);
+                NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
+                var NewSolParams = SolParams;
+                NewSolParams.P *= State.MatrixValue;
+                NewSolParams.Way = NewWay;
+                NewSolParams.BIndex++;
+                Solve(NewSolParams);
+            }
+        }
+        /*protected override bool SLayer(SolverParams SolParams)
         {
             //var LIndex = SolParams.lastNotEmptyLayerIndex;
             var ret = true;
@@ -46,14 +62,14 @@ namespace Allax
                 }
                 ret = false;
                 var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.active_inputs, null, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
+                var Params = new BlockStateExtrParams(WayConverter.ToLong(WayBlock.active_inputs), SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 if(States.Count>0)
                 {
                     var State = States[0];
                     var NewWay = WayConverter.CloneWay(SolParams.Way);
                     var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                    NewBLock.active_outputs = State._outputs;
+                    NewBLock.active_outputs = WayConverter.ToList(State.outputs, State.BlockSize);
                     NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
                     var NewSolParams = SolParams;
                     NewSolParams.P *= State.MatrixValue;
@@ -64,6 +80,6 @@ namespace Allax
                 break;
             }
             return ret;
-        }
+        }*/
     }
 }

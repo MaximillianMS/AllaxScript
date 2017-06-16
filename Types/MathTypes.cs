@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace Allax
 {
 	public delegate bool CallbackAddSolution(Solution s);
-    public delegate void TASKDONEHANDLER(Task T);
+    public delegate void TASKHANDLER(Task T);
     [Serializable()]
     public struct DBNote
     {
@@ -91,43 +91,43 @@ namespace Allax
         /// <param name="Param">Value from Cor or Dif Matrix</param>
         /// <param name="inputs"></param>
         /// <param name="outputs"></param>
-        /// <param name="length"></param>
-        public BlockState(byte MatrixValue, int inputs, int outputs, int length)
+        /// <param name="BlockSize"></param>
+        public BlockState(byte MatrixValue, long inputs, long outputs, int BlockSize)
         {
-            _length = length;
+            this.BlockSize = BlockSize;
             this.MatrixValue = MatrixValue;
             this.inputs = inputs;
             this.outputs = outputs;
-            _inputs = WayConverter.ToList(inputs, _length);
-            _outputs = WayConverter.ToList(outputs, _length);
+            //             _inputs = WayConverter.ToList(inputs, _length);
+            //             _outputs = WayConverter.ToList(outputs, _length);
         }
-        public BlockState(List<bool> Inputs)
-        {
-            MatrixValue = 0;
-            if (Inputs != null)
-                _length = Inputs.Count;
-            else
-                _length = 0;
-            _inputs = Inputs;
-            _outputs = new List<bool>(_length);
-            _outputs.AddRange(Enumerable.Repeat<bool>(false, _length));
-            inputs = WayConverter.ToLong(_inputs);
-            outputs = WayConverter.ToLong(_outputs);
-        }
+//         public BlockState(List<bool> Inputs)
+//         {
+//             MatrixValue = 0;
+//             if (Inputs != null)
+//                 BlockSize = Inputs.Count;
+//             else
+//                 BlockSize = 0;
+// //             _inputs = Inputs;
+// //             _outputs = new List<bool>(BlockSize);
+// //             _outputs.AddRange(Enumerable.Repeat<bool>(false, BlockSize));
+//             inputs = WayConverter.ToLong(Inputs);
+//             outputs = 0;
+//         }
         [XmlElement(ElementName = "length")]
-        public int _length;
+        public int BlockSize;
         [XmlElement(ElementName = "MatrixValue")]
         public byte MatrixValue; // value from Matrix
         [XmlElement(ElementName = "Inputs")]
         public long inputs;
         [XmlElement(ElementName = "Outputs")]
         public long outputs;
-        [XmlIgnore()]
-        [NonSerialized]
-        public List<bool> _inputs;
-        [XmlIgnore()]
-        [NonSerialized]
-        public List<bool> _outputs;
+//         [XmlIgnore()]
+//         [NonSerialized]
+//         public List<bool> _inputs;
+//         [XmlIgnore()]
+//         [NonSerialized]
+//         public List<bool> _outputs;
     }
     public struct Prevalence
     {
@@ -466,26 +466,18 @@ namespace Allax
     public struct BlockStateExtrParams
     {
         public AnalisysType Type;
-        public BlockStateExtrParams(List<bool> Inputs, List<bool> Outputs, Prevalence MIN, Prevalence CurrentPrevalence, AnalisysType Type, bool CheckPrevalence = true)
+        public BlockStateExtrParams(long Inputs/*, long Outputs*/, Prevalence MIN, Prevalence CurrentPrevalence, AnalisysType Type, bool CheckPrevalence = true)
         {
-            if (Inputs == null)
-            {
-                Inputs = new List<bool>();
-            }
             this.Inputs = Inputs;
-            if (Outputs == null)
-            {
-                Outputs = new List<bool>();
-            }
-            this.Outputs = Outputs;
+            //this.Outputs = Outputs;
             this.CheckPrevalence = CheckPrevalence;
             this.CurrentPrevalence = CurrentPrevalence;
             this.MIN = MIN;
             this.Type = Type;
         }
         public Prevalence MIN;
-        public List<bool> Inputs;
-        public List<bool> Outputs;
+        public long Inputs;
+        //public long Outputs;
         public bool CheckPrevalence;
         public Prevalence CurrentPrevalence;
     }
