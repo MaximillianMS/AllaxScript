@@ -49,8 +49,8 @@ namespace Allax
     {
         DBNote GetNoteFromDB(List<List<bool>> funcMatrix);
         DBNote GetNoteFromDB(List<byte> funcMatrix, int VarCount);
-        List<List<byte>> GetCorMatrix(List<List<bool>> funcMatrix);
-        List<List<byte>> GetDifMatrix(List<List<bool>> funcMatrix);
+        List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix);
+        List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix);
     }
 	public interface ISPNet
 	{

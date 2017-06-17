@@ -18,35 +18,16 @@ namespace Allax
         /// <param name="FuncMatrix"></param>
         /// <param name="CorMatrix"></param>
         /// <param name="DifMatrix"></param>
-        public DBNote(List<List<bool>> FuncMatrix, List<List<byte>> CorMatrix, List<List<byte>> DifMatrix)
+        public DBNote(List<List<short>> CorMatrix, List<List<short>> DifMatrix)
         {
-            /*this.FuncMatrix = new List<List<bool>>(FuncMatrix.Count);
-            this.CorMatrix = new List<List<short>>(CorMatrix.Count);
-            this.DifMatrix = new List<List<short>>(DifMatrix.Count);
-                        for (int i = 0; i < FuncMatrix.Count; i++)
-            {
-                this.FuncMatrix.Add(new List<bool>(FuncMatrix[i]));
-            }
-            for (int i = 0; i < CorMatrix.Count; i++)
-            {
-                this.CorMatrix.Add(new List<short>(CorMatrix[i]));
-
-            }
-            for (int i = 0; i < DifMatrix.Count; i++)
-            {
-                this.DifMatrix.Add(new List<short>(DifMatrix[i]));
-            }*/
-            /*this.FuncMatrix = FuncMatrix;
-            this.DifMatrix = DifMatrix;
-            this.CorMatrix = CorMatrix;*/
             this.DStates = new List<BlockState>(DifMatrix.Count * DifMatrix.Count);
             this.LStates = new List<BlockState>(CorMatrix.Count * CorMatrix.Count);
             for (int row = 1; row < CorMatrix.Count; row++)
             {
                 for (int col = 1; col < CorMatrix[0].Count; col++)
                 {
-                    LStates.Add(new BlockState(CorMatrix[row][col], col, row, (int)Math.Log(CorMatrix.Count, 2)));
-                    DStates.Add(new BlockState(DifMatrix[row][col], row, col, (int)Math.Log(DifMatrix.Count, 2)));
+                    LStates.Add(new BlockState((sbyte)CorMatrix[row][col], col, row, (int)Math.Log(CorMatrix.Count, 2)));
+                    DStates.Add(new BlockState((sbyte)DifMatrix[row][col], row, col, (int)Math.Log(DifMatrix.Count, 2)));
                 }
             }
             LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
@@ -85,6 +66,15 @@ namespace Allax
     [Serializable()]
     public struct BlockState
     {
+        public BlockState(long inputs, int BlockSize)
+        {
+            MatrixValue = 0;
+            this.BlockSize = BlockSize;
+            this.CustomInput = WayConverter.ToList(inputs, this.BlockSize);
+            this.CustomOutput = new List<bool>(Enumerable.Repeat(false, this.BlockSize));
+            this.inputs = 0;
+            this.outputs = 0;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -92,36 +82,44 @@ namespace Allax
         /// <param name="inputs"></param>
         /// <param name="outputs"></param>
         /// <param name="BlockSize"></param>
-        public BlockState(byte MatrixValue, long inputs, long outputs, int BlockSize)
+        public BlockState(sbyte MatrixValue, long inputs, long outputs, int BlockSize)
         {
             this.BlockSize = BlockSize;
             this.MatrixValue = MatrixValue;
-            this.inputs = inputs;
-            this.outputs = outputs;
+            this.inputs = (byte)inputs;
+            this.outputs = (byte)outputs;
+            CustomInput = null;
+            CustomOutput = null;
             //             _inputs = WayConverter.ToList(inputs, _length);
             //             _outputs = WayConverter.ToList(outputs, _length);
         }
-//         public BlockState(List<bool> Inputs)
-//         {
-//             MatrixValue = 0;
-//             if (Inputs != null)
-//                 BlockSize = Inputs.Count;
-//             else
-//                 BlockSize = 0;
-// //             _inputs = Inputs;
-// //             _outputs = new List<bool>(BlockSize);
-// //             _outputs.AddRange(Enumerable.Repeat<bool>(false, BlockSize));
-//             inputs = WayConverter.ToLong(Inputs);
-//             outputs = 0;
-//         }
+        //         public BlockState(List<bool> Inputs)
+        //         {
+        //             MatrixValue = 0;
+        //             if (Inputs != null)
+        //                 BlockSize = Inputs.Count;
+        //             else
+        //                 BlockSize = 0;
+        // //             _inputs = Inputs;
+        // //             _outputs = new List<bool>(BlockSize);
+        // //             _outputs.AddRange(Enumerable.Repeat<bool>(false, BlockSize));
+        //             inputs = WayConverter.ToLong(Inputs);
+        //             outputs = 0;
+        //         }
+        [XmlIgnore()]
+        [NonSerialized]
+        public List<bool> CustomInput;
+        [XmlIgnore()]
+        [NonSerialized]
+        public List<bool> CustomOutput;
         [XmlElement(ElementName = "length")]
         public int BlockSize;
         [XmlElement(ElementName = "MatrixValue")]
-        public byte MatrixValue; // value from Matrix
+        public sbyte MatrixValue; // value from Matrix
         [XmlElement(ElementName = "Inputs")]
-        public long inputs;
+        public byte inputs;
         [XmlElement(ElementName = "Outputs")]
-        public long outputs;
+        public byte outputs;
 //         [XmlIgnore()]
 //         [NonSerialized]
 //         public List<bool> _inputs;
@@ -183,7 +181,7 @@ namespace Allax
             var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
             var N = BigInteger.Divide(Numerator, GCD);
             D = BigInteger.Divide(D, GCD);
-            return ((long)N) / (double)(D);
+            return ((double)N) / (double)(D);
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         /// <summary>
@@ -240,7 +238,7 @@ namespace Allax
                 var tempR = R.Numerator;
                 var Mul = new BigInteger(1 << L.BlockSize);
                 var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
-                for (int i=0;i<Diff;i++)
+                for (int i=0;i<Math.Abs(Diff);i++)
                 {
                     if(Diff>0)
                     {
@@ -251,7 +249,10 @@ namespace Allax
                         tempL *= Mul;
                     }
                 }
-                return BigInteger.Abs(tempL) >= BigInteger.Abs(tempR);
+                var ret = BigInteger.Abs(tempL) >= BigInteger.Abs(tempR);
+                var chk = Math.Abs(L.ToDelta()) >= Math.Abs(R.ToDelta());
+                Debug.Assert(ret == chk);
+                return ret;
             }
         }
         public static bool operator <=(Prevalence L, Prevalence R) { return R >= L;  }
@@ -276,7 +277,7 @@ namespace Allax
                 var tempR = R.Numerator;
                 var Mul = new BigInteger(1 << L.BlockSize);
                 var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
-                for (int i = 0; i < Diff; i++)
+                for (int i = 0; i < Math.Abs(Diff); i++)
                 {
                     if (Diff > 0)
                     {
@@ -305,19 +306,18 @@ namespace Allax
 	}
 	public struct SPNetWayBlock
 	{
-		public List<bool> active_inputs;
-		public List<bool> active_outputs;
+        public long Inputs;
+        public long Outputs;
+        public int BlockSize;
 	}
 	public struct SPNetWayLayer
 	{
-		//public Int64 active_inputs;
-		//public Int64 active_outputs;
 		public List<SPNetWayBlock> blocks;
 		public LayerType type;
 	}
 	public struct SPNetWay
 	{
-		public List<SPNetWayLayer> layers; // Input-Output on every layer 
+		public List<SPNetWayLayer> layers;
 	}
     public sealed class AvailableSolverTypes
     {
@@ -365,17 +365,14 @@ namespace Allax
     }
     public struct SolverInputs
     {
-        public SolverInputs(List<bool> Input)
-        {
-            input = Input;
-            weight = 0;
-        }
         public SolverInputs(long Input, int length)
         {
-            input = WayConverter.ToList(Input, length);
+            this.Length = length;
+            this.Input = Input;
             weight = 0;
         }
-        public List<bool> input;
+        public long Input;
+        public int Length;
         public int weight;
     }
     /// <summary>
@@ -403,9 +400,10 @@ namespace Allax
             if (UseCustomInput)
             {
                 ret += "Custom input:\t";
-                for (int i = 0; i < Input.input.Count; i++)
+                var listedInput = WayConverter.ToList(Input.Input, Input.Length);
+                for (int i = 0; i < listedInput.Count; i++)
                 {
-                    ret += (Input.input[i]) ? "1" : "0";
+                    ret += (listedInput[i]) ? "1" : "0";
                 }
                 ret += "\n";
             }

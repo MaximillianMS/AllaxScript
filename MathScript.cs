@@ -47,22 +47,22 @@ namespace Allax
         {
             var CM = GetCorMatrix(funcMatrix);
             var DM = GetDifMatrix(funcMatrix);
-            var Note = new DBNote(funcMatrix, CM, DM);
+            var Note = new DBNote(CM, DM);
             FuncDB.Add(key, Note);
             return Note;
         }
-        List<byte> FourierTransform(List<byte> func)
+        List<short> FourierTransform(List<short> func)
         {
             if (func.Count > 1)
             {
-                var left = new List<byte>();
-                var right = new List<byte>();
-                left.AddRange(Enumerable.Repeat<byte>(0, func.Count / 2));
-                right.AddRange(Enumerable.Repeat<byte>(0, func.Count / 2));
+                var left = new List<short>();
+                var right = new List<short>();
+                left.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
+                right.AddRange(Enumerable.Repeat<short>(0, func.Count / 2));
                 for (int i = 0; i < func.Count / 2; i++)
                 {
-                    left[i] = (byte)(func[i] + func[i + func.Count / 2]);
-                    right[i] = (byte)(func[i] - func[i + func.Count / 2]);
+                    left[i] = (short)(func[i] + func[i + func.Count / 2]);
+                    right[i] = (short)(func[i] - func[i + func.Count / 2]);
                 }
                 left = FourierTransform(left);
                 right = FourierTransform(right);
@@ -74,38 +74,38 @@ namespace Allax
             }
             return func;
         }
-        List<byte> GetLinCombo(List<List<bool>> funcMatrix, int LinCombo)
+        List<short> GetLinCombo(List<List<bool>> funcMatrix, int LinCombo)
         {
             if (funcMatrix.Count > 0)
             {
-                var combo = new List<byte>();
-                combo.AddRange(Enumerable.Repeat<byte>(0, funcMatrix.Count));
+                var combo = new List<short>();
+                combo.AddRange(Enumerable.Repeat<short>(0, funcMatrix.Count));
                 for (int i = 0; i < funcMatrix.Count; i++)
                 {
                     for (int j = 0; j < funcMatrix[0].Count; j++)
                     {
                         if ((LinCombo & (1 << (funcMatrix[0].Count - 1 - j))) != 0)
-                            combo[i] += (byte)((funcMatrix[i][j]) ? 1 : 0);
+                            combo[i] += (short)((funcMatrix[i][j]) ? 1 : 0);
                     }
-                    combo[i] = (byte)(combo[i] & 1);
+                    combo[i] = (short)(combo[i] & 1);
                 }
                 return combo;
             }
             return null;
         }
-        List<byte> GetFuncAnalog(List<byte> func)
+        List<short> GetFuncAnalog(List<short> func)
         {
-            var ret = new List<byte>(func.Count);
+            var ret = new List<short>(func.Count);
             for(int i=0;i<func.Count;i++)
             {
-                ret.Add((byte)((func[i] == 0) ? 1 : -1));
+                ret.Add((short)((func[i] == 0) ? 1 : -1));
             }
             return ret;
         }
-        public List<List<byte>> GetCorMatrix(List<List<bool>> funcMatrix)
+        public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
-            var CorMatrix = new List<List<byte>>(funcMatrix.Count);
-            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<byte>()).ToList());
+            var CorMatrix = new List<List<short>>(funcMatrix.Count);
+            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>()).ToList());
             for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
@@ -115,11 +115,11 @@ namespace Allax
             return CorMatrix;
         }
 
-        public List<List<byte>> GetDifMatrix(List<List<bool>> funcMatrix)
+        public List<List<short>> GetDifMatrix(List<List<bool>> funcMatrix)
         {
             var funcList = WayConverter.MatrixToList(funcMatrix);
-            var ret = new List<List<byte>>();
-            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<byte>(funcMatrix.Count).ToList()));
+            var ret = new List<List<short>>();
+            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
             for(int a=0; a<funcMatrix.Count;a++)
             {
                 for(int b=0;b<funcMatrix.Count;b++)
@@ -132,7 +132,7 @@ namespace Allax
                             Counter++;
                         }
                     }
-                    ret[a].Add((byte)Counter);
+                    ret[a].Add((short)Counter);
                 }
             }
             return ret;
@@ -179,18 +179,19 @@ namespace Allax
         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
-            var State = new BlockState(0, Params.Inputs, 0, this.BlockSize);
+            var State = new BlockState(Params.Inputs, this.BlockSize);
             var ret = new List<BlockState>(1);
 //          var Inputs = WayConverter.ToList(State.inputs, State.BlockSize);
 //          var Outputs = new List<bool>(Enumerable.Repeat(false, State.BlockSize));
-            for(int i= State.BlockSize-1; i>=0;i++)
+/*
+            for(int i= State.BlockSize-1; i>=0;i--)
             {
                 if ((State.inputs & (1 << i)) != 0)
                 {
                     var Num = GetOutputNumber(State.BlockSize - 1 - i);
                     if (Num < BlockSize)
                     {
-                        State.outputs = State.outputs | ((long)1 << (State.BlockSize - 1 - Num));
+                        State.outputs = (byte)(State.outputs | ((long)1 << (State.BlockSize - 1 - Num)));
                     }
                     else
                     {
@@ -198,16 +199,15 @@ namespace Allax
                         throw new NotImplementedException();
                     }
                 }
-            }
-/*
+            }*/
             foreach (var j in Enumerable.Range(0, BlockSize))
             {
-                if (Inputs[j] != false)
+                if (State.CustomInput[j] != false)
                 {
                     var Num = GetOutputNumber(j);
                     if (Num < BlockSize)
                     {
-                        Outputs[Num] = true;
+                        State.CustomOutput[Num] = true;
                     }
                     else
                     {
@@ -216,7 +216,6 @@ namespace Allax
                     }
                 }
             }
-            State.outputs = WayConverter.ToLong(Outputs);*/
             ret.Add(State);
             return ret;
         }

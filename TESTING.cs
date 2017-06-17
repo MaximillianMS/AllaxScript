@@ -69,18 +69,18 @@ namespace AllaxScript
                     }
                     for (int j = 0; j < W.layers[i].blocks.Count; j++)
                     {
-                        var i_ = W.layers[i].blocks[j].active_inputs;
-                        var o_ = W.layers[i].blocks[j].active_outputs;
+                        var i_ = WayConverter.ToList(W.layers[i].blocks[j].Inputs, W.layers[i].blocks[j].BlockSize);
+                        var o_ = WayConverter.ToList(W.layers[i].blocks[j].Outputs, W.layers[i].blocks[j].BlockSize);
                         for (int k = 0; k < i_.Count; k++)
                         {
                             I += (i_[k]) ? '1' : '0';
-                            if ((k + 1) % W.layers[1].blocks[0].active_inputs.Count == 0)
+                            if ((k + 1) % W.layers[1].blocks[0].BlockSize == 0)
                                 I += "\t";
                         }
                         for (int k = 0; k < i_.Count; k++)
                         {
                             O += (o_[k]) ? '1' : '0';
-                            if ((k + 1) % W.layers[1].blocks[0].active_outputs.Count == 0)
+                            if ((k + 1) % W.layers[1].blocks[0].BlockSize == 0)
                                 O += "\t";
                         }
                     }
@@ -372,7 +372,7 @@ namespace AllaxScript
             if(mode==1)
             {
                 R.UseCustomInput = true;
-                R.Input = new SolverInputs(GetInitialSequence(Net.GetSettings().WordLength).ConvertAll(x=>(x==1)));
+                R.Input = new SolverInputs(WayConverter.ToLong(GetInitialSequence(Net.GetSettings().WordLength).ConvertAll(x=>(x==1))), Net.GetSettings().WordLength);
             }
             return R;
         }

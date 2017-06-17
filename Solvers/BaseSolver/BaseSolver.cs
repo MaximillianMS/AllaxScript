@@ -13,7 +13,7 @@ namespace Allax
         {
             var LIndex = SolParams.lastNotEmptyLayerIndex;
             var kblock = SolParams.Way.layers[LIndex].blocks[0];
-            kblock.active_outputs = kblock.active_inputs;
+            kblock.Outputs = kblock.Inputs;
             SolParams.Way.layers[LIndex].blocks[0] = kblock;
         }
         protected virtual bool SLayer(SolverParams SolParams)
@@ -31,17 +31,17 @@ namespace Allax
             for (; SolParams.BIndex <Blocks.Count; SolParams.BIndex++)
             {
                 var WayBlock = Blocks[SolParams.BIndex];
-                if (WayBlock.active_inputs.All(x => !x))
+                if (WayBlock.Inputs == 0)
                 {
                     continue;
                 }
-                if (!WayBlock.active_outputs.All(x => !x))
+                if (WayBlock.Outputs!=0)
                 {
                     continue; //already solved block
                 }
                 ret = false; // Producing new branches mode.
                 var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayConverter.ToLong(WayBlock.active_inputs), SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
+                var Params = new BlockStateExtrParams(WayBlock.Inputs, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 DepthFirstSearch(States, SolParams);
                 break;
@@ -55,7 +55,7 @@ namespace Allax
                 var State = States[i];
                 var NewWay = WayConverter.CloneWay(SolParams.Way);
                 var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                NewBLock.active_outputs = WayConverter.ToList(State.outputs, State.BlockSize);
+                NewBLock.Outputs = State.outputs;
                 NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
                 var NewSolParams = SolParams;
                 NewSolParams.P *= State.MatrixValue;
@@ -72,7 +72,7 @@ namespace Allax
             for (; SolParams.BIndex < SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks.Count; SolParams.BIndex++)
             {
                 var WayBlock = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                if (!WayBlock.active_inputs.All(x => !x))
+                if (WayBlock.Inputs!=0)
                 {
                     ActiveBlocksCount++;
                     continue;
@@ -84,17 +84,12 @@ namespace Allax
         {
             var LIndex = SolParams.lastNotEmptyLayerIndex;
             var Block = SolParams.Way.layers[LIndex].blocks[0];
-            var Params = new BlockStateExtrParams(WayConverter.ToLong(Block.active_inputs),
+            var Params = new BlockStateExtrParams(Block.Inputs,
                                                                 new Prevalence(), new Prevalence(), SolParams.Type);
             var States = SolParams.Engine.GetSPNetInstance().GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if (States.Count == 1)
             {
-                //deep copying
-                var Outputs = WayConverter.ToList(States[0].outputs, States[0].BlockSize);
-                foreach (var j in Enumerable.Range(0, Block.active_outputs.Count))
-                {
-                   Block.active_outputs[j] = Outputs[j];
-                }
+                Block.Outputs = WayConverter.ToLong(States[0].CustomOutput);
                 SolParams.Way.layers[LIndex].blocks[0] = Block;
             }
             else
@@ -109,7 +104,11 @@ namespace Allax
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
             if (SolParams.lastNotEmptyLayerIndex == -1)
+            {
                 SolParams.lastNotEmptyLayerIndex = WayConverter.SearchLastNotEmptyLayer(SolParams.Way);
+                if (SolParams.lastNotEmptyLayerIndex == -1)
+                    return;
+            }
             #endregion
             #region FullRounds
             if ((SolParams.lastNotEmptyLayerIndex >= 0) && (SolParams.lastNotEmptyLayerIndex / 3 < roundsCount - 1))
@@ -122,7 +121,7 @@ namespace Allax
                         KLayer(SolParams);
                         WayConverter.CopyOutToIn(SolParams.Way, SolParams.lastNotEmptyLayerIndex, SolParams.lastNotEmptyLayerIndex + 1);
                         SolParams.lastNotEmptyLayerIndex++;
-                        SolParams.BIndex = -1;
+                        SolParams.BIndex = -1; //reset after previous S-layer
                     }
                     #endregion
                     #region S-layer

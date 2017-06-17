@@ -41,17 +41,7 @@ namespace Allax
             int index = -1;
             for (int i = 0; i < Way.layers.Count; i++)
             {
-                int input_sum = 0;
-                if (Way.layers[i].blocks != null)
-                    foreach (var block in Way.layers[i].blocks)
-                    {
-                        if (block.active_inputs != null)
-                            foreach (var input in block.active_inputs)
-                            {
-                                input_sum += Convert.ToInt32(input);
-                            }
-                    }
-                if (input_sum == 0)
+                if (Way.layers[i].blocks.All(x => x.Inputs == 0))
                 {
                     index = i - 1;
                     break;
@@ -81,10 +71,9 @@ namespace Allax
                     if (tmp.type != LayerType.SLayer)
                     {
                         var tmp_block = new SPNetWayBlock();
-                        tmp_block.active_inputs = new List<bool>();
-                        tmp_block.active_outputs = new List<bool>();
-                        tmp_block.active_inputs.AddRange(Enumerable.Repeat(false, Settings.WordLength));
-                        tmp_block.active_outputs.AddRange(Enumerable.Repeat(false, Settings.WordLength));
+                        tmp_block.Inputs = 0;
+                        tmp_block.Outputs = 0;
+                        tmp_block.BlockSize = Settings.WordLength;
                         tmp.blocks.Add(tmp_block);
                     }
                     else
@@ -92,10 +81,9 @@ namespace Allax
                         foreach (var j in Enumerable.Range(0, Settings.SBoxCount))
                         {
                             var tmp_sblock = new SPNetWayBlock();
-                            tmp_sblock.active_inputs = new List<bool>();
-                            tmp_sblock.active_outputs = new List<bool>();
-                            tmp_sblock.active_inputs.AddRange(Enumerable.Repeat(false, Settings.SBoxSize));
-                            tmp_sblock.active_outputs.AddRange(Enumerable.Repeat(false, Settings.SBoxSize));
+                            tmp_sblock.Inputs = 0;
+                            tmp_sblock.Outputs = 0;
+                            tmp_sblock.BlockSize = Settings.SBoxSize;
                             tmp.blocks.Add(tmp_sblock);
                         }
                     }
@@ -131,22 +119,9 @@ namespace Allax
                         for (int j = 0; j < Way.layers[i].blocks.Count; j++)
                         {
                             var tmp_block = new SPNetWayBlock();
-                            if (Way.layers[i].blocks[j].active_inputs != null & Way.layers[i].blocks[j].active_outputs != null)
-                            {
-                                tmp_block.active_inputs = new List<bool>(Way.layers[i].blocks[j].active_inputs.Count);
-                                tmp_block.active_outputs = new List<bool>(Way.layers[i].blocks[j].active_outputs.Count);
-                                tmp_block.active_inputs.AddRange(Enumerable.Repeat(false, Way.layers[i].blocks[j].active_inputs.Count));
-                                tmp_block.active_outputs.AddRange(Enumerable.Repeat(false, Way.layers[i].blocks[j].active_outputs.Count));
-                                if (!empty & (Way.layers[i].blocks[j].active_inputs.Count == Way.layers[i].blocks[j].active_outputs.Count))
-                                {
-                                    for (int k = 0; k < Way.layers[i].blocks[j].active_inputs.Count; k++)
-                                    {
-                                        tmp_block.active_inputs[k] = Way.layers[i].blocks[j].active_inputs[k];
-                                        tmp_block.active_outputs[k] = Way.layers[i].blocks[j].active_outputs[k];
-                                    }
-                                }
-
-                            }
+                            tmp_block.Inputs = (empty) ? 0 : Way.layers[i].blocks[j].Inputs;
+                            tmp_block.Outputs = (empty) ? 0 : Way.layers[i].blocks[j].Outputs;
+                            tmp_block.BlockSize = Way.layers[i].blocks[j].BlockSize;
                             tmp_layer.blocks.Add(tmp_block);
                         }
                     }
@@ -158,10 +133,9 @@ namespace Allax
         public static SPNetWay ToWay(ISPNet Net, SolverInputs Input)
         {
             var Way = ToWay(Net);
-            foreach(var j in Enumerable.Range(0, Input.input.Count))
-            {
-                Way.layers[0].blocks[0].active_inputs[j] = Input.input[j];
-            }
+            var Block = Way.layers[0].blocks[0];
+            Block.Inputs = Input.Input;
+            Way.layers[0].blocks[0] = Block;
             return Way;
         }
         public static void CopyOutToIn(SPNetWay Way, int SrcLIndex, int DestLIndex)
@@ -171,34 +145,37 @@ namespace Allax
                 #region From S-layer to P-layer
                 if (Way.layers[SrcLIndex].type == LayerType.SLayer && Way.layers[DestLIndex].type == LayerType.PLayer)
                 {
-                    Way.layers[DestLIndex].blocks[0].active_inputs.Clear();
-                    for (int i = 0; i < Way.layers[SrcLIndex].blocks.Count; i++)
+                    var PBlock = Way.layers[DestLIndex].blocks[0];
+                    PBlock.Inputs = 0;
+                    var Offset = Way.layers[SrcLIndex].blocks[0].BlockSize;
+                    var Count = Way.layers[SrcLIndex].blocks.Count;
+                    for (int i = 0; i < Count; i++)
                     {
-                        for (int j = 0; j < Way.layers[SrcLIndex].blocks[i].active_outputs.Count; j++)
-                        {
-                            Way.layers[DestLIndex].blocks[0].active_inputs.Add(Way.layers[SrcLIndex].blocks[i].active_outputs[j]);
-                        }
+                        PBlock.Inputs |= Way.layers[SrcLIndex].blocks[i].Outputs << ((Count - 1 - i) * Offset);
                     }
+                    Way.layers[DestLIndex].blocks[0] = PBlock;
                 }
                 #endregion
                 #region From P-Layer to K-Layer
                 if (Way.layers[SrcLIndex].type == LayerType.PLayer && Way.layers[DestLIndex].type == LayerType.KLayer)
                 {
                     var block = Way.layers[DestLIndex].blocks[0];
-                    block.active_inputs = Way.layers[SrcLIndex].blocks[0].active_outputs;
+                    block.Inputs = Way.layers[SrcLIndex].blocks[0].Outputs;
                     Way.layers[DestLIndex].blocks[0] = block;
                 }
                 #endregion
                 #region From K-Layer to S-Layer
                 if (Way.layers[SrcLIndex].type == LayerType.KLayer && Way.layers[DestLIndex].type == LayerType.SLayer)
                 {
-                    var srcBIndex = 0;
-                    for (int i = 0; i < Way.layers[DestLIndex].blocks.Count; i++)
+                    var Offset = Way.layers[DestLIndex].blocks[0].BlockSize;
+                    var SBlocksCount = Way.layers[DestLIndex].blocks.Count;
+                    for (int i = 0; i < SBlocksCount; i++)
                     {
-                        for (int j = 0; (j < Way.layers[DestLIndex].blocks[i].active_inputs.Count) && (srcBIndex < Way.layers[SrcLIndex].blocks[0].active_outputs.Count); j++, srcBIndex++)
-                        {
-                            Way.layers[DestLIndex].blocks[i].active_inputs[j] = Way.layers[SrcLIndex].blocks[0].active_outputs[srcBIndex];
-                        }
+                        var SBlock = Way.layers[DestLIndex].blocks[i];
+                        SBlock.Inputs = Way.layers[SrcLIndex].blocks[0].Inputs;
+                        SBlock.Inputs = (64 - Offset * (SBlocksCount - i + 1));
+                        SBlock.Inputs = (((uint)Way.layers[SrcLIndex].blocks[0].Inputs) << (64 - Offset * (SBlocksCount - i))) >> (64 - Offset);
+                        Way.layers[DestLIndex].blocks[i] = SBlock;
                     }
                 }
                 #endregion

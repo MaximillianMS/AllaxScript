@@ -15,7 +15,7 @@ namespace Allax
                 var State = States[0];
                 var NewWay = WayConverter.CloneWay(SolParams.Way);
                 var NewBLock = NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex];
-                NewBLock.active_outputs = WayConverter.ToList(State.outputs, State.BlockSize);
+                NewBLock.Outputs = State.outputs;
                 NewWay.layers[SolParams.lastNotEmptyLayerIndex].blocks[SolParams.BIndex] = NewBLock;
                 var NewSolParams = SolParams;
                 NewSolParams.P *= State.MatrixValue;
