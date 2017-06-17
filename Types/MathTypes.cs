@@ -173,7 +173,7 @@ namespace Allax
             var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
             var N = BigInteger.Divide(Numerator, GCD);
             D = BigInteger.Divide(D, GCD);
-            return ((long)N) / (double)(D);
+            return ((double)N) / (double)(D);
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         /// <summary>
@@ -230,7 +230,7 @@ namespace Allax
                 var tempR = R.Numerator;
                 var Mul = new BigInteger(1 << L.BlockSize);
                 var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
-                for (int i=0;i<Diff;i++)
+                for (int i=0;i<Math.Abs(Diff);i++)
                 {
                     if(Diff>0)
                     {
@@ -266,7 +266,7 @@ namespace Allax
                 var tempR = R.Numerator;
                 var Mul = new BigInteger(1 << L.BlockSize);
                 var Diff = L.ActiveBlocksCount - R.ActiveBlocksCount;
-                for (int i = 0; i < Diff; i++)
+                for (int i = 0; i < Math.Abs(Diff); i++)
                 {
                     if (Diff > 0)
                     {
