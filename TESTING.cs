@@ -15,11 +15,12 @@ namespace AllaxScript
         public class OutPut
         {
             private object syncRoot = new object();
-            int SolveCounter = 0;
+            //int SolveCounter = 0;
             int TaskCounter = 0;
+            private System.Collections.Concurrent.ConcurrentBag<Solution> Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
             public void TaskFinished(Task T)
             {
-                //lock(syncRoot)
+                lock(syncRoot)
                 {
                     Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
@@ -27,7 +28,8 @@ namespace AllaxScript
             }
             public void ClearCounters()
             {
-                SolveCounter = 0;
+                Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
+                //SolveCounter = 0;
                 TaskCounter = 0;
             }
             public string PrintWay(SPNetWay W, int MaxLayers = -1)
@@ -90,15 +92,32 @@ namespace AllaxScript
             }
             public bool MyAddSolution(Solution S)
             {
-                lock (syncRoot)
+                Solutions.Add(S);
+                return true;
+            }
+            public void PrintSolution(Solution S, int SolveCounter)
+            {
+                var W = S.Way;
+                var P = S.P;
+                var FullOut = String.Format("Solution {0}. Prevalence: {1}. Active blocks count: {2}.", ++SolveCounter, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
+                FullOut += "\n\n";
+                FullOut += PrintWay(W);
+                Console.WriteLine(FullOut);
+            }
+            public void GetSolutions()
+            {
+                if(Solutions!=null)
                 {
-                    var W = S.Way;
-                    var P = S.P;
-                    var FullOut = String.Format("Solution {0}. Prevalence: {1}. Active blocks count: {2}.", ++SolveCounter, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
-                    FullOut += "\n\n";
-                    FullOut += PrintWay(W);
-                    Console.WriteLine(FullOut);
-                    return true;
+                    if(Solutions.Count>0)
+                    {
+                        Console.WriteLine("Solutions count: {0}", Solutions.Count);
+                        var SortedSolutions = Solutions.ToList().OrderByDescending(x => Math.Abs(x.P.ToDelta())).ToList();
+                        for(int i =0; i<SortedSolutions.Count();i++)
+                        {
+                            var Sol = SortedSolutions[i];
+                            PrintSolution(Sol, i);
+                        }
+                    }
                 }
             }
             public void ExportDB()
@@ -479,11 +498,12 @@ namespace AllaxScript
             {
                 try
                 {
-                    string M = "1 - Create Net\n" +
+                    string M =  "1 - Create Net\n" +
                                 "2 - Manage Net\n" +
                                 "3 - Export DB to file\n" +
                                 "4 - Import DB\n"+
-                                "5 - Exit\n";
+                                "5 - Exit\n" +
+                                "6 - Get results\n";
                     Console.WriteLine(M);
                     var K = Convert.ToInt32(Console.ReadLine());
                     Console.WriteLine();
@@ -513,6 +533,20 @@ namespace AllaxScript
                         case 5:
                             {
                                 exit = true;
+                                break;
+                            }
+                        case 6:
+                            {
+                                output.GetSolutions();
+                                break;
+                            }
+                        case 8:
+                            {
+                                var W = E.GetWorkerInstance();
+                                if(W!=null)
+                                {
+                                    W.Dispose();
+                                }
                                 break;
                             }
                         default:

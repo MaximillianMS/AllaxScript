@@ -186,6 +186,7 @@ namespace Allax
 
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {
+            ;
             if(Thread.GetState()==WorkerThreadState.Free)
             {
                 TASKDONE.BeginInvoke(Thread.GetCurrentTask(), null, null);

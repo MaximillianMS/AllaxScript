@@ -250,8 +250,8 @@ namespace Allax
                     }
                 }
                 var ret = BigInteger.Abs(tempL) >= BigInteger.Abs(tempR);
-                var chk = Math.Abs(L.ToDelta()) >= Math.Abs(R.ToDelta());
-                Debug.Assert(ret == chk);
+                //var chk = Math.Abs(L.ToDelta()) >= Math.Abs(R.ToDelta());
+                //Debug.Assert(ret == chk);
                 return ret;
             }
         }
