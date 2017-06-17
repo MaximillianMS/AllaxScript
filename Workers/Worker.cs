@@ -26,9 +26,6 @@ namespace Allax
 
         public WorkerThread(int ExternalId)
         {
-            if (Tr != null)
-                Tr.Abort();
-            Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
             ID = ExternalId;
         }
 
@@ -68,6 +65,9 @@ namespace Allax
         public void Init(WorkerThreadParams Params)
         {
             this.Params = Params;
+            if (Tr != null)
+                Tr.Abort();
+            Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
             this.Params.State = WorkerThreadState.Loaded;
         }
         /// <summary>
@@ -93,7 +93,7 @@ namespace Allax
                 }
                 try
                 {
-                    Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
+                    //Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
                     Params.State = WorkerThreadState.Started;
                     Tr.Start();
                 }

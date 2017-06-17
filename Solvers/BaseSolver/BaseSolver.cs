@@ -100,6 +100,10 @@ namespace Allax
         }
         public virtual void Solve(SolverParams SolParams)
         {
+            if(SolParams.Way.layers[0].blocks[0].Inputs == 0x0300000000000000)
+            {
+                ;
+            }
             var layersCount = SolParams.Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
@@ -149,6 +153,10 @@ namespace Allax
             #region LastRound
             //No need to process LastRound, because LastRound must be reversed.
             #endregion
+            if(SolParams.P.ToDelta()==0)
+            {
+                ;
+            }
             var Net = SolParams.Engine.GetSPNetInstance();
             SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
             if (SolParams.P > SolParams.Engine.GetMultiThreadPrevalence())

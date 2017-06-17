@@ -172,9 +172,7 @@ namespace Allax
                     for (int i = 0; i < SBlocksCount; i++)
                     {
                         var SBlock = Way.layers[DestLIndex].blocks[i];
-                        SBlock.Inputs = Way.layers[SrcLIndex].blocks[0].Inputs;
-                        SBlock.Inputs = (64 - Offset * (SBlocksCount - i + 1));
-                        SBlock.Inputs = (((uint)Way.layers[SrcLIndex].blocks[0].Inputs) << (64 - Offset * (SBlocksCount - i))) >> (64 - Offset);
+                        SBlock.Inputs = (uint)((((ulong)Way.layers[SrcLIndex].blocks[0].Inputs) << (64 - Offset * (SBlocksCount - i))) >> (64 - Offset));
                         Way.layers[DestLIndex].blocks[i] = SBlock;
                     }
                 }

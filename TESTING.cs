@@ -20,7 +20,7 @@ namespace AllaxScript
             private System.Collections.Concurrent.ConcurrentBag<Solution> Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
             public void TaskFinished(Task T)
             {
-                lock(syncRoot)
+                lock (syncRoot)
                 {
                     Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
@@ -52,20 +52,20 @@ namespace AllaxScript
                     {
                         case LayerType.KLayer:
                             {
-                                I += string.Format("K-Layer {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("K-Layer {0,2} OUT:\t", i / 3 + 1);
+                                I += string.Format("K {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("K {0, 2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                         case LayerType.SLayer:
                             {
-                                I += string.Format("S-Layer {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("S-Layer {0, 2} OUT:\t", i / 3 + 1);
+                                I += string.Format("S {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("S {0, 2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                         case LayerType.PLayer:
                             {
-                                I += string.Format("P-Layer {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("P-Layer {0, 2} OUT:\t", i / 3 + 1);
+                                I += string.Format("P {0, 2}  IN:\t", i / 3 + 1);
+                                O += string.Format("P {0, 2} OUT:\t", i / 3 + 1);
                                 break;
                             }
                     }
@@ -93,6 +93,7 @@ namespace AllaxScript
             public bool MyAddSolution(Solution S)
             {
                 Solutions.Add(S);
+                Console.WriteLine("Solution has been found. Prevalence: {1}. Active blocks count: {2}. Total solutions: {0}.", Solutions.Count, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
                 return true;
             }
             public void PrintSolution(Solution S, int SolveCounter)
@@ -106,13 +107,13 @@ namespace AllaxScript
             }
             public void GetSolutions()
             {
-                if(Solutions!=null)
+                if (Solutions != null)
                 {
-                    if(Solutions.Count>0)
+                    if (Solutions.Count > 0)
                     {
                         Console.WriteLine("Solutions count: {0}", Solutions.Count);
                         var SortedSolutions = Solutions.ToList().OrderByDescending(x => Math.Abs(x.P.ToDelta())).ToList();
-                        for(int i =0; i<SortedSolutions.Count();i++)
+                        for (int i = 0; i < SortedSolutions.Count()&&i<3; i++)
                         {
                             var Sol = SortedSolutions[i];
                             PrintSolution(Sol, i);
@@ -162,6 +163,16 @@ namespace AllaxScript
                     Console.WriteLine("Engine and DB have not been created.");
                 }
             }
+            public void PrintByteArray(byte[] bytes)
+            {
+                var sb = new StringBuilder("{ ");
+                foreach (var b in bytes)
+                {
+                    sb.Append(b + ", ");
+                }
+                sb.Append("}");
+                Console.WriteLine(sb.ToString());
+            }
 
         }
         private static string ReadLine()
@@ -208,44 +219,30 @@ namespace AllaxScript
             }
             return ret;
         }
-        public static void Menu1_2_2_1()
+        public struct PredefinedInitKey
         {
-            var SBL= Net.GetSettings().WordLength / Net.GetSettings().SBoxCount;
-            List<byte> SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
-            int mode = 0;
-            while (mode != 1 && mode != 2)
+            public override bool Equals(object obj)
             {
-                Console.WriteLine("Make all boxes the same? [1 - Yes, 2 - Nope]");
-                mode = Convert.ToInt32(Console.ReadLine());
-                Console.WriteLine();
+                var R = (PredefinedInitKey)obj;
+                return (R.Length == Length) && (R.BoxType == BoxType);
             }
-            if (mode == 1)
+            public override int GetHashCode()
             {
-                int predefined = 0;
-                if ((1<<SBL)==SBlockInit.Count)
-                {
-                    while (predefined != 1 && predefined != 2)
-                    {
-                        Console.WriteLine("Use predefined init? [1 - Yes, 2 - Nope]");
-                        predefined = Convert.ToInt32(Console.ReadLine());
-                        Console.WriteLine();
-                    }
-                }
-                SBlockInit=(predefined==1)?SBlockInit:GetInitialSequence(1<<SBL);
+                return Length.GetHashCode() ^ BoxType.GetHashCode();
             }
-            for (int i = 0; i < (Net.GetLayers().Count / 3 - 1); i++)
-            {
-                for(int j=0;j<Net.GetLayers()[3*i+1].GetBlocks().Count;j++)
-                {
-                    Net.GetLayers()[3 * i + 1].GetBlocks()[j].Init((mode==1)?SBlockInit:GetInitialSequence(SBL));
-                }
-            }
-
+            public int Length;
+            public Allax.LayerType BoxType;
         }
-        public static void Menu1_2_2_2()
+        static public Dictionary<PredefinedInitKey, List<byte>> PredefinedInits = new Dictionary<PredefinedInitKey, List<byte>> {
+            { new PredefinedInitKey {Length = 16, BoxType = LayerType.SLayer }, new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 } },
+            { new PredefinedInitKey {Length = 256, BoxType = LayerType.SLayer },  new List<byte> { 35, 183, 46, 247, 18, 34, 78, 125, 81, 21, 198, 128, 200, 117, 52, 195, 174, 85, 86, 248, 141, 13, 227, 5, 40, 149, 178, 224, 134, 65, 249, 24, 142, 132, 173, 169, 138, 235, 214, 193, 108, 3, 79, 176, 166, 225, 102, 194, 20, 140, 47, 103, 70, 208, 95, 241, 152, 171, 88, 187, 137, 26, 181, 167, 153, 157, 9, 201, 17, 146, 73, 123, 93, 58, 53, 242, 226, 206, 160, 188, 243, 75, 237, 16, 66, 139, 236, 59, 136, 175, 252, 83, 10, 42, 190, 147, 251, 131, 0, 221, 203, 14, 104, 151, 150, 165, 62, 69, 61, 255, 124, 25, 158, 7, 38, 122, 97, 29, 60, 170, 106, 189, 156, 155, 45, 196, 2, 64, 1, 145, 50, 23, 240, 216, 213, 63, 87, 22, 186, 68, 27, 28, 191, 82, 118, 244, 8, 228, 101, 230, 209, 233, 12, 44, 182, 133, 211, 115, 94, 161, 67, 105, 154, 98, 109, 121, 177, 4, 33, 48, 253, 111, 56, 32, 205, 49, 218, 54, 127, 204, 210, 71, 120, 185, 250, 114, 223, 254, 231, 219, 15, 113, 238, 163, 207, 234, 245, 179, 143, 212, 107, 19, 77, 43, 55, 246, 239, 215, 37, 57, 126, 164, 41, 168, 30, 172, 110, 232, 90, 202, 192, 220, 76, 39, 148, 84, 130, 229, 11, 96, 112, 100, 217, 6, 116, 31, 119, 91, 144, 199, 36, 89, 99, 180, 222, 197, 135, 92, 51, 162, 129, 159, 72, 80, 184, 74 } },
+            {new PredefinedInitKey {Length = 16, BoxType = LayerType.PLayer }, new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 } },
+            {new PredefinedInitKey {Length = 64, BoxType=LayerType.PLayer }, new List<byte> { 7, 62, 57, 55, 37, 30, 31, 10, 14, 59, 16, 58, 29, 53, 8, 48, 49, 26, 32, 54, 13, 4, 1, 2, 43, 33, 40, 24, 39, 36, 12, 50, 42, 22, 21, 64, 63, 51, 6, 3, 46, 61, 5, 27, 28, 60, 15, 41, 23, 17, 11, 45, 52, 9, 20, 19, 44, 47, 34, 18, 35, 25, 56, 38 } }
+        };
+        public static void Menu1_2_2_1(LayerType Type)
         {
-            var SBL = Net.GetSettings().WordLength;
-            List<byte> BlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
+            var BL = (Type == LayerType.SLayer) ? 1 << Net.GetSettings().SBoxSize : Net.GetSettings().WordLength;
+            var BlockInit = new List<byte>();
             int mode = 0;
             while (mode != 1 && mode != 2)
             {
@@ -256,7 +253,8 @@ namespace AllaxScript
             if (mode == 1)
             {
                 int predefined = 0;
-                if (SBL == BlockInit.Count)
+                var Key = new PredefinedInitKey { Length = BL, BoxType = Type };
+                if (PredefinedInits.ContainsKey(Key))
                 {
                     while (predefined != 1 && predefined != 2)
                     {
@@ -265,16 +263,31 @@ namespace AllaxScript
                         Console.WriteLine();
                     }
                 }
-                BlockInit = (predefined == 1) ? BlockInit : GetInitialSequence(SBL);
+                if (predefined == 1)
+                {
+                    PredefinedInits.TryGetValue(Key, out BlockInit);
+                }
+                else
+                {
+                    BlockInit = GetInitialSequence(BL);
+                }
             }
             for (int i = 0; i < (Net.GetLayers().Count / 3 - 1); i++)
             {
-                for (int j = 0; j < Net.GetLayers()[3 * i + 2].GetBlocks().Count; j++)
+                var L = Net.GetLayers()[3 * i + ((Type == LayerType.SLayer) ? 1 : 2)];
+                if (L.GetLayerType() == Type)
                 {
-                    Net.GetLayers()[3 * i + 2].GetBlocks()[j].Init((mode == 1) ? BlockInit : GetInitialSequence(SBL));
+                    for (int j = 0; j < L.GetBlocks().Count; j++)
+                    {
+                        Console.WriteLine(String.Format("{1}-Layer {0, 2}:", i + 1, (((Type == LayerType.SLayer) ? "S" : "P"))));
+                        L.GetBlocks()[j].Init((mode == 1) ? BlockInit : GetInitialSequence(BL));
+                        if (mode == 1)
+                        {
+                            output.PrintByteArray(BlockInit.ToArray());
+                        }
+                    }
                 }
             }
-
         }
         public static void Menu1_2_2()
         {
@@ -285,19 +298,7 @@ namespace AllaxScript
                 AT = Convert.ToInt32(Console.ReadLine());
                 Console.WriteLine();
             }
-            switch(AT)
-            {
-                case 1:
-                    {
-                        Menu1_2_2_1();
-                        break;
-                    }
-                case 2:
-                    {
-                        Menu1_2_2_2();
-                        break;
-                    }
-            }
+            Menu1_2_2_1((AT == 1) ? LayerType.SLayer : LayerType.PLayer);
 
         }
         public static AnalisysParams GetAnalisysParams(AnalisysType Type)
@@ -503,7 +504,8 @@ namespace AllaxScript
                                 "3 - Export DB to file\n" +
                                 "4 - Import DB\n"+
                                 "5 - Exit\n" +
-                                "6 - Get results\n";
+                                "6 - Get results\n" +
+                                "8 - Abort analisys\n";
                     Console.WriteLine(M);
                     var K = Convert.ToInt32(Console.ReadLine());
                     Console.WriteLine();
