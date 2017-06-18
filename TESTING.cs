@@ -22,7 +22,8 @@ namespace AllaxScript
             {
                 lock (syncRoot)
                 {
-                    Console.WriteLine("Task {0} has been finished.", ++TaskCounter);
+                    var Time = (T.Params.EndTime - T.Params.StartTime);
+                    Console.WriteLine("Task {0} has been finished. Exec time: {1}.", ++TaskCounter, Time.ToString());
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
                 }
             }

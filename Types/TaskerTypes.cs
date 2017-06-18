@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Allax
 {
@@ -30,8 +26,12 @@ namespace Allax
         {
             this.Weight = Weight;
             //this.Time = Time;
+            this.StartTime = DateTime.Now;
+            this.EndTime = DateTime.Now;
         }
         public int Weight;
+        public DateTime StartTime;
+        public DateTime EndTime;
         //public MultiTime Time;
     }
     public struct Task
@@ -41,15 +41,13 @@ namespace Allax
             return SolParams.Way;
         }
         public ISolver Solver;
-        //long CurrentCorrelation;
-        ExtraParams Params;
+        public ExtraParams Params;
         SolverParams SolParams;
         public Task(ISolver Solver, SolverParams SolParams, ExtraParams Params)
         {
             this.Solver = Solver;
             this.SolParams = SolParams;
             this.Params = Params;
-            //this.CurrentCorrelation = CurrentCorrelation;
         }
         public Task(ISolver Solver, SolverParams SolParams)
         {
@@ -59,7 +57,9 @@ namespace Allax
         }
         public void Exec()
         {
+            Params.StartTime = DateTime.Now;
             Solver.Solve(SolParams);
+            Params.EndTime = DateTime.Now;
         }
     }
     public struct TaskerParams

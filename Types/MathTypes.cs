@@ -176,7 +176,7 @@ namespace Allax
             {
                 return 0;
             }
-            var Mul = new BigInteger(1 << BlockSize);
+            var Mul = 1 << BlockSize;
             var D = BigInteger.Pow(Mul, ActiveBlocksCount);
             var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
             var N = BigInteger.Divide(Numerator, GCD);
