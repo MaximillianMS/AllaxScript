@@ -17,21 +17,29 @@ namespace AllaxScript
             private object syncRoot = new object();
             //int SolveCounter = 0;
             int TaskCounter = 0;
+            TimeSpan AnalisysTime = TimeSpan.Zero;
             private System.Collections.Concurrent.ConcurrentBag<Solution> Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
             public void TaskFinished(Task T)
             {
                 lock (syncRoot)
                 {
                     var Time = (T.Params.EndTime - T.Params.StartTime);
+                    AnalisysTime += Time;
                     Console.WriteLine("Task {0} has been finished. Exec time: {1}.", ++TaskCounter, Time.ToString());
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
                 }
+            }
+            public void AllTasksFinished(object sender, EventArgs e)
+            {
+                Console.WriteLine("All tasks finished. Total time: {0}.", (DateTime.Now-StartTime).ToString());
+                Console.WriteLine("Enter 0 to continue...");
             }
             public void ClearCounters()
             {
                 Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
                 //SolveCounter = 0;
                 TaskCounter = 0;
+                AnalisysTime = TimeSpan.Zero;
             }
             public string PrintWay(SPNetWay W, int MaxLayers = -1)
             {
@@ -240,11 +248,10 @@ namespace AllaxScript
             {new PredefinedInitKey {Length = 16, BoxType = LayerType.PLayer }, new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 } },
             {new PredefinedInitKey {Length = 64, BoxType=LayerType.PLayer }, new List<byte> { 7, 62, 57, 55, 37, 30, 31, 10, 14, 59, 16, 58, 29, 53, 8, 48, 49, 26, 32, 54, 13, 4, 1, 2, 43, 33, 40, 24, 39, 36, 12, 50, 42, 22, 21, 64, 63, 51, 6, 3, 46, 61, 5, 27, 28, 60, 15, 41, 23, 17, 11, 45, 52, 9, 20, 19, 44, 47, 34, 18, 35, 25, 56, 38 } }
         };
-        public static void Menu1_2_2_1(LayerType Type)
+        public static void Menu1_2_2_1(LayerType Type, int mode = 0, int predefined = 0)
         {
             var BL = (Type == LayerType.SLayer) ? 1 << Net.GetSettings().SBoxSize : Net.GetSettings().WordLength;
             var BlockInit = new List<byte>();
-            int mode = 0;
             while (mode != 1 && mode != 2)
             {
                 Console.WriteLine("Make all boxes the same? [1 - Yes, 2 - Nope]");
@@ -253,7 +260,6 @@ namespace AllaxScript
             }
             if (mode == 1)
             {
-                int predefined = 0;
                 var Key = new PredefinedInitKey { Length = BL, BoxType = Type };
                 if (PredefinedInits.ContainsKey(Key))
                 {
@@ -290,16 +296,15 @@ namespace AllaxScript
                 }
             }
         }
-        public static void Menu1_2_2()
+        public static void Menu1_2_2(int AT = 0, int mode = 0, int predefined = 0)
         {
-            int AT = 0;
             while (AT != 1 && AT != 2)
             {
                 Console.WriteLine("Which type of layer you wanna init? [1 - S-box, 2 - P-box]");
                 AT = Convert.ToInt32(Console.ReadLine());
                 Console.WriteLine();
             }
-            Menu1_2_2_1((AT == 1) ? LayerType.SLayer : LayerType.PLayer);
+            Menu1_2_2_1((AT == 1) ? LayerType.SLayer : LayerType.PLayer, mode, predefined);
 
         }
         public static AnalisysParams GetAnalisysParams(AnalisysType Type)
@@ -457,6 +462,7 @@ namespace AllaxScript
                 case "4":
                     {
                         output.ClearCounters();
+                        StartTime = DateTime.Now;
                         E.PerformAnalisys(GetAnalisysParams(AnalisysType.Linear));
                         break;
                     }
@@ -492,6 +498,24 @@ namespace AllaxScript
             SBDB = E.GetSBlockDBInstance();
             AddFullRound(Net);
             AddLastRound(Net);
+            if((SL==8&&WL==64)||(SL==4&&WL==16))
+            {
+                var mode = 0;
+                while (mode != 1 && mode != 2)
+                {
+                    Console.WriteLine("Use standard Net (8 rounds, predefined Boxes)? [1 - Yes, 2 - Nope]");
+                    mode = Convert.ToInt32(Console.ReadLine());
+                    Console.WriteLine();
+                }
+                if(mode==1)
+                {
+                    var count = 6;
+                    foreach (var i in Enumerable.Range(0, count))
+                        AddRound(Net);
+                    Menu1_2_2(1, 1, 1);
+                    Menu1_2_2(2, 1, 1);
+                }
+            }
         }
         public static void Menu1()
         {
@@ -567,31 +591,13 @@ namespace AllaxScript
         public static ISPNet Net;
         public static ISBlockDB SBDB;
         public static OutPut output;
+        public static DateTime StartTime;
         public static void Main()
         {
-            /*
-                        Allax.IEngine E= new Engine();
-                        var OUT = new OutPut();
-                        var SBDB = E.GetSBlockDBInstance();
-                        var Settings = new Allax.SPNetSettings(16, 4, SBDB);
-                        var Net = E.GetSPNetInstance(Settings);
-                        AddFullRound(Net);
-                        AddFullRound(Net);
-                        AddLastRound(Net);
-                        List<byte> SBlockInit = new List<byte>{ 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
-                        var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
-                        InitSLayer(1, SBlockInit, Net);
-                        InitSLayer(4, SBlockInit, Net);
-                        InitPLayer(2, PBlockInit, Net);
-                        InitPLayer(5, PBlockInit, Net);
-                        var R1 = new Rule(AvailableSolverTypes.BaseSolver);
-                        var R2 = new Rule(AvailableSolverTypes.HeuristicSolver);
-                        var F = new Allax.CallbackAddSolution(OUT.MyAddSolution);
-                        var AP = new AnalisysParams(new Algorithm(new List<Rule> { / *R1,* / R2 }, AnalisysType.Linear), F, 1);
-                        //Net.PerformAnalisys(AP);*/
             output = new OutPut();
             E = new Engine(new EngineSettings(output.MyAddSolution));
             E.TASKDONE += output.TaskFinished;
+            E.ALLTASKSDONE += output.AllTasksFinished;
             Menu1();
         }
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)

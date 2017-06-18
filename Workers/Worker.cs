@@ -183,8 +183,10 @@ namespace Allax
     }
     public class Worker : IWorker
     {
+        WorkerThreadState State = WorkerThreadState.Free;
+        private static readonly object syncRoot = new object();
         public event TASKHANDLER TASKDONE;
-
+        public event EventHandler ALLTASKSDONE;
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {
             ;
@@ -212,6 +214,7 @@ namespace Allax
             this.Params = Params;
             TaskQueue = new ConcurrentQueue<Task>();
             CreateTheads();
+            State = WorkerThreadState.Loaded;
         }
         void CreateTheads()
         {
@@ -250,11 +253,24 @@ namespace Allax
                     OK = false;
 
                 }
+                else
+                {
+                    lock (syncRoot)
+                    {
+                        if(State!=WorkerThreadState.Stopped)
+                        if (Threads.All(x => x.GetState() == WorkerThreadState.Free))
+                        {
+                            State = WorkerThreadState.Stopped;
+                            ALLTASKSDONE.BeginInvoke(null, null, null, null);
+                        }
+                    }
+                }
             }
             return OK;
         }
         public void Run()
         {
+            State = WorkerThreadState.Started;
             AddTasks(Params.MaxThreads - TaskQueue.Count);
             if ((TaskQueue.Count != 0) && (!Params.Engine.GetTaskerInstance().IsFinished()))
             {

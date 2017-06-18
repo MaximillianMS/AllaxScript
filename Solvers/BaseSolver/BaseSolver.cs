@@ -100,10 +100,6 @@ namespace Allax
         }
         public virtual void Solve(SolverParams SolParams)
         {
-            if(SolParams.Way.layers[0].blocks[0].Inputs == 0x0300000000000000)
-            {
-                ;
-            }
             var layersCount = SolParams.Way.layers.Count();
             var roundsCount = layersCount / 3;
             #region FindLastNotEmptyLayer
@@ -157,11 +153,10 @@ namespace Allax
             {
                 ;
             }
-            var Net = SolParams.Engine.GetSPNetInstance();
-            SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
             if (SolParams.P > SolParams.Engine.GetMultiThreadPrevalence())
             {
                 SolParams.Engine.SetMultiThreadPrevalence(SolParams.P);
+                SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
             }
         }
     }

@@ -262,17 +262,18 @@ namespace Allax
                 {
                     break;
                 }
-                var P = state.MatrixValue * Params.CurrentPrevalence;
-                if ((P > Params.MIN) || (!Params.CheckPrevalence))
+                if(state.inputs == Params.Inputs)
                 {
-                    if (state.inputs == Params.Inputs)
+                    var P = state.MatrixValue * Params.CurrentPrevalence;
+                    if ((P > Params.MIN) || (!Params.CheckPrevalence))
                     {
+
                         ret.Add(state);
                     }
-                }
-                else
-                {
-                    break;
+                    else
+                    {
+                        break;
+                    }
                 }
             }
             return ret;
@@ -488,6 +489,7 @@ namespace Allax
     {
         public event TASKHANDLER TASKDONE;
         public event TASKHANDLER TASKADDED;
+        public event EventHandler ALLTASKSDONE;
         IWorker TheWorker;
         ISPNet TheNet;
         ISBlockDB TheDB;
@@ -531,6 +533,7 @@ namespace Allax
                 var WorkerParams = new WorkerParams(this, Params.MaxThreads);
                 TheWorker = new Worker(WorkerParams);
                 TheWorker.TASKDONE += TheWorker_TASKDONE;
+                TheWorker.ALLTASKSDONE += TheWorker_ALLTASKSDONE;
                 {
                     if (!Params.ASync)
                     {
@@ -547,6 +550,11 @@ namespace Allax
                 Logger.UltraLogger.Instance.ExportToFile();
                 throw new NotImplementedException();
             }
+        }
+
+        private void TheWorker_ALLTASKSDONE(object sender, EventArgs e)
+        {
+            ALLTASKSDONE.BeginInvoke(sender, e, null, null);
         }
 
         private void TheWorker_TASKDONE(Task T)

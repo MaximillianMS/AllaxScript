@@ -14,7 +14,7 @@ namespace Allax
         public bool IsUsedForBruteForce;
         public int MaxActiveBlocksOnLayer;
     }
-    public delegate void CallbackAddTask(Task T);
+    //public delegate void CallbackAddTask(Task T);
     public struct MultiTime
     {
         Int64 UnixTime;

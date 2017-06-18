@@ -172,17 +172,19 @@ namespace Allax
         /// <returns></returns>
         public double ToDelta()
         {
-            if (BlockSize == 0 || ActiveBlocksCount == 0 || Numerator == 0)
+            if (BlockSize == 0 || ActiveBlocksCount == 0 || Delta == 0/*Numerator == 0*/)
             {
                 return 0;
             }
+            return Delta;
             var Mul = 1 << BlockSize;
             var D = BigInteger.Pow(Mul, ActiveBlocksCount);
-            var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
-            var N = BigInteger.Divide(Numerator, GCD);
-            D = BigInteger.Divide(D, GCD);
-            var ret = ((double)N) / (double)(D);
-            Debug.Assert(ret != 0);
+            //             var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
+            //             var N = BigInteger.Divide(Numerator, GCD);
+            //             D = BigInteger.Divide(D, GCD);
+            //             var ret = ((double)N) / (double)(D);
+            var ret = ((double)Numerator) / (double)(D);
+            //Debug.Assert(ret != 0);
             return ret;
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
@@ -195,18 +197,22 @@ namespace Allax
         public static Prevalence operator *(Prevalence L, long R)
         {
             var ret = L;
-            if (L.Numerator==0)
+            if (L.Delta == 0)
             {
-                ret.Numerator = R;
-                if(L.ActiveBlocksCount != 0)
-                {
-                    ;
-                }
+                ret.Delta = (double)R / (double)(1 << L.BlockSize);
             }
             else
             {
-                ret.Numerator *= R;
+                ret.Delta *= ((double)R / (double)(1 << L.BlockSize));
             }
+            //             if (L.Numerator==0)
+            //             {
+            //                 ret.Numerator = R;
+            //             }
+            //             else
+            //             {
+            //                 ret.Numerator *= R;
+            //             }
             ret.ActiveBlocksCount++;
             return ret;
         }
@@ -215,12 +221,15 @@ namespace Allax
             this.Numerator = Numerator;
             this.ActiveBlocksCount = ActiveBlocksCount;
             this.BlockSize = BlockSize;
+            this.Delta = 0;
         }
         public BigInteger Numerator;
+        public double Delta;
         public int ActiveBlocksCount;
         public int BlockSize;
         public static bool operator >=(Prevalence L, Prevalence R)
         {
+            return L.ToDelta() >= R.ToDelta();
             Debug.Assert(L.BlockSize == R.BlockSize);
             if(L.ActiveBlocksCount==R.ActiveBlocksCount)
             {
@@ -260,7 +269,7 @@ namespace Allax
         public static bool operator <=(Prevalence L, Prevalence R) { return R >= L;  }
         public static bool operator >(Prevalence L, Prevalence R)
         {
-            //return Math.Abs(L.ToDelta()) > Math.Abs(R.ToDelta());
+            return Math.Abs(L.ToDelta()) > Math.Abs(R.ToDelta());
             Debug.Assert(L.BlockSize == R.BlockSize);
             if (L.ActiveBlocksCount == R.ActiveBlocksCount)
             {
