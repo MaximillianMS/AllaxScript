@@ -8,6 +8,7 @@ namespace Allax
     public interface IEngine
     {
         event TASKHANDLER TASKDONE;
+        void AbortAnalisys();
         void Init(EngineSettings Settings);
         EngineSettings GetSettings(); 
         IWorker GetWorkerInstance();

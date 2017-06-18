@@ -181,7 +181,9 @@ namespace Allax
             var GCD = BigInteger.GreatestCommonDivisor(Numerator, D);
             var N = BigInteger.Divide(Numerator, GCD);
             D = BigInteger.Divide(D, GCD);
-            return ((double)N) / (double)(D);
+            var ret = ((double)N) / (double)(D);
+            Debug.Assert(ret != 0);
+            return ret;
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         /// <summary>
@@ -258,6 +260,7 @@ namespace Allax
         public static bool operator <=(Prevalence L, Prevalence R) { return R >= L;  }
         public static bool operator >(Prevalence L, Prevalence R)
         {
+            //return Math.Abs(L.ToDelta()) > Math.Abs(R.ToDelta());
             Debug.Assert(L.BlockSize == R.BlockSize);
             if (L.ActiveBlocksCount == R.ActiveBlocksCount)
             {

@@ -258,8 +258,12 @@ namespace Allax
             for (int i = 0; i < Count; i++)
             {
                 var state = States[i];
+                if(state.MatrixValue==0)
+                {
+                    break;
+                }
                 var P = state.MatrixValue * Params.CurrentPrevalence;
-                if (((P >= Params.MIN)&&(P.Numerator!=0)) || (!Params.CheckPrevalence))
+                if ((P > Params.MIN) || (!Params.CheckPrevalence))
                 {
                     if (state.inputs == Params.Inputs)
                     {
@@ -669,6 +673,17 @@ namespace Allax
         public EngineSettings GetSettings()
         {
             return Settings;
+        }
+
+        public void AbortAnalisys()
+        {
+            if(TheWorker!=null)
+            {
+                TheWorker.Dispose();
+                TheWorker = null;
+                TheTasker = null;
+                GC.Collect();
+            }
         }
     }
 }

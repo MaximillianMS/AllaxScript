@@ -155,6 +155,7 @@ namespace Allax
                 if (disposing)
                 {
                     this.Abort();
+                    Tr = null;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
@@ -311,6 +312,7 @@ namespace Allax
                         {
                             T.Dispose();
                         }
+                    Threads = null;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.

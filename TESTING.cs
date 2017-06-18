@@ -544,11 +544,7 @@ namespace AllaxScript
                             }
                         case 8:
                             {
-                                var W = E.GetWorkerInstance();
-                                if(W!=null)
-                                {
-                                    W.Dispose();
-                                }
+                                E.AbortAnalisys();
                                 break;
                             }
                         default:
