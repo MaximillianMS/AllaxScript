@@ -189,7 +189,6 @@ namespace Allax
         public event EventHandler ALLTASKSDONE;
         void InitAndRunFreeThreads(IWorkerThread Thread)
         {
-            ;
             if(Thread.GetState()==WorkerThreadState.Free)
             {
                 TASKDONE.BeginInvoke(Thread.GetCurrentTask(), null, null);
@@ -213,6 +212,7 @@ namespace Allax
         {
             this.Params = Params;
             TaskQueue = new ConcurrentQueue<Task>();
+            AddTasks(-1);
             CreateTheads();
             State = WorkerThreadState.Loaded;
         }

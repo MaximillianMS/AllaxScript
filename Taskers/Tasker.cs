@@ -85,8 +85,9 @@ namespace Allax
         void InitSolvers()
         {
             Solvers = new Dictionary<AvailableSolverTypes, Solver> {
-                { AvailableSolverTypes.HeuristicSolver, new Solver(new HeuristicSolver()) },
-                { AvailableSolverTypes.BaseSolver, new Solver(new BaseSolver()) }
+                { AvailableSolverTypes.GreedySolver, new Solver(new GreedySolver()) },
+                {AvailableSolverTypes.AdvancedSolver, new Solver(new AdvancedSolver()) },
+                { AvailableSolverTypes.BruteforceSolver, new Solver(new BaseSolver()) }
             };
         }
         void AnalysePreviousTasks()
@@ -96,6 +97,8 @@ namespace Allax
         public List<Task> GetTasks(int count)
         {
             var ret = new List<Task>();
+            if (count < 0)
+                count = _tasks.Count;
             for (int i = 0; (i < count) && (_tasks.Count > 0);)
             {
                 if (_tasks != null)

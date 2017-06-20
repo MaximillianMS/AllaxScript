@@ -12,7 +12,7 @@ namespace AllaxScript
 {
     public class Program
     {
-        public class OutPut
+        public class InOut
         {
             private object syncRoot = new object();
             //int SolveCounter = 0;
@@ -61,20 +61,20 @@ namespace AllaxScript
                     {
                         case LayerType.KLayer:
                             {
-                                I += string.Format("K {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("K {0, 2} OUT:\t", i / 3 + 1);
+                                I += string.Format("K{0, 2}  IN: ", i / 3 + 1);
+                                O += string.Format("K{0, 2} OUT: ", i / 3 + 1);
                                 break;
                             }
                         case LayerType.SLayer:
                             {
-                                I += string.Format("S {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("S {0, 2} OUT:\t", i / 3 + 1);
+                                I += string.Format("S{0, 2}  IN: ", i / 3 + 1);
+                                O += string.Format("S{0, 2} OUT: ", i / 3 + 1);
                                 break;
                             }
                         case LayerType.PLayer:
                             {
-                                I += string.Format("P {0, 2}  IN:\t", i / 3 + 1);
-                                O += string.Format("P {0, 2} OUT:\t", i / 3 + 1);
+                                I += string.Format("P{0, 2}  IN: ", i / 3 + 1);
+                                O += string.Format("P{0, 2} OUT: ", i / 3 + 1);
                                 break;
                             }
                     }
@@ -86,23 +86,27 @@ namespace AllaxScript
                         {
                             I += (i_[k]) ? '1' : '0';
                             if ((k + 1) % W.layers[1].blocks[0].BlockSize == 0)
-                                I += "\t";
+                                I += " ";
                         }
                         for (int k = 0; k < i_.Count; k++)
                         {
                             O += (o_[k]) ? '1' : '0';
                             if ((k + 1) % W.layers[1].blocks[0].BlockSize == 0)
-                                O += "\t";
+                                O += " ";
                         }
                     }
-                    FullOut += I + "\n" + O + "\n\n";
+                    FullOut += I.Trim() + "\n" + O.Trim() + "\n\n";
                 }
                 return FullOut;
             }
             public bool MyAddSolution(Solution S)
             {
                 Solutions.Add(S);
-                Console.WriteLine("Solution has been found. Prevalence: {1}. Active blocks count: {2}. Total solutions: {0}.", Solutions.Count, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
+                lock (syncRoot)
+                {
+                    Console.WriteLine("Solution has been found. Prevalence: {1}. Active blocks count: {2}. Total solutions: {0}.", Solutions.Count, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
+
+                }
                 return true;
             }
             public void PrintSolution(Solution S, int SolveCounter)
@@ -137,7 +141,7 @@ namespace AllaxScript
                     Console.WriteLine("Enter the file name:");
                     var Path = Console.ReadLine();
                     Path = "SBOXDB_" + Path;
-                    Path = @"D:\" + Path + ".TimVoiMaxDB";
+                    Path = AppDomain.CurrentDomain.BaseDirectory + Path + ".TimVoiMaxDB";
                     using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                     {
                         lock (syncRoot)
@@ -158,7 +162,7 @@ namespace AllaxScript
                     Console.WriteLine("Enter the file name:");
                     var Path = Console.ReadLine();
                     Path = "SBOXDB_" + Path;
-                    Path = @"D:\" + Path + ".TimVoiMaxDB";
+                    Path = AppDomain.CurrentDomain.BaseDirectory + Path + ".TimVoiMaxDB";
                     using (var aFile = new System.IO.FileStream(Path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
                     {
                         lock (syncRoot)
@@ -369,13 +373,17 @@ namespace AllaxScript
                 () =>
             {
                 int ind = 0;
-                while (ind != 1 && ind != 2)
+                while (ind  < 1 || ind > AvailableSolverTypes.GetAllTypes().Count)
                 {
-                    Console.WriteLine("Choose Solver: \n1 - {0}\n2 - {1}", AvailableSolverTypes.BaseSolver, AvailableSolverTypes.HeuristicSolver);
+                    Console.WriteLine("Choose Solver:");
+                    for (int i = 0; i < AvailableSolverTypes.GetAllTypes().Count; i++)
+                    {
+                        Console.WriteLine("{0} - {1}", i + 1, AvailableSolverTypes.GetAllTypes()[i]);
+                    }
                     ind = Convert.ToInt32(Console.ReadLine());
                     Console.WriteLine();
                 }
-                return (ind == 1) ? AvailableSolverTypes.BaseSolver : AvailableSolverTypes.HeuristicSolver;
+                return AvailableSolverTypes.GetAllTypes()[ind-1];
             }))(), ((Func<int>)(
             () =>
             {
@@ -590,11 +598,11 @@ namespace AllaxScript
         public static IEngine E;
         public static ISPNet Net;
         public static ISBlockDB SBDB;
-        public static OutPut output;
+        public static InOut output;
         public static DateTime StartTime;
         public static void Main()
         {
-            output = new OutPut();
+            output = new InOut();
             E = new Engine(new EngineSettings(output.MyAddSolution));
             E.TASKDONE += output.TaskFinished;
             E.ALLTASKSDONE += output.AllTasksFinished;

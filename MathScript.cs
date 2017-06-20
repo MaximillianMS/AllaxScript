@@ -235,35 +235,21 @@ namespace Allax
     {
         ISBlockDB _database;
         List<List<bool>> FuncMatrix;
-        public List<BlockState> LStates;
-        public List<BlockState> DStates;
+        DBNote Note;
         int VarCount;
-//         public List<List<byte>> GetCorMatrix()
-//         {
-//             return _database.GetCorMatrix(FuncMatrix);
-//         }
-//         public List<List<bool>> GetFuncMatrix()
-//         {
-//             return FuncMatrix;
-//         }
-//         public List<List<byte>> GetDifMatrix()
-//         {
-//             return _database.GetDifMatrix(FuncMatrix);
-//         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)// MIN prevalence, current inputs
         {
             var ret = new List<BlockState>();
-            var States = (Params.Type == AnalisysType.Linear) ? LStates : DStates;
-            var Count = States.Count;
+            var States = (Params.Type == AnalisysType.Linear) ? Note.LStates : Note.DStates;
+            var Inputs = (int)Params.Inputs;
+            var Count = States[Inputs].Count;
             for (int i = 0; i < Count; i++)
             {
-                var state = States[i];
+                var state = States[Inputs][i];
                 if(state.MatrixValue==0)
                 {
                     break;
                 }
-                if(state.inputs == Params.Inputs)
-                {
                     var P = state.MatrixValue * Params.CurrentPrevalence;
                     if ((P > Params.MIN) || (!Params.CheckPrevalence))
                     {
@@ -274,7 +260,6 @@ namespace Allax
                     {
                         break;
                     }
-                }
             }
             return ret;
         }
@@ -296,11 +281,7 @@ namespace Allax
                     {
                         _database = new SBlockDB();
                     }
-                    var Note = _database.GetNoteFromDB(FuncMatrix);
-//                     CorMatrix = Note.CorMatrix;
-//                     DifMatrix = Note.DifMatrix;
-                    LStates = Note.LStates;
-                    DStates = Note.DStates;
+                    Note = _database.GetNoteFromDB(FuncMatrix);
                 }
                 else
                 {
@@ -631,7 +612,8 @@ namespace Allax
         }
         private void UpdateSBlockDB()
         {
-            TheNet.SetSBlockDB(TheDB);
+            if (TheNet != null)
+                TheNet.SetSBlockDB(TheDB);
         }
         public virtual ISBlockDB GetSBlockDBInstance()
         {

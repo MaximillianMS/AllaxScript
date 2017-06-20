@@ -12,26 +12,28 @@ namespace Allax
     [Serializable()]
     public struct DBNote
     {
-        /// <summary>
-        /// Deep copy constructor
-        /// </summary>
-        /// <param name="FuncMatrix"></param>
-        /// <param name="CorMatrix"></param>
-        /// <param name="DifMatrix"></param>
         public DBNote(List<List<short>> CorMatrix, List<List<short>> DifMatrix)
         {
-            this.DStates = new List<BlockState>(DifMatrix.Count * DifMatrix.Count);
-            this.LStates = new List<BlockState>(CorMatrix.Count * CorMatrix.Count);
+            this.DStates = new List<List<BlockState>>();
+            DStates.AddRange(Enumerable.Range(0, CorMatrix.Count).Select(i=>new List<BlockState>()));
+            this.LStates = new List<List<BlockState>>();
+            LStates.AddRange(Enumerable.Range(0, CorMatrix.Count).Select(i => new List<BlockState>()));
+            //           this.LStates = new List<BlockState>(CorMatrix.Count * CorMatrix.Count);
             for (int row = 1; row < CorMatrix.Count; row++)
             {
                 for (int col = 1; col < CorMatrix[0].Count; col++)
                 {
-                    LStates.Add(new BlockState((sbyte)CorMatrix[row][col], col, row, (int)Math.Log(CorMatrix.Count, 2)));
-                    DStates.Add(new BlockState((sbyte)DifMatrix[row][col], row, col, (int)Math.Log(DifMatrix.Count, 2)));
+                    if (((sbyte)CorMatrix[row][col]) != 0)
+                        LStates[col].Add(new BlockState((sbyte)CorMatrix[row][col], col, row, (int)Math.Log(CorMatrix.Count, 2)));
+                    if (((sbyte)DifMatrix[row][col]) != 0)
+                        DStates[row].Add(new BlockState((sbyte)DifMatrix[row][col], row, col, (int)Math.Log(DifMatrix.Count, 2)));
                 }
             }
-            LStates = LStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
-            DStates = DStates.OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+            for(int i=1;i<CorMatrix.Count;i++)
+            {
+                LStates[i] = LStates[i].OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+                DStates[i] = DStates[i].OrderByDescending(o => Math.Abs(o.MatrixValue)).ToList();
+            }
         }
         public DBNote(DBNote N)
         {
@@ -60,8 +62,8 @@ namespace Allax
 //         public List<List<bool>> FuncMatrix;
 //         public List<List<short>> CorMatrix;
 //         public List<List<short>> DifMatrix;
-        public List<BlockState> LStates;
-        public List<BlockState> DStates;
+        public List<List<BlockState>> LStates;
+        public List<List<BlockState>> DStates;
     }
     [Serializable()]
     public struct BlockState
@@ -337,9 +339,13 @@ namespace Allax
         private readonly String name;
         private readonly int value;
 
-        public static readonly AvailableSolverTypes BaseSolver = new AvailableSolverTypes(1, "BaseSolver");
-        public static readonly AvailableSolverTypes HeuristicSolver = new AvailableSolverTypes(2, "HeuristicSolver");
-
+        public static readonly AvailableSolverTypes BruteforceSolver = new AvailableSolverTypes(1, "Bruteforce Solver");
+        public static readonly AvailableSolverTypes GreedySolver = new AvailableSolverTypes(2, "Greedy Solver");
+        public static readonly AvailableSolverTypes AdvancedSolver = new AvailableSolverTypes(3, "Advanced Solver");
+        public static List<AvailableSolverTypes> GetAllTypes()
+        {
+            return new List<AvailableSolverTypes> { BruteforceSolver, GreedySolver, AdvancedSolver };
+        }
         private AvailableSolverTypes(int value, String name)
         {
             this.name = name;
