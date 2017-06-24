@@ -51,7 +51,16 @@ namespace Allax
         protected virtual int GetStatesCount(List<BlockState> States, SolverParams SolParams)
         {
             if (SolParams.lastNotEmptyLayerIndex > SolParams.Way.layers.Count - 6 && States.Count != 0)
-                return 1;
+            {
+                var ret = 0;
+                var max = Math.Abs(States[0].MatrixValue);
+                for(;ret<States.Count;ret++)
+                {
+                    if (Math.Abs(States[ret].MatrixValue) < max)
+                        break;
+                }
+                return ret;
+            }
             else
                 return States.Count;
         }
@@ -157,15 +166,11 @@ namespace Allax
             #region LastRound
             //No need to process LastRound, because LastRound must be reversed.
             #endregion
-            if(SolParams.P.ToDelta()==0)
-            {
-                ;
-            }
             if (SolParams.P > SolParams.Engine.GetMultiThreadPrevalence())
             {
                 SolParams.Engine.SetMultiThreadPrevalence(SolParams.P);
-                SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
             }
+                SolParams.Engine.GetSettings().AddSolution(new Solution(SolParams.P, SolParams.Way));
         }
     }
 }

@@ -2,17 +2,19 @@
 
 namespace Allax
 {
-    struct Solver
+    public struct Solver
     {
-        public Solver(ISolver s, bool isUsedForBruteForce = false, int MaxActiveBlocksOnLayer = 2)
+        public Solver(ISolver s, bool isUsedForBruteForce = false, int MaxActiveBlocksOnLayer = 2, int MaxStartBlocks = 1)
         {
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
+            this.MaxStartBlocks = MaxStartBlocks;
             this.S = s;
             this.IsUsedForBruteForce = isUsedForBruteForce;
         }
         public ISolver S;
         public bool IsUsedForBruteForce;
         public int MaxActiveBlocksOnLayer;
+        public int MaxStartBlocks;
     }
     //public delegate void CallbackAddTask(Task T);
     public struct MultiTime

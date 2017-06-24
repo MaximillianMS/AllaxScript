@@ -398,13 +398,15 @@ namespace Allax
     /// </summary>
     public struct Rule
     {
-        public Rule(AvailableSolverTypes SolverType, int MaxActiveBlocksOnLayer = 2, bool UseCustomInput=false, SolverInputs Input = new SolverInputs())
+        public Rule(AvailableSolverTypes SolverType, int MaxActiveBlocksOnLayer = 2, int MaxStartBlocks=1, bool UseCustomInput=false, SolverInputs Input = new SolverInputs())
         {
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.SolverType = SolverType;
             this.Input = Input;
             this.UseCustomInput = UseCustomInput;
+            this.MaxStartBlocks = MaxStartBlocks;
         }
+        public int MaxStartBlocks;
         public int MaxActiveBlocksOnLayer;
         public AvailableSolverTypes SolverType;
         public bool UseCustomInput;

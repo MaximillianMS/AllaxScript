@@ -179,6 +179,11 @@ namespace Allax
             // TODO: uncomment the following line if the finalizer is overridden above.
             // GC.SuppressFinalize(this);
         }
+
+        public void SetState(WorkerThreadState State)
+        {
+            Params.State = State;
+        }
         #endregion
     }
     public class Worker : IWorker
@@ -191,7 +196,8 @@ namespace Allax
         {
             if(Thread.GetState()==WorkerThreadState.Free)
             {
-                TASKDONE.BeginInvoke(Thread.GetCurrentTask(), null, null);
+                //if(Params.)
+                TASKDONE(Thread.GetCurrentTask());
                 InitThread(Thread);
             }
             else
@@ -251,17 +257,21 @@ namespace Allax
                 {
                     Logger.UltraLogger.Instance.AddToLog("Worker: Coudn't dequeue Task.", Logger.MsgType.Error);
                     OK = false;
+                    throw new NotImplementedException();
 
                 }
                 else
                 {
                     lock (syncRoot)
                     {
-                        if(State!=WorkerThreadState.Stopped)
-                        if (Threads.All(x => x.GetState() == WorkerThreadState.Free))
+                        if (State != WorkerThreadState.Stopped)
                         {
-                            State = WorkerThreadState.Stopped;
-                            ALLTASKSDONE.BeginInvoke(null, null, null, null);
+                            Thread.SetState(WorkerThreadState.Finished);
+                            if (Threads.All(x => x.GetState() == WorkerThreadState.Finished))
+                            {
+                                State = WorkerThreadState.Stopped;
+                                ALLTASKSDONE.BeginInvoke(null, null, null, null);
+                            }
                         }
                     }
                 }

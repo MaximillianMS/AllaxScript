@@ -14,6 +14,7 @@ namespace Allax
         EngineSettings GetSettings(); 
         IWorker GetWorkerInstance();
         ITasker GetTaskerInstance();
+        Dictionary<AvailableSolverTypes, Solver> GetSolvers();
         Prevalence GetMultiThreadPrevalence();
         void SetMultiThreadPrevalence(Prevalence P);
         void PerformAnalisys(AnalisysParams Params);

@@ -8,13 +8,15 @@ namespace Allax
 {
     public struct WorkerParams
     {
-        public WorkerParams(IEngine Engine, int MaxThreads=1)
+        public WorkerParams(IEngine Engine, int MaxThreads=1, bool ASync=true)
         {
             this.MaxThreads = MaxThreads;
             this.Engine = Engine;
+            this.ASync = ASync;
         }
         public IEngine Engine;
         public int MaxThreads;
+        bool ASync;
     }
     public struct WorkerThreadParams
     {
@@ -26,5 +28,5 @@ namespace Allax
             State = WorkerThreadState.Loaded;
         }
     }
-    public enum WorkerThreadState {Free, Loaded, Started, Paused, Stopped }
+    public enum WorkerThreadState {Free, Loaded, Started, Paused, Stopped, Finished }
 }

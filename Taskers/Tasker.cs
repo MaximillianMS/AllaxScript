@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Allax
 {
-    public class Tasker:ITasker
+    public class Tasker : ITasker
     {
         private object syncRoot = new object();
         TaskerParams Params;
@@ -21,6 +21,20 @@ namespace Allax
         public Tasker(TaskerParams Params)
         {
             Init(Params);
+            InitSolvers();
+            ProcessRules(Params.Alg.Rules);
+            AddBruteForceTasks();
+        }
+        public void Reset()
+        {
+            IsBruteForceTurnedOn = false;
+            _tasks = new ConcurrentQueue<Task>();
+            if (Params.Engine != null)
+            {
+                var Net = Params.Engine.GetSPNetInstance();
+                if (Net != null)
+                    Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
+            }
         }
         public void AddTask(Task T)
         {
@@ -32,34 +46,12 @@ namespace Allax
             var Net = this.Params.Engine.GetSPNetInstance();
             _rounds_count = Params.Engine.GetSPNetInstance().GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Net);
-            IsBruteForceTurnedOn = false;
-            Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
-            _tasks = new ConcurrentQueue<Task>();
-            InitSolvers();
-            ProcessRules();
+
+            Reset();
         }
-        void ProcessRules()
+        public void AddBruteForceTasks()
         {
             var Net = Params.Engine.GetSPNetInstance();
-            //throw new NotImplementedException();
-            for (int i=0;i<Params.Alg.Rules.Count;i++)
-            {
-                var Rule = Params.Alg.Rules[i];
-                if (Rule.UseCustomInput==true)
-                {
-                    var SolParam = new SolverParams(WayConverter.ToWay(Net, Rule.Input), Params.Engine, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
-                    var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
-                    _tasks.Enqueue(T);
-                }
-                else
-                {
-                    var S = Solvers[Rule.SolverType];
-                    S.IsUsedForBruteForce = true;
-                    S.MaxActiveBlocksOnLayer = Rule.MaxActiveBlocksOnLayer;
-                    Solvers[Rule.SolverType] = S;
-                    IsBruteForceTurnedOn = true;
-                }
-            }
             //Warning! Unoptimized code!!!
             if (IsBruteForceTurnedOn)
             {
@@ -69,7 +61,7 @@ namespace Allax
                 {
                     if (S.Value.IsUsedForBruteForce)
                     {
-                        Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
+                        Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize, S.Value.MaxStartBlocks);
                         while (!Iter.IsFinished())
                         {
                             NextInput = Iter.NextState();
@@ -82,13 +74,36 @@ namespace Allax
                 Iter = temp;
             }
         }
-        void InitSolvers()
+        public void ProcessRules(List<Rule> Rules)
         {
-            Solvers = new Dictionary<AvailableSolverTypes, Solver> {
-                { AvailableSolverTypes.GreedySolver, new Solver(new GreedySolver()) },
-                {AvailableSolverTypes.AdvancedSolver, new Solver(new AdvancedSolver()) },
-                { AvailableSolverTypes.BruteforceSolver, new Solver(new BaseSolver()) }
-            };
+            var Net = Params.Engine.GetSPNetInstance();
+            //throw new NotImplementedException();
+            for (int i = 0; i < Rules.Count; i++)
+            {
+                var Rule = Rules[i];
+                if (Rule.UseCustomInput == true)
+                {
+                    var SolParam = new SolverParams(WayConverter.ToWay(Net, Rule.Input), Params.Engine, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
+                    var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
+                    _tasks.Enqueue(T);
+                }
+                else
+                {
+                    var S = Solvers[Rule.SolverType];
+                    S.IsUsedForBruteForce = true;
+                    S.MaxActiveBlocksOnLayer = Rule.MaxActiveBlocksOnLayer;
+                    S.MaxStartBlocks = Rule.MaxStartBlocks;
+                    Solvers[Rule.SolverType] = S;
+                    IsBruteForceTurnedOn = true;
+                }
+            }
+        }
+        public void InitSolvers(Dictionary<AvailableSolverTypes, Solver> Solvers = null)
+        {
+            if (Solvers == null && Params.Engine != null)
+                this.Solvers = Params.Engine.GetSolvers();
+            else
+                throw new NotImplementedException();
         }
         void AnalysePreviousTasks()
         {
@@ -130,43 +145,100 @@ namespace Allax
     class InputsIterator
     {
         int CurrentBlock;
+        int CurrentMask;
+        int MaxMask;
         int BlocksCount;
         int BlockLength;
+        int MaxBlocksOnInput;
         List<InputsIteratorBlock> Blocks;
-        public InputsIterator(int BlocksCount, int BlockLength)
+        public InputsIterator(int BlocksCount, int BlockLength, int MaxBlocksOnInput = 1)
         {
             this.BlocksCount = BlocksCount;
             this.BlockLength = BlockLength;
+            this.MaxBlocksOnInput = (MaxBlocksOnInput < BlocksCount) ? MaxBlocksOnInput : BlocksCount;
             if (this.BlocksCount <= 0 || this.BlockLength <= 0)
             {
                 Logger.UltraLogger.Instance.AddToLog("Iterator: Wrong init params.", Logger.MsgType.Error);
                 throw new NotImplementedException();
             }
             Blocks = new List<InputsIteratorBlock>(this.BlocksCount);
-            Blocks.AddRange(Enumerable.Repeat(0, this.BlocksCount).Select(i=> new InputsIteratorBlock(this.BlockLength)).ToList());
+            Blocks.AddRange(Enumerable.Repeat(0, this.BlocksCount).Select(i => new InputsIteratorBlock(this.BlockLength)).ToList());
             CurrentBlock = 0;
+            CurrentMask = 1;
+            MaxMask = (1 << (BlocksCount)) - 1;
+        }
+        bool IsBlockInMask(int Block, int Mask)
+        {
+            return (1 << Block/*(BlocksCount - 1 - Block)*/ & CurrentMask) != 0;
+        }
+        public ulong Concat(ulong CurrentInput, byte Value, int CurrentBlock)
+        {
+            CurrentInput |= (ulong)Value << (BlockLength * (BlocksCount - 1 - CurrentBlock));
+            return CurrentInput;
+        }
+        public bool CheckMaxCondition(int Mask)
+        {
+            int counter = 0;
+            for (int i = 0; i < BlocksCount; i++)
+            {
+                counter += ((((1 << i) & Mask) > 0) ? 1 : 0);
+            }
+            return counter <= MaxBlocksOnInput;
         }
         public SolverInputs NextState()
         {
-            //lock (syncRoot)
+            CurrentBlock = 0;
+            ulong CurrentBlockInput = 0;
+            for (; CurrentBlock < BlocksCount; CurrentBlock++)
             {
-                if (Blocks[CurrentBlock].IsFinished())
+                if (IsBlockInMask(CurrentBlock, CurrentMask))
                 {
-                    CurrentBlock++;
-                    if (CurrentBlock >= BlocksCount)
+                    if (Blocks[CurrentBlock].IsFinished())
                     {
-                        return new SolverInputs();
+                        CurrentBlockInput = Concat(CurrentBlockInput, (byte)Blocks[CurrentBlock].NextState(), CurrentBlock);
+                        continue;
                     }
+                    CurrentBlockInput = Concat(CurrentBlockInput, (byte)Blocks[CurrentBlock].NextState(), CurrentBlock);
+                    CurrentBlock++;
+                    for (; CurrentBlock < BlocksCount; CurrentBlock++)
+                    {
+                        if (IsBlockInMask(CurrentBlock, CurrentMask))
+                        {
+                            var Value = (byte)Blocks[CurrentBlock].CurrentState();
+                            if (Value == 0)
+                                Value = (byte)Blocks[CurrentBlock].NextState();
+                            CurrentBlockInput = Concat(CurrentBlockInput, Value, CurrentBlock);
+                        }
+                    }
+                    return new SolverInputs((long)CurrentBlockInput, BlockLength * BlocksCount);
                 }
-                var CurrentBlockInput = Blocks[CurrentBlock].NextState();
-                CurrentBlockInput = CurrentBlockInput << ((BlocksCount - (CurrentBlock + 1)) * BlockLength);
-                return new SolverInputs(CurrentBlockInput, BlockLength * BlocksCount);
             }
-
+            CurrentMask++;
+            while (!CheckMaxCondition(CurrentMask))
+                CurrentMask++;
+            foreach (var B in Blocks)
+            {
+                B.ResetState();
+            }
+            return NextState();
         }
         public bool IsFinished()
         {
-            return Enumerable.Range(0, BlocksCount).All(x => Blocks[x].IsFinished());
+            var NextMask = CurrentMask;
+            if (Enumerable.Range(0, BlocksCount).Where(i => IsBlockInMask(i, CurrentMask)).All(x => Blocks[x].IsFinished()))
+            {
+                NextMask++;
+                while (!CheckMaxCondition(NextMask))
+                    NextMask++;
+            }
+            if (NextMask > MaxMask)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
     class InputsIteratorBlock
@@ -190,6 +262,10 @@ namespace Allax
             StatesPassed = 0;
             finished = false;
         }
+        public long CurrentState()
+        {
+            return StatesPassed;
+        }
         public long NextState()
         {
             //lock (syncRoot)
@@ -210,7 +286,7 @@ namespace Allax
         }
         public bool IsFinished()
         {
-            if(StatesPassed>=((1<<Length)-1))
+            if (StatesPassed >= ((1 << Length) - 1))
             {
                 finished = true;
             }

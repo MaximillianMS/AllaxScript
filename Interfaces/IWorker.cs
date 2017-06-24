@@ -16,6 +16,7 @@ namespace Allax
         void Resume();
         Task GetCurrentTask();
         WorkerThreadState GetState();
+        void SetState(WorkerThreadState State);
     }
     public interface IWorker:IDisposable
     {

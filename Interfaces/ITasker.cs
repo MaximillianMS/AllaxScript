@@ -11,5 +11,9 @@ namespace Allax
         void AddTask(Task T);
         void Init(TaskerParams Params);
         bool IsFinished();
+        void InitSolvers(Dictionary<AvailableSolverTypes, Solver> Solvers = null);
+        void ProcessRules(List<Rule> Rules);
+        void AddBruteForceTasks();
+        void Reset();
     }
 }

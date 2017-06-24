@@ -468,6 +468,10 @@ namespace Allax
 
     public class Engine : IEngine
     {
+        static Dictionary<AvailableSolverTypes, Solver> Solvers = new Dictionary<AvailableSolverTypes, Solver> {
+                { AvailableSolverTypes.GreedySolver, new Solver(new GreedySolver()) },
+                {AvailableSolverTypes.AdvancedSolver, new Solver(new AdvancedSolver()) },
+                { AvailableSolverTypes.BruteforceSolver, new Solver(new BaseSolver()) } };
         public event TASKHANDLER TASKDONE;
         public event TASKHANDLER TASKADDED;
         public event EventHandler ALLTASKSDONE;
@@ -511,7 +515,7 @@ namespace Allax
                 this.SetMultiThreadPrevalence(new Prevalence(0, 0, TheNet.GetSettings().SBoxSize));
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 TheTasker = new Tasker(TaskerParams);
-                var WorkerParams = new WorkerParams(this, Params.MaxThreads);
+                var WorkerParams = new WorkerParams(this, Params.MaxThreads, Params.ASync);
                 TheWorker = new Worker(WorkerParams);
                 TheWorker.TASKDONE += TheWorker_TASKDONE;
                 TheWorker.ALLTASKSDONE += TheWorker_ALLTASKSDONE;
@@ -674,6 +678,11 @@ namespace Allax
                 TheTasker = null;
                 GC.Collect();
             }
+        }
+
+        public Dictionary<AvailableSolverTypes, Solver> GetSolvers()
+        {
+            return Solvers;
         }
     }
 }

@@ -31,8 +31,11 @@ namespace AllaxScript
             }
             public void AllTasksFinished(object sender, EventArgs e)
             {
-                Console.WriteLine("All tasks finished. Total time: {0}.", (DateTime.Now-StartTime).ToString());
-                Console.WriteLine("Enter 0 to continue...");
+                lock (syncRoot)
+                {
+                    Console.WriteLine("All tasks finished. Total time: {0}.", (DateTime.Now - StartTime).ToString());
+                    Console.WriteLine("Enter 0 to continue...");
+                }
             }
             public void ClearCounters()
             {
@@ -407,6 +410,18 @@ namespace AllaxScript
             {
                 R.UseCustomInput = true;
                 R.Input = new SolverInputs(WayConverter.ToLong(GetInitialSequence(Net.GetSettings().WordLength).ConvertAll(x=>(x==1))), Net.GetSettings().WordLength);
+            }
+            else
+            {
+                
+                int MaxStart = 0;
+                while (!(MaxStart > 0 && MaxStart < (Net.GetSettings().SBoxCount + 1)))
+                {
+                    Console.WriteLine("Enter maximum of S-boxes in start layer:");
+                    MaxStart = Convert.ToInt32(Console.ReadLine());
+                    Console.WriteLine();
+                }
+                R.MaxStartBlocks = MaxStart;
             }
             return R;
         }
