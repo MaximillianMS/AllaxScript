@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxScript", "AllaxScript.csproj", "{A7240CD1-B08D-43D0-9685-9B5741DCF221}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormsGUI", "FormsGUI\FormsGUI.csproj", "{25D09230-E4A4-4C50-91EF-1E2CE738FD68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A7240CD1-B08D-43D0-9685-9B5741DCF221}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7240CD1-B08D-43D0-9685-9B5741DCF221}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7240CD1-B08D-43D0-9685-9B5741DCF221}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25D09230-E4A4-4C50-91EF-1E2CE738FD68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25D09230-E4A4-4C50-91EF-1E2CE738FD68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25D09230-E4A4-4C50-91EF-1E2CE738FD68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25D09230-E4A4-4C50-91EF-1E2CE738FD68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
