@@ -48,9 +48,17 @@ namespace Allax
             }
             return ret;
         }
+        protected virtual int GetStatesCount(List<BlockState> States, SolverParams SolParams)
+        {
+            if (SolParams.lastNotEmptyLayerIndex > SolParams.Way.layers.Count - 6 && States.Count != 0)
+                return 1;
+            else
+                return States.Count;
+        }
         protected virtual void DepthFirstSearch(List<BlockState> States, SolverParams SolParams)
         {
-            for (int i = 0; i < States.Count; i++)
+            var Count = GetStatesCount(States, SolParams);
+            for (int i = 0; i < Count; i++)
             {
                 var State = States[i];
                 var NewWay = WayConverter.CloneWay(SolParams.Way);
