@@ -19,7 +19,7 @@ namespace FormsGUI
         List<string> layerList = new List<string>();
         public MainForm()
         {
-            var F = new Allax.CallbackAddSolution(AddSolution);
+            var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             e = new Engine(new EngineSettings(F));
             InitializeComponent();
             SPNetSettings settings = new SPNetSettings(16, 4);
@@ -81,7 +81,7 @@ namespace FormsGUI
         {
             var R1 = new Allax.Rule(AvailableSolverTypes.BaseSolver);
             var R2 = new Allax.Rule(AvailableSolverTypes.HeuristicSolver);
-            var F = new Allax.CallbackAddSolution(AddSolution);
+            var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             //var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2 }, AnalisysType.Linear), F);
             //net.PerformAnalisys(AP);
         }

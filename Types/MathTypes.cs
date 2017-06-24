@@ -7,8 +7,9 @@ using System.Xml.Serialization;
 
 namespace Allax
 {
-	public delegate bool CallbackAddSolution(Solution s);
+	public delegate void ADDSOLUTIONHANDLER(Solution s);
     public delegate void TASKHANDLER(Task T);
+    public delegate void PROGRESSHANDLER(double Progress);
     [Serializable()]
     public struct DBNote
     {
@@ -231,7 +232,7 @@ namespace Allax
         public int BlockSize;
         public static bool operator >=(Prevalence L, Prevalence R)
         {
-            return L.ToDelta() >= R.ToDelta();
+            return Math.Abs(L.ToDelta()) >= Math.Abs(R.ToDelta());
             Debug.Assert(L.BlockSize == R.BlockSize);
             if(L.ActiveBlocksCount==R.ActiveBlocksCount)
             {
@@ -442,13 +443,11 @@ namespace Allax
     }
     public struct EngineSettings
     {
-        public EngineSettings(CallbackAddSolution AddSolution/*, TaskFinishedHandler TaskFinishedFunc*/)
+        public EngineSettings(ADDSOLUTIONHANDLER AddSolutionFunc/*, TaskFinishedHandler TaskFinishedFunc*/)
         {
-            //this.TaskFinishedFunc = TaskFinishedFunc;
-            this.AddSolution = AddSolution;
+            this.AddSolutionFunc = AddSolutionFunc;
         }
-        public CallbackAddSolution AddSolution;
-        //public TaskFinishedHandler TaskFinishedFunc;
+        public ADDSOLUTIONHANDLER AddSolutionFunc;
     }
     public struct SPNetSettings
     {

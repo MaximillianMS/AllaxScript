@@ -13,28 +13,26 @@ namespace Allax
         private object syncRoot = new object();
         TaskerParams Params;
         int _rounds_count;
-        ConcurrentQueue<Task> _tasks;
+        Queue<Task> _tasks;
         SPNetWay _tempEmptyWay;
-        InputsIterator Iter;
+        //InputsIterator Iter;
         Dictionary<AvailableSolverTypes, Solver> Solvers;
+        Dictionary<AvailableSolverTypes, InputsIterator> Iterators;
         private bool IsBruteForceTurnedOn;
         public Tasker(TaskerParams Params)
         {
             Init(Params);
             InitSolvers();
+            Reset();
             ProcessRules(Params.Alg.Rules);
-            AddBruteForceTasks();
+            //AddAllBruteForceTasks();
         }
         public void Reset()
         {
             IsBruteForceTurnedOn = false;
-            _tasks = new ConcurrentQueue<Task>();
-            if (Params.Engine != null)
-            {
-                var Net = Params.Engine.GetSPNetInstance();
-                if (Net != null)
-                    Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize);
-            }
+            _tasks = new Queue<Task>();
+            foreach (var It in Iterators)
+                It.Value.Reset();
         }
         public void AddTask(Task T)
         {
@@ -46,32 +44,34 @@ namespace Allax
             var Net = this.Params.Engine.GetSPNetInstance();
             _rounds_count = Params.Engine.GetSPNetInstance().GetLayers().Count / 3;
             _tempEmptyWay = WayConverter.ToWay(Net);
-
-            Reset();
+            Solvers = new Dictionary<AvailableSolverTypes, Solver>();
+            Iterators = new Dictionary<AvailableSolverTypes, InputsIterator>();
         }
-        public void AddBruteForceTasks()
+        public void AddAllBruteForceTasks()
         {
             var Net = Params.Engine.GetSPNetInstance();
             //Warning! Unoptimized code!!!
             if (IsBruteForceTurnedOn)
             {
-                var temp = Iter;
                 SolverInputs NextInput;
-                foreach (var S in Solvers)
+                foreach (var T in AvailableSolverTypes.GetAllTypes())
                 {
-                    if (S.Value.IsUsedForBruteForce)
+                    if (Solvers.ContainsKey(T))
                     {
-                        Iter = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize, S.Value.MaxStartBlocks);
-                        while (!Iter.IsFinished())
+                        var S = Solvers[T];
+                        if (S.IsUsedForBruteForce)
                         {
-                            NextInput = Iter.NextState();
-                            var ws = WayConverter.ToWay(Net, NextInput);
+                            var Iter = Iterators[T];
+                            while (!Iter.IsFinished())
+                            {
+                                NextInput = Iter.NextState();
+                                var ws = WayConverter.ToWay(Net, NextInput);
 
-                            _tasks.Enqueue(new Task(S.Value.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
+                                _tasks.Enqueue(new Task(S.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.MaxActiveBlocksOnLayer)));
+                            }
                         }
                     }
                 }
-                Iter = temp;
             }
         }
         public void ProcessRules(List<Rule> Rules)
@@ -92,7 +92,14 @@ namespace Allax
                     var S = Solvers[Rule.SolverType];
                     S.IsUsedForBruteForce = true;
                     S.MaxActiveBlocksOnLayer = Rule.MaxActiveBlocksOnLayer;
-                    S.MaxStartBlocks = Rule.MaxStartBlocks;
+                    if(!Iterators.ContainsKey(Rule.SolverType))
+                    {
+                        Iterators.Add(Rule.SolverType, new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize, Rule.MaxStartBlocks));
+                    }
+                    else
+                    {
+                        Iterators[Rule.SolverType] = new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize, Rule.MaxStartBlocks);
+                    }
                     Solvers[Rule.SolverType] = S;
                     IsBruteForceTurnedOn = true;
                 }
@@ -100,8 +107,8 @@ namespace Allax
         }
         public void InitSolvers(Dictionary<AvailableSolverTypes, Solver> Solvers = null)
         {
-            if (Solvers == null && Params.Engine != null)
-                this.Solvers = Params.Engine.GetSolvers();
+            if (Params.Engine != null)
+                this.Solvers = Params.Engine.GetSolvers().ToDictionary(i=>i.Key, i=>new Solver(i.Value));
             else
                 throw new NotImplementedException();
         }
@@ -109,37 +116,52 @@ namespace Allax
         {
             throw new NotImplementedException();
         }
-        public List<Task> GetTasks(int count)
+        public List<Task> DequeueTasks(int count)
         {
             var ret = new List<Task>();
-            if (count < 0)
-                count = _tasks.Count;
-            for (int i = 0; (i < count) && (_tasks.Count > 0);)
+            //             if (count < 0)
+            //                 count = _tasks.Count;
+            while ((ret.Count < count) && (_tasks.Count > 0))
             {
-                if (_tasks != null)
-                    if (_tasks.Count > 0)
+                Task T;
+                //                 if (!_tasks.TryDequeue(out T))
+                //                 {
+                //                     Logger.UltraLogger.Instance.AddToLog("Tasker: Cant dequeue predefined tasks", Logger.MsgType.Error);
+                //                     throw new NotImplementedException();
+                //                 }
+                //                 else
+                    T = _tasks.Dequeue();
+                ret.Add(T);
+                continue;
+            }
+            if(ret.Count<count)
+            {
+                foreach(var S in Solvers)
+                {
+                    if(S.Value.IsUsedForBruteForce)
                     {
-                        Task T;
-                        if (!_tasks.TryDequeue(out T))
+                        var Iter = Iterators[S.Key];
+                        while (!Iter.IsFinished() && ret.Count < count)
                         {
-                            Logger.UltraLogger.Instance.AddToLog("Tasker: Cant dequeue predefined tasks", Logger.MsgType.Error);
-                        }
-                        else
-                        {
-                            ret.Add(T);
-                            i++;
-                            continue;
+                            var NextInput = Iter.NextState();
+                            var ws = WayConverter.ToWay(Params.Engine.GetSPNetInstance(), NextInput);
+                            ret.Add(new Task(S.Value.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
                         }
                     }
-
+                    if (ret.Count >= count)
+                        break;
+                }
             }
             return ret;
         }
-
         public bool IsFinished()
         {
             //throw new NotImplementedException();
-            return Iter.IsFinished()/*&&(_tasks.Count==0)*/;
+            return AvailableSolverTypes.GetAllTypes().Where(i=>Solvers[i].IsUsedForBruteForce).All(i=>Iterators[i].IsFinished()) && (_tasks.Count==0);
+        }
+        public ulong GetTasksCount()
+        {
+            return (ulong)(_tasks.Count) + AvailableSolverTypes.GetAllTypes().Where(i => Solvers[i].IsUsedForBruteForce).Select(i=>Iterators[i]).Aggregate<InputsIterator, ulong>(0, (acc, x) => acc + x.GetStatesCount());
         }
     }
     class InputsIterator
@@ -150,7 +172,35 @@ namespace Allax
         int BlocksCount;
         int BlockLength;
         int MaxBlocksOnInput;
-        List<InputsIteratorBlock> Blocks;
+        ulong Factorial(ulong i)
+        {
+            if (i <= 1)
+                return 1;
+            return i * Factorial(i - 1);
+        }
+        public ulong GetStatesCount()
+        {
+            ulong ret=0;
+            for(int i=1;i<MaxBlocksOnInput+1;i++)
+            {
+                ulong statesCount = 1;
+                for(int j=0;j<i;j++)
+                {
+                    statesCount *= (ulong)1 << BlockLength;
+                }
+                statesCount--;
+                ret += statesCount * (Factorial((ulong)BlocksCount) / (Factorial((ulong)i) * Factorial((ulong)(BlocksCount - i))));
+            }
+            return ret;
+        }
+        List<InputsIteratorBlock> Blocks = new List<InputsIteratorBlock>();
+        public void Reset()
+        {
+            foreach(var B in Blocks)
+            {
+                B.ResetState();
+            }
+        }
         public InputsIterator(int BlocksCount, int BlockLength, int MaxBlocksOnInput = 1)
         {
             this.BlocksCount = BlocksCount;

@@ -19,21 +19,29 @@ namespace AllaxScript
             int TaskCounter = 0;
             TimeSpan AnalisysTime = TimeSpan.Zero;
             private System.Collections.Concurrent.ConcurrentBag<Solution> Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
-            public void TaskFinished(Task T)
+            public void TaskFinishedHandler(Task T)
             {
-                lock (syncRoot)
+                //return;
+                //lock (syncRoot)
                 {
                     var Time = (T.Params.EndTime - T.Params.StartTime);
                     AnalisysTime += Time;
-                    Console.WriteLine("Task {0} has been finished. Exec time: {1}.", ++TaskCounter, Time.ToString());
+                    Console.WriteLine("Task {0} has been finished. Exec time: {1}.", ((Func<int>)(() => { lock (syncRoot) return ++TaskCounter; }))(), Time.ToString());
                     //Console.WriteLine(PrintWay(T.GetWay(), 2));
                 }
             }
-            public void AllTasksFinished(object sender, EventArgs e)
+            public void ProgressBarHandler(double Progress)
+            {
+                //lock(syncRoot)
+                {
+                    Console.WriteLine(string.Format("Progress: {0, 3:P1}.", Progress));
+                }
+            }
+            public void AllTasksFinishedHandler(Task T)
             {
                 lock (syncRoot)
                 {
-                    Console.WriteLine("All tasks finished. Total time: {0}.", (DateTime.Now - StartTime).ToString());
+                    Console.WriteLine("All tasks finished. Total time: {0}. Total solutions: {1}.", (DateTime.Now - StartTime).ToString(), Solutions.Count);
                     Console.WriteLine("Enter 0 to continue...");
                 }
             }
@@ -102,15 +110,14 @@ namespace AllaxScript
                 }
                 return FullOut;
             }
-            public bool MyAddSolution(Solution S)
+            public void MyAddSolution(Solution S)
             {
-                Solutions.Add(S);
                 lock (syncRoot)
                 {
+                    Solutions.Add(S);
                     Console.WriteLine("Solution has been found. Prevalence: {1}. Active blocks count: {2}. Total solutions: {0}.", Solutions.Count, S.P.ToPrevalence(), S.P.ActiveBlocksCount);
 
                 }
-                return true;
             }
             public void PrintSolution(Solution S, int SolveCounter)
             {
@@ -361,6 +368,14 @@ namespace AllaxScript
                         }
                     case 4:
                         {
+                            int mode = 0;
+                            while (mode != 1 && mode != 2)
+                            {
+                                Console.WriteLine("Run asynchronously? [1 - Yes, 2 - Nope]");
+                                mode = Convert.ToInt32(Console.ReadLine());
+                                Console.WriteLine();
+                            }
+                            ret.ASync = (mode == 1) ? true : false;
                             exit = true;
                             break;
                         }
@@ -617,10 +632,22 @@ namespace AllaxScript
         public static DateTime StartTime;
         public static void Main()
         {
+            /*int BoxSize = 8;
+            int BoxCount = 8;
+            int MaxBoxOnInput = 1;
+            InputsIterator It = new InputsIterator(BoxCount, BoxSize, MaxBoxOnInput);
+            while(!It.IsFinished())
+            {
+                var State = It.NextState();
+                var List = WayConverter.ToList(State.Input, State.Length);
+                Console.WriteLine(Enumerable.Range(0, List.Count).Select(i => ((List[i]) ? '1' : '0')).ToArray());
+            }*/
             output = new InOut();
-            E = new Engine(new EngineSettings(output.MyAddSolution));
-            E.TASKDONE += output.TaskFinished;
-            E.ALLTASKSDONE += output.AllTasksFinished;
+            E = new Engine();
+            E.ONSOLUTIONFOUND += output.MyAddSolution;
+            E.ONTASKDONE += output.TaskFinishedHandler;
+            E.ONALLTASKSDONE += output.AllTasksFinishedHandler;
+            E.ONPROGRESSCHANGED += output.ProgressBarHandler;
             Menu1();
         }
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)

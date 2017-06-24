@@ -16,7 +16,7 @@ namespace Allax
         }
         public IEngine Engine;
         public int MaxThreads;
-        bool ASync;
+        public bool ASync;
     }
     public struct WorkerThreadParams
     {

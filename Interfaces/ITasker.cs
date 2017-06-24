@@ -7,13 +7,14 @@ namespace Allax
 {
     public interface ITasker
     {
-        List<Task> GetTasks(int Count);
+        List<Task> DequeueTasks(int Count);
+        ulong GetTasksCount();
         void AddTask(Task T);
         void Init(TaskerParams Params);
         bool IsFinished();
         void InitSolvers(Dictionary<AvailableSolverTypes, Solver> Solvers = null);
         void ProcessRules(List<Rule> Rules);
-        void AddBruteForceTasks();
+        void AddAllBruteForceTasks();
         void Reset();
     }
 }

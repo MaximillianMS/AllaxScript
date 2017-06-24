@@ -191,13 +191,16 @@ namespace Allax
         WorkerThreadState State = WorkerThreadState.Free;
         private static readonly object syncRoot = new object();
         public event TASKHANDLER TASKDONE;
-        public event EventHandler ALLTASKSDONE;
-        void InitAndRunFreeThreads(IWorkerThread Thread)
+        public event TASKHANDLER ALLTASKSDONE;
+        void ReInitThread(IWorkerThread Thread)
         {
             if(Thread.GetState()==WorkerThreadState.Free)
             {
                 //if(Params.)
-                TASKDONE(Thread.GetCurrentTask());
+                if (!Params.ASync)
+                    TASKDONE(Thread.GetCurrentTask());
+                else
+                    TASKDONE.BeginInvoke(Thread.GetCurrentTask(), null, null);
                 InitThread(Thread);
             }
             else
@@ -207,7 +210,7 @@ namespace Allax
             }
         }
         WorkerParams Params;
-        ConcurrentQueue<Task> TaskQueue;
+        Queue<Task> TaskQueue;
         List<IWorkerThread> Threads;
         public Worker(WorkerParams Params)
         {
@@ -217,8 +220,8 @@ namespace Allax
         public void Init(WorkerParams Params)
         {
             this.Params = Params;
-            TaskQueue = new ConcurrentQueue<Task>();
-            AddTasks(-1);
+            TaskQueue = new Queue<Task>();
+            //AddTasks(-1);
             CreateTheads();
             State = WorkerThreadState.Loaded;
         }
@@ -228,12 +231,12 @@ namespace Allax
             for(int i=0; i<Params.MaxThreads;i++)
             {
                 Threads.Add(new WorkerThread(i, this));
-                Threads[i].JOBSDONE += InitAndRunFreeThreads;
+                Threads[i].JOBSDONE += ReInitThread;
             }
         }
         void AddTasks(int Count=1)
         {
-            foreach (var T in Params.Engine.GetTaskerInstance().GetTasks(Count))
+            foreach (var T in Params.Engine.GetTaskerInstance().DequeueTasks(Count))
             {
                 TaskQueue.Enqueue(T);
             }
@@ -242,36 +245,39 @@ namespace Allax
         {
             bool OK = true;
             Task Task;
-            if (TaskQueue.Count == 0)
+            lock (syncRoot)
             {
-                AddTasks(Params.MaxThreads);
-            }
-            if (TaskQueue.TryDequeue(out Task))
-            {
-                Thread.Init(new WorkerThreadParams(Task));
-                Thread.Start();
-            }
-            else
-            {
+                if (TaskQueue.Count == 0)
+                {
+                    AddTasks(Params.MaxThreads);
+                }
                 if (TaskQueue.Count > 0)
                 {
-                    Logger.UltraLogger.Instance.AddToLog("Worker: Coudn't dequeue Task.", Logger.MsgType.Error);
-                    OK = false;
-                    throw new NotImplementedException();
-
+                    Task = TaskQueue.Dequeue();
+                    Thread.Init(new WorkerThreadParams(Task));
+                    Thread.Start();
                 }
                 else
                 {
-                    lock (syncRoot)
+                    //                     if (TaskQueue.Count > 0)
+                    //                     {
+                    //                         Logger.UltraLogger.Instance.AddToLog("Worker: Coudn't dequeue Task.", Logger.MsgType.Error);
+                    //                         OK = false;
+                    //                         throw new NotImplementedException();
+                    // 
+                    //                     }
+                    //                     else
+                    //                     {
+                    if (State != WorkerThreadState.Stopped)
                     {
-                        if (State != WorkerThreadState.Stopped)
+                        Thread.SetState(WorkerThreadState.Finished);
+                        if (Threads.All(x => x.GetState() == WorkerThreadState.Finished))
                         {
-                            Thread.SetState(WorkerThreadState.Finished);
-                            if (Threads.All(x => x.GetState() == WorkerThreadState.Finished))
-                            {
-                                State = WorkerThreadState.Stopped;
-                                ALLTASKSDONE.BeginInvoke(null, null, null, null);
-                            }
+                            State = WorkerThreadState.Stopped;
+                            if (!Params.ASync)
+                                ALLTASKSDONE(new Task());
+                            else
+                                ALLTASKSDONE.BeginInvoke(new Task(), null, null);
                         }
                     }
                 }
@@ -282,7 +288,7 @@ namespace Allax
         {
             State = WorkerThreadState.Started;
             AddTasks(Params.MaxThreads - TaskQueue.Count);
-            if ((TaskQueue.Count != 0) && (!Params.Engine.GetTaskerInstance().IsFinished()))
+            if ((TaskQueue.Count != 0) /*&& (!Params.Engine.GetTaskerInstance().IsFinished())*/)
             {
                 bool OK = true;
                 foreach (var Thread in Threads)
@@ -295,9 +301,14 @@ namespace Allax
                     throw new Exception();
                 }
             }
-            //long SecNow = DateTime.Now.Second;
+            else
+            {
+                if (!Params.ASync)
+                    ALLTASKSDONE(new Task());
+                else
+                    ALLTASKSDONE.BeginInvoke(new Task(), null, null);
+            }
         }
-
         public void AsyncRun()
         {
             /*throw new NotFiniteNumberException();*/

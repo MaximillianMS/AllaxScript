@@ -7,14 +7,17 @@ namespace Allax
     //Yuri. To get ISPNet and ISBlockDB use "IEngine E=new Engine();" or "Engine E=new Engine();"
     public interface IEngine
     {
-        event EventHandler ALLTASKSDONE;
-        event TASKHANDLER TASKDONE;
+
+        event PROGRESSHANDLER ONPROGRESSCHANGED;
+        event TASKHANDLER ONALLTASKSDONE;
+        event TASKHANDLER ONTASKDONE;
+        event ADDSOLUTIONHANDLER ONSOLUTIONFOUND;
         void AbortAnalisys();
         void Init(EngineSettings Settings);
         EngineSettings GetSettings(); 
         IWorker GetWorkerInstance();
         ITasker GetTaskerInstance();
-        Dictionary<AvailableSolverTypes, Solver> GetSolvers();
+        Dictionary<AvailableSolverTypes, ISolver> GetSolvers();
         Prevalence GetMultiThreadPrevalence();
         void SetMultiThreadPrevalence(Prevalence P);
         void PerformAnalisys(AnalisysParams Params);

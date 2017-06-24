@@ -96,7 +96,7 @@ namespace Allax
         List<short> GetFuncAnalog(List<short> func)
         {
             var ret = new List<short>(func.Count);
-            for(int i=0;i<func.Count;i++)
+            for (int i = 0; i < func.Count; i++)
             {
                 ret.Add((short)((func[i] == 0) ? 1 : -1));
             }
@@ -105,7 +105,7 @@ namespace Allax
         public List<List<short>> GetCorMatrix(List<List<bool>> funcMatrix)
         {
             var CorMatrix = new List<List<short>>(funcMatrix.Count);
-            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>()).ToList());
+            CorMatrix.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i => new List<short>()).ToList());
             for (int LinCombo = 0; LinCombo < funcMatrix.Count; LinCombo++)
             {
                 CorMatrix[LinCombo] = GetLinCombo(funcMatrix, LinCombo);
@@ -119,15 +119,15 @@ namespace Allax
         {
             var funcList = WayConverter.MatrixToList(funcMatrix);
             var ret = new List<List<short>>();
-            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i=>new List<short>(funcMatrix.Count).ToList()));
-            for(int a=0; a<funcMatrix.Count;a++)
+            ret.AddRange(Enumerable.Range(0, funcMatrix.Count).Select(i => new List<short>(funcMatrix.Count).ToList()));
+            for (int a = 0; a < funcMatrix.Count; a++)
             {
-                for(int b=0;b<funcMatrix.Count;b++)
+                for (int b = 0; b < funcMatrix.Count; b++)
                 {
                     int Counter = 0;
-                    foreach(var x in Enumerable.Range(0, funcMatrix.Count))
-                    { 
-                        if((funcList[x] ^ funcList[x^a])==b)
+                    foreach (var x in Enumerable.Range(0, funcMatrix.Count))
+                    {
+                        if ((funcList[x] ^ funcList[x ^ a]) == b)
                         {
                             Counter++;
                         }
@@ -181,25 +181,25 @@ namespace Allax
         {
             var State = new BlockState(Params.Inputs, this.BlockSize);
             var ret = new List<BlockState>(1);
-//          var Inputs = WayConverter.ToList(State.inputs, State.BlockSize);
-//          var Outputs = new List<bool>(Enumerable.Repeat(false, State.BlockSize));
-/*
-            for(int i= State.BlockSize-1; i>=0;i--)
-            {
-                if ((State.inputs & (1 << i)) != 0)
-                {
-                    var Num = GetOutputNumber(State.BlockSize - 1 - i);
-                    if (Num < BlockSize)
-                    {
-                        State.outputs = (byte)(State.outputs | ((long)1 << (State.BlockSize - 1 - Num)));
-                    }
-                    else
-                    {
-                        Logger.UltraLogger.Instance.AddToLog("Net: Wrong pblock initializaion", Logger.MsgType.Error);
-                        throw new NotImplementedException();
-                    }
-                }
-            }*/
+            //          var Inputs = WayConverter.ToList(State.inputs, State.BlockSize);
+            //          var Outputs = new List<bool>(Enumerable.Repeat(false, State.BlockSize));
+            /*
+                        for(int i= State.BlockSize-1; i>=0;i--)
+                        {
+                            if ((State.inputs & (1 << i)) != 0)
+                            {
+                                var Num = GetOutputNumber(State.BlockSize - 1 - i);
+                                if (Num < BlockSize)
+                                {
+                                    State.outputs = (byte)(State.outputs | ((long)1 << (State.BlockSize - 1 - Num)));
+                                }
+                                else
+                                {
+                                    Logger.UltraLogger.Instance.AddToLog("Net: Wrong pblock initializaion", Logger.MsgType.Error);
+                                    throw new NotImplementedException();
+                                }
+                            }
+                        }*/
             foreach (var j in Enumerable.Range(0, BlockSize))
             {
                 if (State.CustomInput[j] != false)
@@ -246,20 +246,20 @@ namespace Allax
             for (int i = 0; i < Count; i++)
             {
                 var state = States[Inputs][i];
-                if(state.MatrixValue==0)
+                if (state.MatrixValue == 0)
                 {
                     break;
                 }
-                    var P = state.MatrixValue * Params.CurrentPrevalence;
-                    if ((P > Params.MIN) || (!Params.CheckPrevalence))
-                    {
+                var P = state.MatrixValue * Params.CurrentPrevalence;
+                if ((P >= Params.MIN) || (!Params.CheckPrevalence))
+                {
 
-                        ret.Add(state);
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    ret.Add(state);
+                }
+                else
+                {
+                    break;
+                }
             }
             return ret;
         }
@@ -302,8 +302,8 @@ namespace Allax
         public SBlock(ref ISBlockDB database, byte block_length) //!NOW USED
         {
             _database = database;
-            if(FuncMatrix!=null)
-            FuncMatrix.Clear();
+            if (FuncMatrix != null)
+                FuncMatrix.Clear();
             else
             {
                 FuncMatrix = new List<List<bool>>();
@@ -375,7 +375,7 @@ namespace Allax
         {
             type = LayerType.SLayer;
             Blocks = new List<IBlock>(blocks_count);
-            foreach(var i in Enumerable.Range(0, blocks_count))
+            foreach (var i in Enumerable.Range(0, blocks_count))
             {
                 Blocks.Add(new SBlock(ref db, block_length));
             }
@@ -468,32 +468,56 @@ namespace Allax
 
     public class Engine : IEngine
     {
-        static Dictionary<AvailableSolverTypes, Solver> Solvers = new Dictionary<AvailableSolverTypes, Solver> {
-                { AvailableSolverTypes.GreedySolver, new Solver(new GreedySolver()) },
-                {AvailableSolverTypes.AdvancedSolver, new Solver(new AdvancedSolver()) },
-                { AvailableSolverTypes.BruteforceSolver, new Solver(new BaseSolver()) } };
-        public event TASKHANDLER TASKDONE;
+        static Dictionary<AvailableSolverTypes, ISolver> Solvers = new Dictionary<AvailableSolverTypes, ISolver> {
+                { AvailableSolverTypes.GreedySolver, new GreedySolver() },
+                {AvailableSolverTypes.AdvancedSolver, new AdvancedSolver() },
+                { AvailableSolverTypes.BruteforceSolver, new BaseSolver() } };
+        public event TASKHANDLER ONTASKDONE;
         public event TASKHANDLER TASKADDED;
-        public event EventHandler ALLTASKSDONE;
+        public event TASKHANDLER ONALLTASKSDONE;
+        public event PROGRESSHANDLER ONPROGRESSCHANGED;
+        public event ADDSOLUTIONHANDLER ONSOLUTIONFOUND;
         IWorker TheWorker;
         ISPNet TheNet;
         ISBlockDB TheDB;
         ITasker TheTasker;
         EngineSettings Settings;
+        ulong AllTasksCount;
+        private static long TaskCounter;
+        bool ASync;
         private static Prevalence MultiThreadParam1; //Prevalence
         private static readonly object syncRoot = new object();
-        public Engine(EngineSettings Settings)
+        private static readonly object syncRoot2 = new object();
+        public Engine(/*EngineSettings Settings*/)
         {
             TheWorker = null;
             TheNet = null;
             TheDB = null;
-            Init(Settings);
+            Init(new EngineSettings(PublishSolution));
+        }
+        private void PublishSolution(Solution S)
+        {
+            if(!ASync)
+            {
+                ONSOLUTIONFOUND(S);
+            }
+            else
+            {
+                ONSOLUTIONFOUND.BeginInvoke(S, null, null);
+            }
         }
         public void Init(EngineSettings Settings)
         {
             this.Settings = Settings;
         }
-
+        private long IncrementTaskCounter()
+        {
+            lock (syncRoot2)
+            {
+                TaskCounter++;
+                return TaskCounter;
+            }
+        }
         public Prevalence GetMultiThreadPrevalence()
         {
             lock (syncRoot)
@@ -508,13 +532,28 @@ namespace Allax
                 MultiThreadParam1 = P;
             }
         }
+        private void Reset()
+        {
+            this.SetMultiThreadPrevalence(new Prevalence(0, 0, TheNet.GetSettings().SBoxSize));
+            TaskCounter = 0;
+            Solvers = new Dictionary<AvailableSolverTypes, ISolver> {
+                { AvailableSolverTypes.GreedySolver, new GreedySolver() },
+                {AvailableSolverTypes.AdvancedSolver, new AdvancedSolver() },
+                { AvailableSolverTypes.BruteforceSolver, new BaseSolver() } };
+        }
         public void PerformAnalisys(AnalisysParams Params)
         {
             try
             {
-                this.SetMultiThreadPrevalence(new Prevalence(0, 0, TheNet.GetSettings().SBoxSize));
+                Reset();
+                ASync = Params.ASync;
                 var TaskerParams = new TaskerParams(this, Params.Alg);
                 TheTasker = new Tasker(TaskerParams);
+                AllTasksCount = TheTasker.GetTasksCount();
+                if(AllTasksCount>((ulong)1<<32))
+                {
+                    throw new Exception("Tasks count is above 4 billions!!!");
+                }
                 var WorkerParams = new WorkerParams(this, Params.MaxThreads, Params.ASync);
                 TheWorker = new Worker(WorkerParams);
                 TheWorker.TASKDONE += TheWorker_TASKDONE;
@@ -522,31 +561,47 @@ namespace Allax
                 {
                     if (!Params.ASync)
                     {
+                        ONPROGRESSCHANGED(0);
                         TheWorker.Run();
                     }
                     else
                     {
+                        ONPROGRESSCHANGED.BeginInvoke(0, null, null);
                         TheWorker.AsyncRun();
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
                 Logger.UltraLogger.Instance.ExportToFile();
-                throw new NotImplementedException();
+                throw new Exception(e.Message);
             }
         }
-
-        private void TheWorker_ALLTASKSDONE(object sender, EventArgs e)
+        private void TheWorker_ALLTASKSDONE(Task T)
         {
-            ALLTASKSDONE.BeginInvoke(sender, e, null, null);
+            if (!ASync)
+            {
+                ONALLTASKSDONE(T);
+            }
+            else
+            {
+                System.Threading.Thread.Sleep(50); // some workaround
+                ONALLTASKSDONE.BeginInvoke(T, null, null);
+            }
         }
-
         private void TheWorker_TASKDONE(Task T)
         {
-            TASKDONE.BeginInvoke(T, null, null);
+            var Value = IncrementTaskCounter()/ (double)AllTasksCount;
+            if (!ASync)
+            {
+                ONTASKDONE.BeginInvoke(T, null, null);
+                ONPROGRESSCHANGED.BeginInvoke(Value, null, null);
+            }
+            {
+                ONTASKDONE(T);
+                ONPROGRESSCHANGED(Value);
+            }
         }
-
         public static byte[] Zip(string str)
         {
             var bytes = Encoding.UTF8.GetBytes(str);
@@ -653,22 +708,18 @@ namespace Allax
             UpdateSBlockDB();
             return TheDB;
         }
-
         public IWorker GetWorkerInstance()
         {
             return TheWorker;
         }
-
         public ITasker GetTaskerInstance()
         {
             return TheTasker;
         }
-
         public EngineSettings GetSettings()
         {
             return Settings;
         }
-
         public void AbortAnalisys()
         {
             if(TheWorker!=null)
@@ -679,8 +730,7 @@ namespace Allax
                 GC.Collect();
             }
         }
-
-        public Dictionary<AvailableSolverTypes, Solver> GetSolvers()
+        public Dictionary<AvailableSolverTypes, ISolver> GetSolvers()
         {
             return Solvers;
         }
