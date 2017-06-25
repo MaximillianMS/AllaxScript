@@ -33,11 +33,11 @@ namespace FormsGUI
             addLastRound();
         }
 
-        private void E_OnTaskDone(Allax.Task T)
+        private void E_OnTaskDone(ITask T)
         {
             //int i = 0;
         }
-        private void E_OnAllTasksDone(Allax.Task T)
+        private void E_OnAllTasksDone(ITask T)
         {
             MessageBox.Show("All done!");
         }
