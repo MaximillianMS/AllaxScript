@@ -22,9 +22,12 @@ namespace Allax
             if(SolParams.BIndex == -1) // check MaxActiveBlocks condition
             {
                 SolParams.BIndex = 0;
-                if (!CheckActiveBlocksCondition(SolParams))
+                if (SolParams.lastNotEmptyLayerIndex != 1) //skip first layer
                 {
-                    return false;
+                    if (!CheckActiveBlocksCondition(SolParams))
+                    {
+                        return false;
+                    }
                 }
             }
             var Blocks = SolParams.Way.layers[SolParams.lastNotEmptyLayerIndex].blocks;

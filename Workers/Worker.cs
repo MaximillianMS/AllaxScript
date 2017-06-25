@@ -137,7 +137,7 @@ namespace Allax
             }
         }
 
-        public Task GetCurrentTask()
+        public ITask GetCurrentTask()
         {
             return this.Params.T;
         }
@@ -210,7 +210,7 @@ namespace Allax
             }
         }
         WorkerParams Params;
-        Queue<Task> TaskQueue;
+        Queue<ITask> TaskQueue;
         List<IWorkerThread> Threads;
         public Worker(WorkerParams Params)
         {
@@ -220,7 +220,7 @@ namespace Allax
         public void Init(WorkerParams Params)
         {
             this.Params = Params;
-            TaskQueue = new Queue<Task>();
+            TaskQueue = new Queue<ITask>();
             //AddTasks(-1);
             CreateTheads();
             State = WorkerThreadState.Loaded;
@@ -234,17 +234,17 @@ namespace Allax
                 Threads[i].JOBSDONE += ReInitThread;
             }
         }
-        void AddTasks(int Count=1)
+        public virtual void AddTasks(int Count=1)
         {
             foreach (var T in Params.Engine.GetTaskerInstance().DequeueTasks(Count))
             {
                 TaskQueue.Enqueue(T);
             }
         }
-        public bool InitThread(IWorkerThread Thread)
+        bool InitThread(IWorkerThread Thread)
         {
             bool OK = true;
-            Task Task;
+            ITask Task;
             lock (syncRoot)
             {
                 if (TaskQueue.Count == 0)
@@ -284,7 +284,7 @@ namespace Allax
             }
             return OK;
         }
-        public void Run()
+        public virtual void Run()
         {
             State = WorkerThreadState.Started;
             AddTasks(Params.MaxThreads - TaskQueue.Count);
@@ -309,14 +309,14 @@ namespace Allax
                     ALLTASKSDONE.BeginInvoke(new Task(), null, null);
             }
         }
-        public void AsyncRun()
+        public virtual void AsyncRun()
         {
             /*throw new NotFiniteNumberException();*/
             //LOL. you really thought that i'd make another function special for you, Yuri? AHAHAHAHAHAHA (C) =^_^= 
             Run();
         }
 
-        public void Pause()
+        public virtual void Pause()
         {
             foreach(var Thread in Threads)
             {
@@ -324,7 +324,7 @@ namespace Allax
             }
         }
 
-        public void Resume()
+        public virtual void Resume()
         {
             foreach (var Thread in Threads)
             {

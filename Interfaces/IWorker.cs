@@ -14,7 +14,7 @@ namespace Allax
         void Suspend();
         void Abort();
         void Resume();
-        Task GetCurrentTask();
+        ITask GetCurrentTask();
         WorkerThreadState GetState();
         void SetState(WorkerThreadState State);
     }
@@ -23,7 +23,7 @@ namespace Allax
         event TASKHANDLER TASKDONE;
         event TASKHANDLER ALLTASKSDONE;
         void Init(WorkerParams Params);
-        bool InitThread(IWorkerThread Thread);
+        void AddTasks(int count);
         void Run();
         void Pause();
         void Resume();

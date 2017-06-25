@@ -20,9 +20,9 @@ namespace Allax
     }
     public struct WorkerThreadParams
     {
-        public Task T;
+        public ITask T;
         public WorkerThreadState State;
-        public WorkerThreadParams(Task t)
+        public WorkerThreadParams(ITask t)
         {
             T = t;
             State = WorkerThreadState.Loaded;

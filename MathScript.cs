@@ -473,7 +473,6 @@ namespace Allax
                 {AvailableSolverTypes.AdvancedSolver, new AdvancedSolver() },
                 { AvailableSolverTypes.BruteforceSolver, new BaseSolver() } };
         public event TASKHANDLER ONTASKDONE;
-        public event TASKHANDLER TASKADDED;
         public event TASKHANDLER ONALLTASKSDONE;
         public event PROGRESSHANDLER ONPROGRESSCHANGED;
         public event ADDSOLUTIONHANDLER ONSOLUTIONFOUND;
@@ -561,12 +560,14 @@ namespace Allax
                 {
                     if (!Params.ASync)
                     {
-                        ONPROGRESSCHANGED(0);
+                        if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                            ONPROGRESSCHANGED(0);
                         TheWorker.Run();
                     }
                     else
                     {
-                        ONPROGRESSCHANGED.BeginInvoke(0, null, null);
+                        if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                            ONPROGRESSCHANGED.BeginInvoke(0, null, null);
                         TheWorker.AsyncRun();
                     }
                 }
@@ -577,29 +578,35 @@ namespace Allax
                 throw new Exception(e.Message);
             }
         }
-        private void TheWorker_ALLTASKSDONE(Task T)
+        private void TheWorker_ALLTASKSDONE(ITask T)
         {
             if (!ASync)
             {
-                ONALLTASKSDONE(T);
+                if (ONALLTASKSDONE.GetInvocationList().Length != 0)
+                    ONALLTASKSDONE(T);
             }
             else
             {
                 System.Threading.Thread.Sleep(50); // some workaround
-                ONALLTASKSDONE.BeginInvoke(T, null, null);
+                if (ONALLTASKSDONE.GetInvocationList().Length != 0)
+                    ONALLTASKSDONE.BeginInvoke(T, null, null);
             }
         }
-        private void TheWorker_TASKDONE(Task T)
+        private void TheWorker_TASKDONE(ITask T)
         {
-            var Value = IncrementTaskCounter()/ (double)AllTasksCount;
+            var Value = IncrementTaskCounter() / (double)AllTasksCount;
             if (!ASync)
             {
-                ONTASKDONE.BeginInvoke(T, null, null);
-                ONPROGRESSCHANGED.BeginInvoke(Value, null, null);
+                if (ONTASKDONE.GetInvocationList().Length != 0)
+                    ONTASKDONE.BeginInvoke(T, null, null);
+                if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                    ONPROGRESSCHANGED.BeginInvoke(Value, null, null);
             }
             {
-                ONTASKDONE(T);
-                ONPROGRESSCHANGED(Value);
+                if (ONTASKDONE.GetInvocationList().Length != 0)
+                    ONTASKDONE(T);
+                if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                    ONPROGRESSCHANGED(Value);
             }
         }
         public static byte[] Zip(string str)

@@ -19,11 +19,12 @@ namespace AllaxScript
             int TaskCounter = 0;
             TimeSpan AnalisysTime = TimeSpan.Zero;
             private System.Collections.Concurrent.ConcurrentBag<Solution> Solutions = new System.Collections.Concurrent.ConcurrentBag<Solution>();
-            public void TaskFinishedHandler(Task T)
+            public void TaskFinishedHandler(ITask iT)
             {
                 //return;
                 //lock (syncRoot)
                 {
+                    var T = (Task)iT;
                     var Time = (T.Params.EndTime - T.Params.StartTime);
                     AnalisysTime += Time;
                     Console.WriteLine("Task {0} has been finished. Exec time: {1}.", ((Func<int>)(() => { lock (syncRoot) return ++TaskCounter; }))(), Time.ToString());
@@ -37,7 +38,7 @@ namespace AllaxScript
                     Console.WriteLine(string.Format("Progress: {0, 3:P1}.", Progress));
                 }
             }
-            public void AllTasksFinishedHandler(Task T)
+            public void AllTasksFinishedHandler(ITask T)
             {
                 lock (syncRoot)
                 {
@@ -547,7 +548,7 @@ namespace AllaxScript
                 }
                 if(mode==1)
                 {
-                    var count = 6;
+                    var count = 2;
                     foreach (var i in Enumerable.Range(0, count))
                         AddRound(Net);
                     Menu1_2_2(1, 1, 1);

@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace Allax
 {
 	public delegate void ADDSOLUTIONHANDLER(Solution s);
-    public delegate void TASKHANDLER(Task T);
+    public delegate void TASKHANDLER(ITask T);
     public delegate void PROGRESSHANDLER(double Progress);
     [Serializable()]
     public struct DBNote
@@ -189,6 +189,10 @@ namespace Allax
             var ret = ((double)Numerator) / (double)(D);
             //Debug.Assert(ret != 0);
             return ret;
+        }
+        public override string ToString()
+        {
+            return String.Format("Prevalence: {0}.", ToPrevalence());
         }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         /// <summary>
@@ -371,13 +375,13 @@ namespace Allax
             if (MaxThreads == -1)
             {
                 this.MaxThreads = System.Environment.ProcessorCount;
+            }
+            else
+            {
                 if (MaxThreads > 32)
                 {
                     throw new Exception("Seems incorrect processor count value. Maximum is 32 (hardcoded value).");
                 }
-            }
-            else
-            {
                 this.MaxThreads = MaxThreads;
             }
         }
@@ -507,5 +511,9 @@ namespace Allax
         }
         public Prevalence P;
 		public SPNetWay Way;
-	}
+        public override string ToString()
+        {
+            return P.ToString()+string.Format(" Active Boxes Count: {0}.", P.ActiveBlocksCount);
+        }
+    }
 }

@@ -13,7 +13,7 @@ namespace Allax
         private object syncRoot = new object();
         TaskerParams Params;
         int _rounds_count;
-        Queue<Task> _tasks;
+        Queue<ITask> _tasks;
         SPNetWay _tempEmptyWay;
         //InputsIterator Iter;
         Dictionary<AvailableSolverTypes, Solver> Solvers;
@@ -30,7 +30,7 @@ namespace Allax
         public void Reset()
         {
             IsBruteForceTurnedOn = false;
-            _tasks = new Queue<Task>();
+            _tasks = new Queue<ITask>();
             foreach (var It in Iterators)
                 It.Value.Reset();
         }
@@ -116,21 +116,20 @@ namespace Allax
         {
             throw new NotImplementedException();
         }
-        public List<Task> DequeueTasks(int count)
+        public List<ITask> DequeueTasks(int count)
         {
-            var ret = new List<Task>();
+            var ret = new List<ITask>();
             //             if (count < 0)
             //                 count = _tasks.Count;
             while ((ret.Count < count) && (_tasks.Count > 0))
             {
-                Task T;
                 //                 if (!_tasks.TryDequeue(out T))
                 //                 {
                 //                     Logger.UltraLogger.Instance.AddToLog("Tasker: Cant dequeue predefined tasks", Logger.MsgType.Error);
                 //                     throw new NotImplementedException();
                 //                 }
                 //                 else
-                    T = _tasks.Dequeue();
+                 var  T = _tasks.Dequeue();
                 ret.Add(T);
                 continue;
             }
@@ -186,9 +185,8 @@ namespace Allax
                 ulong statesCount = 1;
                 for(int j=0;j<i;j++)
                 {
-                    statesCount *= (ulong)1 << BlockLength;
+                    statesCount *= (((ulong)(1 << BlockLength))-1);
                 }
-                statesCount--;
                 ret += statesCount * (Factorial((ulong)BlocksCount) / (Factorial((ulong)i) * Factorial((ulong)(BlocksCount - i))));
             }
             return ret;
