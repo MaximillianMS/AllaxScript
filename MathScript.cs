@@ -473,7 +473,6 @@ namespace Allax
                 {AvailableSolverTypes.AdvancedSolver, new AdvancedSolver() },
                 { AvailableSolverTypes.BruteforceSolver, new BaseSolver() } };
         public event TASKHANDLER ONTASKDONE;
-        public event TASKHANDLER TASKADDED;
         public event TASKHANDLER ONALLTASKSDONE;
         public event PROGRESSHANDLER ONPROGRESSCHANGED;
         public event ADDSOLUTIONHANDLER ONSOLUTIONFOUND;

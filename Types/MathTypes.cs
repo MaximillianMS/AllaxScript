@@ -190,6 +190,10 @@ namespace Allax
             //Debug.Assert(ret != 0);
             return ret;
         }
+        public override string ToString()
+        {
+            return String.Format("Prevalence: {0}.", ToPrevalence());
+        }
         public static Prevalence operator *(long L, Prevalence R) { return R * L; }
         /// <summary>
         /// Adding new Matrix value from new block
@@ -507,5 +511,9 @@ namespace Allax
         }
         public Prevalence P;
 		public SPNetWay Way;
-	}
+        public override string ToString()
+        {
+            return P.ToString()+string.Format(" Active Boxes Count: {0}.", P.ActiveBlocksCount);
+        }
+    }
 }
