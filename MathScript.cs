@@ -577,7 +577,7 @@ namespace Allax
                 throw new Exception(e.Message);
             }
         }
-        private void TheWorker_ALLTASKSDONE(Task T)
+        private void TheWorker_ALLTASKSDONE(ITask T)
         {
             if (!ASync)
             {
@@ -589,7 +589,7 @@ namespace Allax
                 ONALLTASKSDONE.BeginInvoke(T, null, null);
             }
         }
-        private void TheWorker_TASKDONE(Task T)
+        private void TheWorker_TASKDONE(ITask T)
         {
             var Value = IncrementTaskCounter()/ (double)AllTasksCount;
             if (!ASync)

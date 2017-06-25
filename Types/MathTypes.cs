@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 namespace Allax
 {
 	public delegate void ADDSOLUTIONHANDLER(Solution s);
-    public delegate void TASKHANDLER(Task T);
+    public delegate void TASKHANDLER(ITask T);
     public delegate void PROGRESSHANDLER(double Progress);
     [Serializable()]
     public struct DBNote

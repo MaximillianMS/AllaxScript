@@ -34,8 +34,16 @@ namespace Allax
         public DateTime EndTime;
         //public MultiTime Time;
     }
-    public struct Task
+    public interface ITask
     {
+        void Exec();
+    }
+    public class Task:ITask
+    {
+        public Task()
+        {
+            Solver = null;
+        }
         public SPNetWay GetWay()
         {
             return SolParams.Way;
@@ -55,7 +63,7 @@ namespace Allax
             this.SolParams = SolParams;
             this.Params = new ExtraParams();
         }
-        public void Exec()
+        public virtual void Exec()
         {
             Params.StartTime = DateTime.Now;
             Solver.Solve(SolParams);
