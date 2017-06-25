@@ -19,30 +19,26 @@ namespace FormsGUI
         List<string> layerList = new List<string>();
         public MainForm()
         {
-            var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
-            e = new Engine(new EngineSettings(F));
+            e = new Engine();
+            e.ONSOLUTIONFOUND += this.E_AddSolution;
             InitializeComponent();
             SPNetSettings settings = new SPNetSettings(16, 4);
-            //settings.sblock_count = 4;
-            //settings.word_length = 16;
-            //settings.db = e.GetSBlockDBInstance();
-            net = e.GetSPNetInstance();
-            //addRound();
-            //addLastRound();
+            net = e.CreateSPNetInstance(settings);
         }
 
-        private bool AddSolution(Solution s)
+        public void E_AddSolution(Solution s)
         {
-            return true;
+            MessageBox.Show("Solution found " + s.P);
         }
-
         private void addRound()
         {
             net.AddLayer(LayerType.KLayer);
             net.AddLayer(LayerType.SLayer);
             net.AddLayer(LayerType.PLayer);
             var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
-            net.GetLayers()[net.GetLayers().Count - 1].GetBlocks()[0].Init(PBlockInit);
+            int layer = net.GetLayers().Count - 1;
+            InitPLayer(layer, PBlockInit, net);
+            InitSLayer(layer - 1, SBlockInit, net);
             refreshList();
 
         }
@@ -52,6 +48,42 @@ namespace FormsGUI
             net.AddLayer(LayerType.SLayer);
             net.AddLayer(LayerType.KLayer);
             refreshList();
+        }
+
+        static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)
+        {
+            Net.GetLayers()[L].GetBlocks()[0].Init(PBlockInit);
+        }
+        static void InitSLayer(int L, List<byte> SBlockInit, ISPNet Net)
+        { 
+            foreach (var B in Net.GetLayers()[L].GetBlocks())
+            {
+                B.Init(SBlockInit);
+            }
+        }
+        static void AddRound(Allax.ISPNet Net)
+        {
+            DelLastRound(Net);
+            AddFullRound(Net);
+            AddLastRound(Net);
+        }
+        static void AddFullRound(Allax.ISPNet Net)
+        {
+            Net.AddLayer(Allax.LayerType.KLayer);
+            Net.AddLayer(Allax.LayerType.SLayer);
+            Net.AddLayer(Allax.LayerType.PLayer);
+        }
+        static void AddLastRound(Allax.ISPNet Net)
+        {
+            Net.AddLayer(Allax.LayerType.KLayer);
+            Net.AddLayer(Allax.LayerType.SLayer);
+            Net.AddLayer(Allax.LayerType.KLayer);
+        }
+        static void DelLastRound(Allax.ISPNet Net)
+        {
+            Net.DeleteLayer((byte)(Net.GetLayers().Count-1));
+            Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
+            Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
         }
 
         private void refreshList()
@@ -79,7 +111,7 @@ namespace FormsGUI
         
         private void runAnalysis()
         {
-            var R1 = new Allax.Rule(AvailableSolverTypes.BaseSolver);
+            var R1 = new Allax.Rule(AvailableSolverTypes.);
             var R2 = new Allax.Rule(AvailableSolverTypes.HeuristicSolver);
             var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             //var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2 }, AnalisysType.Linear), F);
