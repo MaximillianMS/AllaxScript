@@ -502,7 +502,7 @@ namespace Allax
         public bool CheckPrevalence;
         public Prevalence CurrentPrevalence;
     }
-    public struct Solution
+    public struct Solution : IComparable<Solution>
 	{
         public Solution(Prevalence p, SPNetWay w)
         {
@@ -514,6 +514,15 @@ namespace Allax
         public override string ToString()
         {
             return P.ToString()+string.Format(" Active Boxes Count: {0}.", P.ActiveBlocksCount);
+        }
+
+        public int CompareTo(Solution other)
+        {
+            if (Math.Abs(Math.Abs(this.P.Delta) - Math.Abs(other.P.Delta)) < 1E-200)
+            {
+                return this.P.ActiveBlocksCount.CompareTo(other.P.ActiveBlocksCount);
+            }
+            return - Math.Abs(this.P.Delta).CompareTo(Math.Abs(other.P.Delta));
         }
     }
 }

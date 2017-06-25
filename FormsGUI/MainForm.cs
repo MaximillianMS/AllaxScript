@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
 using Allax;
+using System.Threading;
 
 namespace FormsGUI
 {
@@ -18,6 +14,9 @@ namespace FormsGUI
         ISPNet net;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
+        delegate void RefreshSolutionsCallback();
+        delegate void RefreshProgressBarCallback(double progress);
+        private static object syncRoot = new object();
         public MainForm()
         {
             InitializeComponent();
@@ -26,7 +25,7 @@ namespace FormsGUI
             e.ONPROGRESSCHANGED += this.E_ProgressChanged;
             e.ONTASKDONE += E_OnTaskDone;
             e.ONALLTASKSDONE += E_OnAllTasksDone;
-            
+            tasksProgressBar.Width = solutionsListBox.Size.Width;
             SPNetSettings settings = new SPNetSettings(16, 4);
             net = e.CreateSPNetInstance(settings);
             addFullRound();
@@ -43,10 +42,24 @@ namespace FormsGUI
         }
         public void E_AddSolution(Solution s)
         {
-            MessageBox.Show("Solution found " + s.P.ToPrevalence());
+            lock (syncRoot)
+            {
+                solutions.Add(s);
+                solutions.Sort();
+                refreshSolutions();
+            }
         }
         public void E_ProgressChanged(double progress)
         {
+            if (tasksProgressBar.InvokeRequired)
+            {
+                RefreshProgressBarCallback d = new RefreshProgressBarCallback(E_ProgressChanged);
+                this.Invoke(d, new object[] { progress });
+            }
+            else
+            {
+                tasksProgressBar.Value = Convert.ToInt32(progress * 100);
+            }
             //double Progress = progress;
         }
         private void addFullRound()
@@ -67,7 +80,7 @@ namespace FormsGUI
             net.AddLayer(LayerType.KLayer);
             net.AddLayer(LayerType.SLayer);
             net.AddLayer(LayerType.KLayer);
-            refreshList();
+            refreshLayers();
         }
 
         private void addRound()
@@ -113,7 +126,7 @@ namespace FormsGUI
             Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
         }
 
-        private void refreshList()
+        private void refreshLayers()
         {
             layerList.Clear();
             foreach (ILayer l in net.GetLayers())
@@ -123,6 +136,32 @@ namespace FormsGUI
             layersListBox.Items.Clear();
             layersListBox.Items.AddRange(layerList.ToArray());
         }
+
+        private void refreshSolutions()
+        {
+            if (solutionsListBox.InvokeRequired)
+            {
+                RefreshSolutionsCallback d = new RefreshSolutionsCallback(refreshSolutions);
+                this.Invoke(d);
+            }
+            else
+            {
+                List<string> items = new List<string>();
+                foreach (var s in solutions)
+                {
+                    //if (items.Contains(s.ToString()))
+                    //    continue;
+                    items.Add(s.ToString());
+                }
+                solutionsListBox.Items.Clear();
+                solutionsListBox.Items.AddRange(items.ToArray());
+                //Magical constant that makes the width similar to the actual width of a string
+                int longestLength = (int)(solutionsListBox.Items[solutionsListBox.Items.Count - 1].ToString().Length * (solutionsListBox.Font.SizeInPoints - 2.75));//*0.72));
+                if (solutionsListBox.Size.Width < longestLength)
+                    solutionsPanel.Width = longestLength;
+            }
+        }
+
 
         private void sLayerToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -138,9 +177,9 @@ namespace FormsGUI
         
         private void runAnalysis()
         {
-            var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver);
-            var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver);
-            var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver);
+            var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2);
+            var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2);
+            var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2, R3}, AnalisysType.Linear));
             e.PerformAnalisys(AP);  
@@ -150,11 +189,18 @@ namespace FormsGUI
         {
             runAnalysis();
             solutionsListBox.Items.Clear();
+            solutionsPanel.Width = 250;
         }
 
         private void addToolStripMenuItem_Click(object sender, EventArgs e)
         {
             addRound();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.e.AbortAnalisys();
+            Thread.Sleep(2000);
         }
     }
 }

@@ -38,13 +38,15 @@
             this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.LeftPanel = new System.Windows.Forms.Panel();
+            this.tasksProgressBar = new System.Windows.Forms.ProgressBar();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.layersListBox = new System.Windows.Forms.ListBox();
+            this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
-            this.graphVisualsPanel = new System.Windows.Forms.Panel();
             this.toolStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
-            this.LeftPanel.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
+            this.solutionsPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // toolStrip1
@@ -55,7 +57,7 @@
             this.toolStripButton3});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(784, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(1264, 25);
             this.toolStrip1.TabIndex = 0;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -93,7 +95,7 @@
             this.addToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(784, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -108,7 +110,7 @@
             // sPNetToolStripMenuItem
             // 
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
             this.sPNetToolStripMenuItem.Text = "Run";
             this.sPNetToolStripMenuItem.Click += new System.EventHandler(this.sPNetToolStripMenuItem_Click);
             // 
@@ -123,63 +125,87 @@
             // sLayerToolStripMenuItem
             // 
             this.sLayerToolStripMenuItem.Name = "sLayerToolStripMenuItem";
-            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.sLayerToolStripMenuItem.Text = "Round";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
             // 
-            // LeftPanel
+            // tasksProgressBar
             // 
-            this.LeftPanel.Controls.Add(this.layersListBox);
-            this.LeftPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.LeftPanel.Location = new System.Drawing.Point(0, 49);
-            this.LeftPanel.Name = "LeftPanel";
-            this.LeftPanel.Size = new System.Drawing.Size(200, 363);
-            this.LeftPanel.TabIndex = 2;
+            this.tasksProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.tasksProgressBar.Location = new System.Drawing.Point(0, 687);
+            this.tasksProgressBar.Margin = new System.Windows.Forms.Padding(0);
+            this.tasksProgressBar.Name = "tasksProgressBar";
+            this.tasksProgressBar.Size = new System.Drawing.Size(200, 20);
+            this.tasksProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.tasksProgressBar.TabIndex = 5;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 180F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel1.Controls.Add(this.layersListBox, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.solutionsPanel, 2, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 49);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1264, 713);
+            this.tableLayoutPanel1.TabIndex = 6;
             // 
             // layersListBox
             // 
-            this.layersListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.layersListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.layersListBox.FormattingEnabled = true;
-            this.layersListBox.Location = new System.Drawing.Point(0, 0);
+            this.layersListBox.IntegralHeight = false;
+            this.layersListBox.Location = new System.Drawing.Point(3, 3);
             this.layersListBox.Name = "layersListBox";
-            this.layersListBox.Size = new System.Drawing.Size(200, 363);
+            this.layersListBox.Size = new System.Drawing.Size(174, 707);
             this.layersListBox.TabIndex = 0;
+            // 
+            // solutionsPanel
+            // 
+            this.solutionsPanel.Controls.Add(this.solutionsListBox);
+            this.solutionsPanel.Controls.Add(this.tasksProgressBar);
+            this.solutionsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.solutionsPanel.Location = new System.Drawing.Point(1061, 3);
+            this.solutionsPanel.Name = "solutionsPanel";
+            this.solutionsPanel.Size = new System.Drawing.Size(200, 707);
+            this.solutionsPanel.TabIndex = 6;
             // 
             // solutionsListBox
             // 
-            this.solutionsListBox.Dock = System.Windows.Forms.DockStyle.Right;
+            this.solutionsListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.solutionsListBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.solutionsListBox.FormattingEnabled = true;
-            this.solutionsListBox.Location = new System.Drawing.Point(638, 49);
+            this.solutionsListBox.IntegralHeight = false;
+            this.solutionsListBox.Location = new System.Drawing.Point(0, 0);
             this.solutionsListBox.Name = "solutionsListBox";
-            this.solutionsListBox.Size = new System.Drawing.Size(146, 363);
-            this.solutionsListBox.TabIndex = 3;
-            // 
-            // graphVisualsPanel
-            // 
-            this.graphVisualsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.graphVisualsPanel.Location = new System.Drawing.Point(200, 49);
-            this.graphVisualsPanel.Name = "graphVisualsPanel";
-            this.graphVisualsPanel.Size = new System.Drawing.Size(438, 363);
-            this.graphVisualsPanel.TabIndex = 4;
+            this.solutionsListBox.Size = new System.Drawing.Size(200, 687);
+            this.solutionsListBox.TabIndex = 13;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(784, 412);
-            this.Controls.Add(this.graphVisualsPanel);
-            this.Controls.Add(this.solutionsListBox);
-            this.Controls.Add(this.LeftPanel);
+            this.ClientSize = new System.Drawing.Size(1264, 762);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Form1";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            this.LeftPanel.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.solutionsPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -190,16 +216,17 @@
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
-        private System.Windows.Forms.Panel LeftPanel;
-        private System.Windows.Forms.ListBox layersListBox;
         private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sLayerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sPNetToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;
+        private System.Windows.Forms.ProgressBar tasksProgressBar;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.ListBox layersListBox;
+        private System.Windows.Forms.Panel solutionsPanel;
         private System.Windows.Forms.ListBox solutionsListBox;
-        private System.Windows.Forms.Panel graphVisualsPanel;
     }
 }
 
