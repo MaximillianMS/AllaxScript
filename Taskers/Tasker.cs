@@ -185,9 +185,8 @@ namespace Allax
                 ulong statesCount = 1;
                 for(int j=0;j<i;j++)
                 {
-                    statesCount *= (ulong)1 << BlockLength;
+                    statesCount *= (((ulong)(1 << BlockLength))-1);
                 }
-                statesCount--;
                 ret += statesCount * (Factorial((ulong)BlocksCount) / (Factorial((ulong)i) * Factorial((ulong)(BlocksCount - i))));
             }
             return ret;

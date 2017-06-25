@@ -561,12 +561,14 @@ namespace Allax
                 {
                     if (!Params.ASync)
                     {
-                        ONPROGRESSCHANGED(0);
+                        if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                            ONPROGRESSCHANGED(0);
                         TheWorker.Run();
                     }
                     else
                     {
-                        ONPROGRESSCHANGED.BeginInvoke(0, null, null);
+                        if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                            ONPROGRESSCHANGED.BeginInvoke(0, null, null);
                         TheWorker.AsyncRun();
                     }
                 }
@@ -581,25 +583,31 @@ namespace Allax
         {
             if (!ASync)
             {
-                ONALLTASKSDONE(T);
+                if (ONALLTASKSDONE.GetInvocationList().Length != 0)
+                    ONALLTASKSDONE(T);
             }
             else
             {
                 System.Threading.Thread.Sleep(50); // some workaround
-                ONALLTASKSDONE.BeginInvoke(T, null, null);
+                if (ONALLTASKSDONE.GetInvocationList().Length != 0)
+                    ONALLTASKSDONE.BeginInvoke(T, null, null);
             }
         }
         private void TheWorker_TASKDONE(ITask T)
         {
-            var Value = IncrementTaskCounter()/ (double)AllTasksCount;
+            var Value = IncrementTaskCounter() / (double)AllTasksCount;
             if (!ASync)
             {
-                ONTASKDONE.BeginInvoke(T, null, null);
-                ONPROGRESSCHANGED.BeginInvoke(Value, null, null);
+                if (ONTASKDONE.GetInvocationList().Length != 0)
+                    ONTASKDONE.BeginInvoke(T, null, null);
+                if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                    ONPROGRESSCHANGED.BeginInvoke(Value, null, null);
             }
             {
-                ONTASKDONE(T);
-                ONPROGRESSCHANGED(Value);
+                if (ONTASKDONE.GetInvocationList().Length != 0)
+                    ONTASKDONE(T);
+                if (ONPROGRESSCHANGED.GetInvocationList().Length != 0)
+                    ONPROGRESSCHANGED(Value);
             }
         }
         public static byte[] Zip(string str)

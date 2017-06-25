@@ -371,13 +371,13 @@ namespace Allax
             if (MaxThreads == -1)
             {
                 this.MaxThreads = System.Environment.ProcessorCount;
+            }
+            else
+            {
                 if (MaxThreads > 32)
                 {
                     throw new Exception("Seems incorrect processor count value. Maximum is 32 (hardcoded value).");
                 }
-            }
-            else
-            {
                 this.MaxThreads = MaxThreads;
             }
         }
