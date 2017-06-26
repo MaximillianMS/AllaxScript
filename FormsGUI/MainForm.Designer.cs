@@ -56,7 +56,7 @@
             this.analysisToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(718, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -102,7 +102,7 @@
             // sLayerToolStripMenuItem
             // 
             this.sLayerToolStripMenuItem.Name = "sLayerToolStripMenuItem";
-            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.sLayerToolStripMenuItem.Text = "Round";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
             // 
@@ -119,7 +119,7 @@
             // 
             this.sPNetToolStripMenuItem.Enabled = false;
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.sPNetToolStripMenuItem.Text = "Начать";
             this.sPNetToolStripMenuItem.Click += new System.EventHandler(this.sPNetToolStripMenuItem_Click);
             // 
@@ -127,7 +127,7 @@
             // 
             this.finishAnalysisToolStripMenuItem.Enabled = false;
             this.finishAnalysisToolStripMenuItem.Name = "finishAnalysisToolStripMenuItem";
-            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.finishAnalysisToolStripMenuItem.Text = "Прервать";
             this.finishAnalysisToolStripMenuItem.Click += new System.EventHandler(this.finishAnalysisToolStripMenuItem_Click);
             // 
@@ -154,7 +154,7 @@
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1264, 738);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(718, 738);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
             // layersListBox
@@ -195,13 +195,14 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1264, 762);
+            this.ClientSize = new System.Drawing.Size(718, 762);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Анализ SP-Сетей";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
