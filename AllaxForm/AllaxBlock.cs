@@ -18,7 +18,7 @@ namespace AllaxForm
 
         public int layer_index;
         public int index_in_layer;
-
+        public List<byte> init_sequence;
         public void init(BLOCK_TYPE type, int width, int height)
         {
             InitializeComponent();
