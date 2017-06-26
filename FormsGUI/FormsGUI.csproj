@@ -66,6 +66,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateNetDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CreateNetDialog.Designer.cs">
+      <DependentUpon>CreateNetDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditSBlock.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -80,6 +86,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="CreateNetDialog.resx">
+      <DependentUpon>CreateNetDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditSBlock.resx">
       <DependentUpon>EditSBlock.cs</DependentUpon>
     </EmbeddedResource>

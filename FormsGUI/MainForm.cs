@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Linq;
+using System.IO;
 using Allax;
 using System.Threading;
 
@@ -10,8 +11,9 @@ namespace FormsGUI
     public partial class MainForm : Form
     {
         
-        Engine e;
+        Engine eng;
         ISPNet net;
+        SPNetSettings currentSettings;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
         delegate void RefreshSolutionsCallback();
@@ -20,16 +22,19 @@ namespace FormsGUI
         public MainForm()
         {
             InitializeComponent();
-            e = new Engine();
-            e.ONSOLUTIONFOUND += this.E_AddSolution;
-            e.ONPROGRESSCHANGED += this.E_ProgressChanged;
-            e.ONTASKDONE += E_OnTaskDone;
-            e.ONALLTASKSDONE += E_OnAllTasksDone;
+            eng = new Engine();
+            eng.ONSOLUTIONFOUND += this.E_AddSolution;
+            eng.ONPROGRESSCHANGED += this.E_ProgressChanged;
+            eng.ONTASKDONE += E_OnTaskDone;
+            eng.ONALLTASKSDONE += E_OnAllTasksDone;
             tasksProgressBar.Width = solutionsListBox.Size.Width;
+            createSPNet(16, 4);
+            /*
             SPNetSettings settings = new SPNetSettings(16, 4);
-            net = e.CreateSPNetInstance(settings);
+            net = eng.CreateSPNetInstance(settings);
             addFullRound();
             addLastRound();
+            */
             //DoTesting();
             //this.Close();
         }
@@ -84,16 +89,60 @@ namespace FormsGUI
             }
             //double Progress = progress;
         }
-        private void addFullRound()
+        private void addFullRound(bool sameBlocks = true)
         {
+            var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
+            var SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
+            
             net.AddLayer(LayerType.KLayer);
             net.AddLayer(LayerType.SLayer);
             net.AddLayer(LayerType.PLayer);
-            var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
-            var SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
+            EditSBlock d = new EditSBlock(currentSettings.SBoxSize, new List<byte>(), true);
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                PBlockInit = d.Value;
+
+            }
+            else
+            {
+                DelLastRound(net);
+                return;
+            }
             int layer = net.GetLayers().Count - 1;
             InitPLayer(layer, PBlockInit, net);
-            InitSLayer(layer - 1, SBlockInit, net);
+
+            if (sameBlocks)
+            {
+                d = new EditSBlock(currentSettings.SBoxSize, new List<byte>(), false);
+                if (d.ShowDialog() == DialogResult.OK)
+                {
+                    SBlockInit = d.Value;
+                    InitSLayer(layer - 1, SBlockInit, net);
+                }
+                else
+                {
+                    DelLastRound(net);
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("Пожалуйста введите заполнение для " + currentSettings.SBoxCount + " S-Блоков\n" + "В случае отмены ввода хотя-бы одного блока создание слоя будет отменено");
+                for (int i = 0; i < currentSettings.SBoxCount; i++)
+                {
+                    var B = net.GetLayers()[layer].GetBlocks()[i];
+                    d = new EditSBlock(currentSettings.SBoxSize, new List<byte>());
+                    if (d.ShowDialog() == DialogResult.OK)
+                    {
+                        B.Init(d.Value);
+                    }
+                    else
+                    {
+                        DelLastRound(net);
+                        return;
+                    }
+                }
+            }
             //refreshList();
 
         }
@@ -204,7 +253,7 @@ namespace FormsGUI
             var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2, R3}, AnalisysType.Linear));
-            e.PerformAnalisys(AP);  
+            eng.PerformAnalisys(AP);  
         }
 
         private void sPNetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -224,8 +273,50 @@ namespace FormsGUI
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            this.e.AbortAnalisys();
+            this.eng.AbortAnalisys();
             Thread.Sleep(2000);
+        }
+
+        private void createSPNet(byte wordLength, byte sBlockSize)
+        {
+            SPNetSettings settings = new SPNetSettings(wordLength, sBlockSize);
+            currentSettings = settings;
+            net = eng.CreateSPNetInstance(settings);
+        }
+
+        private void createNetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CreateNetDialog d = new CreateNetDialog();
+            d.ShowDialog();
+            if (d.DialogResult == DialogResult.OK)
+            {
+                createSPNet(d.wordLength, d.sBlockSize);
+                //addFullRound();
+                //addLastRound();
+            }
+        }
+
+        private void saveNetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists("sb.db"))
+            {
+                //???
+            }
+            else
+            {
+                var fs = File.OpenWrite("sb.db");
+                eng.SerializeDB(fs, false);
+            }
+            
+        }
+
+        private void loadNetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (File.Exists("sb.db"))
+            {
+                var fs = File.OpenRead("sb.db");
+                eng.InjectSBlockDB(fs, false);
+            }
         }
     }
 }

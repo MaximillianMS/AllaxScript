@@ -35,9 +35,14 @@
             this.toolStripButton3 = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.createNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.loadNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.analysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.finishToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tasksProgressBar = new System.Windows.Forms.ProgressBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.layersListBox = new System.Windows.Forms.ListBox();
@@ -92,7 +97,8 @@
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.addToolStripMenuItem});
+            this.addToolStripMenuItem,
+            this.analysisToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
@@ -102,17 +108,33 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.sPNetToolStripMenuItem});
+            this.createNetToolStripMenuItem,
+            this.saveNetToolStripMenuItem,
+            this.loadNetToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
             this.fileToolStripMenuItem.Text = "Файл";
             // 
-            // sPNetToolStripMenuItem
+            // createNetToolStripMenuItem
             // 
-            this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(95, 22);
-            this.sPNetToolStripMenuItem.Text = "Run";
-            this.sPNetToolStripMenuItem.Click += new System.EventHandler(this.sPNetToolStripMenuItem_Click);
+            this.createNetToolStripMenuItem.Name = "createNetToolStripMenuItem";
+            this.createNetToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.createNetToolStripMenuItem.Text = "Создать SP-Сеть";
+            this.createNetToolStripMenuItem.Click += new System.EventHandler(this.createNetToolStripMenuItem_Click);
+            // 
+            // saveNetToolStripMenuItem
+            // 
+            this.saveNetToolStripMenuItem.Name = "saveNetToolStripMenuItem";
+            this.saveNetToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.saveNetToolStripMenuItem.Text = "Сохранить Сеть";
+            this.saveNetToolStripMenuItem.Click += new System.EventHandler(this.saveNetToolStripMenuItem_Click);
+            // 
+            // loadNetToolStripMenuItem
+            // 
+            this.loadNetToolStripMenuItem.Name = "loadNetToolStripMenuItem";
+            this.loadNetToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.loadNetToolStripMenuItem.Text = "Загрузить Сеть";
+            this.loadNetToolStripMenuItem.Click += new System.EventHandler(this.loadNetToolStripMenuItem_Click);
             // 
             // addToolStripMenuItem
             // 
@@ -128,6 +150,28 @@
             this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.sLayerToolStripMenuItem.Text = "Round";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
+            // 
+            // analysisToolStripMenuItem
+            // 
+            this.analysisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.sPNetToolStripMenuItem,
+            this.finishToolStripMenuItem});
+            this.analysisToolStripMenuItem.Name = "analysisToolStripMenuItem";
+            this.analysisToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
+            this.analysisToolStripMenuItem.Text = "Анализ";
+            // 
+            // sPNetToolStripMenuItem
+            // 
+            this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.sPNetToolStripMenuItem.Text = "Начать";
+            this.sPNetToolStripMenuItem.Click += new System.EventHandler(this.sPNetToolStripMenuItem_Click);
+            // 
+            // finishToolStripMenuItem
+            // 
+            this.finishToolStripMenuItem.Name = "finishToolStripMenuItem";
+            this.finishToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.finishToolStripMenuItem.Text = "Прервать";
             // 
             // tasksProgressBar
             // 
@@ -198,7 +242,7 @@
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
-            this.Text = "Form1";
+            this.Text = "Анализ SP-Сетей";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
@@ -218,7 +262,6 @@
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sLayerToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem sPNetToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;
@@ -227,6 +270,12 @@
         private System.Windows.Forms.ListBox layersListBox;
         private System.Windows.Forms.Panel solutionsPanel;
         private System.Windows.Forms.ListBox solutionsListBox;
+        private System.Windows.Forms.ToolStripMenuItem createNetToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem analysisToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem sPNetToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem finishToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveNetToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem loadNetToolStripMenuItem;
     }
 }
 
