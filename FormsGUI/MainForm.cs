@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Linq;
 using System.IO;
 using Allax;
+using AllaxForm;
 using System.Threading;
 
 namespace FormsGUI
@@ -14,6 +15,7 @@ namespace FormsGUI
         Engine eng;
         ISPNet net;
         SPNetSettings currentSettings;
+        AllaxPanel SPNetGraph;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
         delegate void RefreshSolutionsCallback();
@@ -61,9 +63,12 @@ namespace FormsGUI
         }
         private void E_OnAllTasksDone(ITask T)
         {
-            toolStrip1.Enabled = true;
+           
             layersListBox.Enabled = true;
-            menuStrip1.Enabled = true;
+            addToolStripMenuItem.Enabled = true;
+            sPNetToolStripMenuItem.Enabled = true;
+            finishAnalysisToolStripMenuItem.Enabled = false;
+            fileToolStripMenuItem.Enabled = true;
             MessageBox.Show("All done!");
             //this.Close();
         }
@@ -93,11 +98,11 @@ namespace FormsGUI
         {
             var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
             var SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
-            
-            net.AddLayer(LayerType.KLayer);
-            net.AddLayer(LayerType.SLayer);
-            net.AddLayer(LayerType.PLayer);
-            EditSBlock d = new EditSBlock(currentSettings.SBoxSize, new List<byte>(), true);
+
+            addKLayer();
+            addSLayer();
+            addPLayer();
+            EditSBlock d = new EditSBlock(currentSettings.SBoxSize, PBlockInit, true);
             if (d.ShowDialog() == DialogResult.OK)
             {
                 PBlockInit = d.Value;
@@ -113,7 +118,7 @@ namespace FormsGUI
 
             if (sameBlocks)
             {
-                d = new EditSBlock(currentSettings.SBoxSize, new List<byte>(), false);
+                d = new EditSBlock(currentSettings.SBoxSize, SBlockInit, false);
                 if (d.ShowDialog() == DialogResult.OK)
                 {
                     SBlockInit = d.Value;
@@ -148,15 +153,16 @@ namespace FormsGUI
         }
         private void addLastRound()
         {
-            net.AddLayer(LayerType.KLayer);
-            net.AddLayer(LayerType.SLayer);
-            net.AddLayer(LayerType.KLayer);
+            addKLayer();
+            addSLayer();
+            addKLayer();
             refreshLayers();
         }
 
         private void addRound()
         {
-            DelLastRound(net);
+            if (net.GetLayers().Count >= 6)
+                DelLastRound(net);
             addFullRound();
             addLastRound();
         }
@@ -195,6 +201,22 @@ namespace FormsGUI
             Net.DeleteLayer((byte)(Net.GetLayers().Count-1));
             Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
             Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
+        }
+
+        private void addPLayer()
+        {
+            net.AddLayer(Allax.LayerType.PLayer);
+            SPNetGraph.addPLayer();
+        }
+        private void addSLayer()
+        {
+            net.AddLayer(Allax.LayerType.SLayer);
+            SPNetGraph.addSLayer();
+        }
+        private void addKLayer()
+        {
+            net.AddLayer(Allax.LayerType.KLayer);
+            SPNetGraph.addKLayer();
         }
 
         private void refreshLayers()
@@ -259,8 +281,12 @@ namespace FormsGUI
         private void sPNetToolStripMenuItem_Click(object sender, EventArgs e)
         {
             runAnalysis();
-            toolStrip1.Enabled = false;
-            menuStrip1.Enabled = false;
+            //toolStrip1.Enabled = false;
+            //menuStrip1.Enabled = false;
+            addToolStripMenuItem.Enabled = false;
+            sPNetToolStripMenuItem.Enabled = false;
+            finishAnalysisToolStripMenuItem.Enabled = true;
+            fileToolStripMenuItem.Enabled = false;
             layersListBox.Enabled = false;
             solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
@@ -268,7 +294,9 @@ namespace FormsGUI
 
         private void addToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            sPNetToolStripMenuItem.Enabled = true;
             addRound();
+            
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -276,12 +304,19 @@ namespace FormsGUI
             this.eng.AbortAnalisys();
             Thread.Sleep(2000);
         }
+        
 
         private void createSPNet(byte wordLength, byte sBlockSize)
         {
             SPNetSettings settings = new SPNetSettings(wordLength, sBlockSize);
             currentSettings = settings;
             net = eng.CreateSPNetInstance(settings);
+            SPNetGraph = new AllaxPanel(settings.WordLength, settings.SBoxCount, 1);
+            SPNetGraph.Dock = DockStyle.Fill;
+            SPNetGraph.Parent = tableLayoutPanel1;
+            SPNetGraph.BackColor = System.Drawing.Color.Aquamarine;
+            tableLayoutPanel1.Controls.Add(SPNetGraph, 1, 0);
+            
         }
 
         private void createNetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -317,6 +352,17 @@ namespace FormsGUI
                 var fs = File.OpenRead("sb.db");
                 eng.InjectSBlockDB(fs, false);
             }
+        }
+
+        private void finishAnalysisToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            eng.AbortAnalisys();
+            Thread.Sleep(1000);
+            addToolStripMenuItem.Enabled = true;
+            sPNetToolStripMenuItem.Enabled = true;
+            finishAnalysisToolStripMenuItem.Enabled = false;
+            fileToolStripMenuItem.Enabled = true;
+            layersListBox.Enabled = true;
         }
     }
 }

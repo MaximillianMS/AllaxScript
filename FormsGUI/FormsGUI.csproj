@@ -118,6 +118,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\AllaxForm\AllaxForm.csproj">
+      <Project>{080e8cb5-8ba4-4392-9ceb-0c84ff1dcd2f}</Project>
+      <Name>AllaxForm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\AllaxScript.csproj">
       <Project>{a7240cd1-b08d-43d0-9685-9b5741dcf221}</Project>
       <Name>AllaxScript</Name>

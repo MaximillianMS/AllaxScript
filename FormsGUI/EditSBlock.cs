@@ -22,7 +22,7 @@ namespace FormsGUI
             textBox.Text = "14 4 13 1 2 15 11 8 3 10 6 12 5 9 0 7";
         }
 
-        public EditSBlock(byte SBlockSize, List<byte> previousValues, bool isPBlock = false):base()
+        public EditSBlock(byte SBlockSize, List<byte> previousValues, bool isPBlock = false):this()
         {
             textBox.Text = string.Join<byte>(" ", previousValues);
             this.SBlockSize = SBlockSize;
@@ -39,6 +39,7 @@ namespace FormsGUI
         
         private void textBox_TextChanged(object sender, EventArgs e)
         {
+            Value.Clear();
             foreach(string s in textBox.Text.Split(' '))
             {
                 Value.Add(Byte.Parse(s));
@@ -57,18 +58,34 @@ namespace FormsGUI
             }
         }
 
-        private bool verifyPValues()
-        {
-            return true;
-        }
-
         private bool verifyValues()
         {
-            if (isPBlock)
+            return ((Func<List<byte>, bool, bool>)((arg, ZeroSeed) =>
             {
-                return verifyPValues();
-            }
-            return true;
+                List<byte> argCopy = arg;
+                if (!ZeroSeed)
+                    argCopy = arg.Select(i => --i).ToList();
+                List<int> Temp = new List<int>(Enumerable.Repeat(0, argCopy.Count));
+                foreach (var Ind in argCopy)
+                {
+                    if (Ind >= argCopy.Count)
+                        return false;
+                    Temp[Ind] += 1;
+                }
+                return Temp.All(x => x == 1);
+            }))(Value, !isPBlock);
+        }
+
+        private void EditSBlock_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (this.DialogResult == DialogResult.OK)
+                return;
+            this.DialogResult = DialogResult.Cancel;
+        }
+
+        private void cancelButton_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

@@ -69,6 +69,7 @@
             this.cancelButton.TabIndex = 3;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
+            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // EditSBlock
             // 
@@ -82,6 +83,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "EditSBlock";
             this.Text = "Редактировать S блок";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditSBlock_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
