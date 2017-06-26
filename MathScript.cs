@@ -224,11 +224,12 @@ namespace Allax
     {
         public override void Init(List<byte> arg)
         {
-            throw new NotImplementedException("KBlock do not needed to init");
+            //throw new NotImplementedException("KBlock do not needed to init");
         }
         public override List<BlockState> ExtractStates(BlockStateExtrParams Params)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return null;
         }
     }
     class SBlock : Block
@@ -343,15 +344,15 @@ namespace Allax
         }
         public override List<IBlock> GetBlocks()
         {
-            throw new NotImplementedException();
+            return new List<IBlock> { new KBlock() };//throw new NotImplementedException();
         }
         public override void DeleteBlock(byte number)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
         public override IBlock GetBlock(byte number)
         {
-            throw new NotImplementedException();
+            return new KBlock();// throw new NotImplementedException();
         }
     }
     class SLayer : Layer
