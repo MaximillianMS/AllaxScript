@@ -67,6 +67,8 @@ namespace Allax
             this.Params = Params;
             if (Tr != null)
                 Tr.Abort();
+            if (this.GetState() == WorkerThreadState.Finished)
+                return;
             Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
             this.Params.State = WorkerThreadState.Loaded;
         }
@@ -155,6 +157,7 @@ namespace Allax
                 if (disposing)
                 {
                     this.Abort();
+                    this.SetState(WorkerThreadState.Finished);
                     Tr = null;
                 }
 
@@ -205,8 +208,11 @@ namespace Allax
             }
             else
             {
-                Logger.UltraLogger.Instance.AddToLog("Worker: Thread is not free. Cant init thread after end of previous task.", Logger.MsgType.Error);
-                throw new NotImplementedException();
+                if (Thread.GetState() != WorkerThreadState.Finished)
+                {
+                    Logger.UltraLogger.Instance.AddToLog("Worker: Thread is not free. Cant init thread after end of previous task.", Logger.MsgType.Error);
+                    throw new NotImplementedException();
+                }
             }
         }
         WorkerParams Params;
@@ -254,8 +260,20 @@ namespace Allax
                 if (TaskQueue.Count > 0)
                 {
                     Task = TaskQueue.Dequeue();
-                    Thread.Init(new WorkerThreadParams(Task));
-                    Thread.Start();
+                    if (Thread.GetState() == WorkerThreadState.Free)
+                        Thread.Init(new WorkerThreadParams(Task));
+                    else
+                    {
+                        if (Thread.GetState() == WorkerThreadState.Finished)
+                        {
+                            ;
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                    }
+                        Thread.Start();
                 }
                 else
                 {
