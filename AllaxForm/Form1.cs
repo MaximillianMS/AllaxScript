@@ -12,16 +12,23 @@ namespace AllaxForm
 {
     public partial class Form1 : Form
     {
+        AllaxPanel panel;
         public Form1()
         {
             InitializeComponent();
-            AllaxBlock pblock = new AllaxBlock(AllaxBlock.BLOCK_TYPE.P, 30);
-            AllaxBlock sblock4 = new AllaxBlock(AllaxBlock.BLOCK_TYPE.S, 30);
-            sblock4.Location = new Point(0,200);
-            this.Controls.Add(pblock);
-            this.Controls.Add(sblock4);
+            panel = new AllaxPanel(4, 4, 12);
+            panel.Size = new Size(500, 500);
+            panel.BackColor = Color.AliceBlue;
+            panel.addKLayer();
+            panel.addPLayer();
+            panel.addSLayer();
+            this.Controls.Add(panel);
+            //this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
+        }
 
-            List<Point> pconnectors = pblock.topConnectorsRelative();
+        private void panel1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            panel.addSLayer();
         }
     }
 }

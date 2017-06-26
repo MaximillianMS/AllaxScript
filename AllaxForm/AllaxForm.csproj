@@ -51,6 +51,9 @@
     <Compile Include="AllaxBlock.Designer.cs">
       <DependentUpon>AllaxBlock.cs</DependentUpon>
     </Compile>
+    <Compile Include="AllaxPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

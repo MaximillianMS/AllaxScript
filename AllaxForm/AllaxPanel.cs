@@ -1,0 +1,160 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace AllaxForm
+{
+    public partial class AllaxPanel : Panel
+    {
+        // All values as fractions of the panel's size
+        public double block_height = 1.0 / 25;
+        public double wide_block_width = 1;
+        public double narrow_block_width = (1.0 / 4) * (3.0/4);
+        public double block_width_distance = (1.0 / 4) * (1.0 / 4);
+        public double block_height_distance = (3.0 / 16) / 13;    
+        
+        public struct Layer
+        {
+            public AllaxBlock.BLOCK_TYPE type;
+            public List<AllaxBlock> blocks;
+        }
+
+        public readonly int wordsize;
+        public readonly int blocks_wide;
+        public readonly int blocks_tall;
+        public List<Layer> layers = new List<Layer>();
+  
+        public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall)
+        {
+            this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
+            this.Paint += testpaint;
+            SetStyle(ControlStyles.ResizeRedraw, true);
+            this.initializeSizes();
+            //this.initializeDragDrop();
+        }
+
+        /*private void initializeDragDrop()
+        {
+            this.AllowDrop = true;
+            this.DragEnter += new DragEventHandler(allax_DragEnter);
+            this.DragDrop += new DragEventHandler(allax_DragDrop);
+        }
+        public void allax_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }
+        public void allax_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
+        }*/
+
+
+        private void initializeSizes()
+        {
+            /* public const double block_height = 1.0 / 25;
+             public const double wide_block_width = 1;
+             public const double narrow_block_width = (1.0 / 4) * (3.0 / 4);
+             public const double block_width_distance = (1.0 / 4) * (1.0 / 4);
+             public const double block_height_distance = (3.0 / 16) / 13;*/
+            block_height = (1.0 / blocks_tall) * (3.0 / 4);
+            block_height_distance = (1.0 / blocks_tall) * (1.0 / 4);
+
+            wide_block_width = 1;
+            narrow_block_width = (1.0 / blocks_wide) * (3.0 / 4);
+            block_width_distance = (1.0 / blocks_wide) * (1.0 / 4);
+    }
+
+        private void testpaint(object sender, System.Windows.Forms.PaintEventArgs e)
+
+        {
+            Graphics g = this.CreateGraphics(); Pen pen = new Pen(Color.Black, 1);
+            for (int i=0; i<this.layers.Count-1; i++)
+            {
+                // drawing lines from layer i to layer i+1
+                List<Point> topC = new List<Point>();
+                foreach (AllaxBlock b in this.layers[i].blocks) {
+                    foreach (Point p in b.bottomConnectorsRelative())
+                    {
+                        Point abs = new Point(p.X + b.Location.X, p.Y + b.Location.Y);
+                        topC.Add(abs);
+                    }
+                }
+                List<Point> botC = new List<Point>();
+                foreach (AllaxBlock b in this.layers[i+1].blocks)
+                {
+                    foreach (Point p in b.topConnectorsRelative())
+                    {
+                        Point abs = new Point(p.X + b.Location.X, p.Y + b.Location.Y);
+                        botC.Add(abs);
+                    }
+                }
+
+                for (int j = 0; j < topC.Count; j++)
+                {
+                    g.DrawLine(pen, 
+                        topC[j].X, topC[j].Y,
+                        botC[j].X, botC[j].Y);
+                }
+            }
+        }
+
+        public void addKLayer()
+        {
+            AllaxBlock newblock = new AllaxBlock(AllaxBlock.BLOCK_TYPE.K,
+                (int)(wide_block_width * this.Size.Width),
+                (int)(block_height * this.Size.Height));
+            int height_pos = (int)(this.Size.Height * (block_height + block_height_distance)) * this.layers.Count;
+            newblock.Location = new Point(0, height_pos);
+            Layer newblockl = new Layer();
+            newblockl.blocks = new List<AllaxBlock>();
+            newblockl.blocks.Add(newblock);
+            newblockl.type = AllaxBlock.BLOCK_TYPE.K;
+            this.layers.Add(newblockl);
+            this.Controls.Add(newblock);
+            Invalidate();
+        }
+
+        public void addPLayer()
+        {
+            AllaxBlock newblock = new AllaxBlock(AllaxBlock.BLOCK_TYPE.P,
+                (int)(wide_block_width * this.Size.Width),
+                (int)(block_height * this.Size.Height));
+            int height_pos = (int)(this.Size.Height * (block_height + block_height_distance)) * this.layers.Count;
+            newblock.Location = new Point(0, height_pos);
+            Layer newblockl = new Layer();
+            newblockl.blocks = new List<AllaxBlock>();
+            newblockl.blocks.Add(newblock);
+            newblockl.type = AllaxBlock.BLOCK_TYPE.P;
+            this.layers.Add(newblockl);
+            this.Controls.Add(newblock);
+            Invalidate();
+        }
+
+        public void addSLayer()
+        {
+            Layer newblockl = new Layer();
+            newblockl.blocks = new List<AllaxBlock>();
+            for (int i=0; i<this.blocks_wide; i++)
+            {
+                AllaxBlock newblock = new AllaxBlock(AllaxBlock.BLOCK_TYPE.S,
+                    (int)(narrow_block_width * this.Size.Width),
+                    (int)(block_height * this.Size.Height));
+                int height_pos = (int)(this.Size.Height * (block_height + block_height_distance)) * this.layers.Count;
+                newblock.Location = new Point(
+                    (int)((narrow_block_width + block_width_distance) * i * this.Size.Width) + (int)(block_width_distance * this.Size.Width/2), 
+                    height_pos);
+                newblockl.blocks.Add(newblock);
+                newblockl.type = AllaxBlock.BLOCK_TYPE.S;
+                this.Controls.Add(newblock);
+            }
+            this.layers.Add(newblockl);
+            Invalidate();
+        }
+    }
+}

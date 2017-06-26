@@ -16,22 +16,41 @@ namespace AllaxForm
 
         public BLOCK_TYPE type; 
 
-        public AllaxBlock(BLOCK_TYPE type, int scale)
+        public void init(BLOCK_TYPE type, int width, int height)
         {
             InitializeComponent();
             this.type = type;
-            switch (type) {
+            switch (type)
+            {
                 case BLOCK_TYPE.S:
-                    this.Sblock(scale);
+                    this.Sblock(width, height);
                     break;
                 case BLOCK_TYPE.P:
-                    this.Pblock(scale);
+                    this.Pblock(width, height);
                     break;
                 case BLOCK_TYPE.K:
-                    this.Kblock(scale);
+                    this.Kblock(width, height);
                     break;
             }
-            this.MouseDown += AllaxBlock_MouseDown;
+        }
+
+        public AllaxBlock(BLOCK_TYPE type, int width, int height)
+        {
+            this.init(type, width, height);
+        }
+
+        public AllaxBlock(BLOCK_TYPE type, int scale)
+        {
+            switch (type)
+            {
+                case BLOCK_TYPE.S:
+                    this.init(type, 3 * scale, 1 * scale);
+                    break;
+                case BLOCK_TYPE.P:
+                case BLOCK_TYPE.K:
+                    this.init(type, (int)((4 * 3 + 0.5) * scale), 1 * scale);
+                    break;
+            }
         }
 
         private void AllaxBlock_MouseDown(object sender, MouseEventArgs e)
@@ -40,15 +59,15 @@ namespace AllaxForm
                DragDropEffects.Move);
         }
 
-        private void Sblock(int scale)
+        private void Sblock(int width, int height)
         {
-            this.Size = new Size(3 * scale, 1 * scale);
+            this.Size = new Size(width, height);
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
             Label label = new Label();
             label.Text = "S";
-            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * scale);
+            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
 
@@ -56,29 +75,29 @@ namespace AllaxForm
         }
 
 
-        private void Pblock(int scale)
+        private void Pblock(int width, int height)
         {
-            this.Size = new Size((int)((4*3+0.5) * scale), 1 * scale);
+            this.Size = new Size(width, height);
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
             Label label = new Label();
             label.Text = "P";
-            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * scale);
+            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
 
             this.Controls.Add(label);
         }
-        private void Kblock(int scale)
+        private void Kblock(int width, int height)
         {
-            this.Size = new Size((int)((4 * 3 + 0.5) * scale), 1 * scale);
+            this.Size = new Size(width, height);
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
             Label label = new Label();
             label.Text = "K";
-            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * scale);
+            label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
 
