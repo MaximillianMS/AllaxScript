@@ -14,7 +14,10 @@ namespace AllaxForm
     {
         public enum BLOCK_TYPE {S, P, K,};
 
-        public BLOCK_TYPE type; 
+        public BLOCK_TYPE type;
+
+        public int layer_index;
+        public int index_in_layer;
 
         public void init(BLOCK_TYPE type, int width, int height)
         {

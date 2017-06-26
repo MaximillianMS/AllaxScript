@@ -23,6 +23,7 @@ namespace AllaxForm
         {
             public AllaxBlock.BLOCK_TYPE type;
             public List<AllaxBlock> blocks;
+            public int layer_index;
         }
 
         public readonly int wordsize;
@@ -115,6 +116,9 @@ namespace AllaxForm
             newblockl.blocks = new List<AllaxBlock>();
             newblockl.blocks.Add(newblock);
             newblockl.type = AllaxBlock.BLOCK_TYPE.K;
+            newblockl.layer_index = this.layers.Count;
+            newblock.index_in_layer = 0;
+            newblock.layer_index = newblockl.layer_index;
             this.layers.Add(newblockl);
             this.Controls.Add(newblock);
             Invalidate();
@@ -131,6 +135,9 @@ namespace AllaxForm
             newblockl.blocks = new List<AllaxBlock>();
             newblockl.blocks.Add(newblock);
             newblockl.type = AllaxBlock.BLOCK_TYPE.P;
+            newblockl.layer_index = this.layers.Count;
+            newblock.index_in_layer = 0;
+            newblock.layer_index = newblockl.layer_index;
             this.layers.Add(newblockl);
             this.Controls.Add(newblock);
             Invalidate();
@@ -150,9 +157,12 @@ namespace AllaxForm
                     (int)((narrow_block_width + block_width_distance) * i * this.Size.Width) + (int)(block_width_distance * this.Size.Width/2), 
                     height_pos);
                 newblockl.blocks.Add(newblock);
-                newblockl.type = AllaxBlock.BLOCK_TYPE.S;
+                newblock.index_in_layer = i;
+                newblock.layer_index = this.layers.Count;
                 this.Controls.Add(newblock);
             }
+            newblockl.layer_index = this.layers.Count;
+            newblockl.type = AllaxBlock.BLOCK_TYPE.S;
             this.layers.Add(newblockl);
             Invalidate();
         }
