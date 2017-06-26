@@ -19,6 +19,7 @@ namespace FormsGUI
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
         delegate void RefreshSolutionsCallback();
+        delegate void AllTasksDoneCallback(ITask task);
         delegate void RefreshProgressBarCallback(double progress);
         private static object syncRoot = new object();
         public MainForm()
@@ -63,14 +64,22 @@ namespace FormsGUI
         }
         private void E_OnAllTasksDone(ITask T)
         {
-           
-            layersListBox.Enabled = true;
-            addToolStripMenuItem.Enabled = true;
-            sPNetToolStripMenuItem.Enabled = true;
-            finishAnalysisToolStripMenuItem.Enabled = false;
-            fileToolStripMenuItem.Enabled = true;
-            MessageBox.Show("All done!");
-            //this.Close();
+            if (layersListBox.InvokeRequired)
+            {
+                AllTasksDoneCallback d = new AllTasksDoneCallback(E_OnAllTasksDone);
+                if (!this.Disposing)
+                    this.Invoke(d, new object[] { T });
+            }
+            else
+            {
+                layersListBox.Enabled = true;
+                addToolStripMenuItem.Enabled = true;
+                sPNetToolStripMenuItem.Enabled = true;
+                finishAnalysisToolStripMenuItem.Enabled = false;
+                fileToolStripMenuItem.Enabled = true;
+                MessageBox.Show("All done!");
+                //this.Close();
+            }
         }
         public void E_AddSolution(Solution s)
         {
@@ -86,7 +95,8 @@ namespace FormsGUI
             if (tasksProgressBar.InvokeRequired)
             {
                 RefreshProgressBarCallback d = new RefreshProgressBarCallback(E_ProgressChanged);
-                this.Invoke(d, new object[] { progress });
+                if (!Disposing)
+                    this.Invoke(d, new object[] { progress });
             }
             else
             {
@@ -161,10 +171,12 @@ namespace FormsGUI
 
         private void addRound()
         {
-            if (net.GetLayers().Count >= 6)
-                DelLastRound(net);
+            /*if (net.GetLayers().Count >= 6)
+                DelLastRound(net);*/
             addFullRound();
-            addLastRound();
+            //AddLastRound(net);
+            refreshLayers();
+
         }
 
         static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)
@@ -235,7 +247,8 @@ namespace FormsGUI
             if (solutionsListBox.InvokeRequired)
             {
                 RefreshSolutionsCallback d = new RefreshSolutionsCallback(refreshSolutions);
-                this.Invoke(d);
+                if (!this.Disposing)
+                    this.Invoke(d);
             }
             else
             {
@@ -258,14 +271,8 @@ namespace FormsGUI
 
         private void sLayerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            EditSBlock f = new EditSBlock();
-            //f.ShowDialog();
+            sPNetToolStripMenuItem.Enabled = true;
             addRound();
-            //int size = net.GetLayers().Count;
-            /*foreach (IBlock b in net.GetLayers()[size - 2].GetBlocks())
-            {
-                b.Init(f.SValues);
-            }*/
         }
         
         private void runAnalysis()
@@ -275,6 +282,8 @@ namespace FormsGUI
             var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2, R3}, AnalisysType.Linear));
+            //DelLastRound(net);
+            addLastRound();
             eng.PerformAnalisys(AP);  
         }
 
@@ -292,29 +301,21 @@ namespace FormsGUI
             solutionsPanel.Width = 250;
         }
 
-        private void addToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            sPNetToolStripMenuItem.Enabled = true;
-            addRound();
-            
-        }
-
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.eng.AbortAnalisys();
-            Thread.Sleep(2000);
+            Thread.Sleep(3000);
         }
         
-
         private void createSPNet(byte wordLength, byte sBlockSize)
         {
             SPNetSettings settings = new SPNetSettings(wordLength, sBlockSize);
             currentSettings = settings;
             net = eng.CreateSPNetInstance(settings);
-            SPNetGraph = new AllaxPanel(settings.WordLength, settings.SBoxCount, 1);
+            SPNetGraph = new AllaxPanel(settings.WordLength, settings.SBoxCount, 24);
             SPNetGraph.Dock = DockStyle.Fill;
             SPNetGraph.Parent = tableLayoutPanel1;
-            SPNetGraph.BackColor = System.Drawing.Color.Aquamarine;
+            //SPNetGraph.BackColor = System.Drawing.Color.Aquamarine;
             tableLayoutPanel1.Controls.Add(SPNetGraph, 1, 0);
             
         }
@@ -363,6 +364,31 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = false;
             fileToolStripMenuItem.Enabled = true;
             layersListBox.Enabled = true;
+        }
+
+        private void solutionsListBox_DoubleClick(object sender, EventArgs e)
+        {
+            if (solutionsListBox.SelectedItem != null)
+            {
+                var s = solutions[solutionsListBox.SelectedIndex];
+                for(int i = 0; i < s.Way.layers.Count; i++)
+                {
+                    var l = s.Way.layers[i];
+                    for (int j = 0; j < l.blocks.Count; j++)
+                    {
+                        var b = l.blocks[j];
+                        if (b.Inputs != 0)
+                        {
+                            SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
+                            //SPNetGraph.layers[i].blocks[j].
+                        }
+                        else
+                        {
+                            SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.WhiteSmoke;
+                        }
+                    }
+                }
+            }
         }
     }
 }

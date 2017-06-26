@@ -733,8 +733,8 @@ namespace Allax
             if(TheWorker!=null)
             {
                 TheWorker.Dispose();
-                TheWorker = null;
-                TheTasker = null;
+                //TheWorker = null;
+                //TheTasker = null;
                 GC.Collect();
             }
         }

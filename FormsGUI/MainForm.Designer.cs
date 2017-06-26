@@ -137,7 +137,7 @@
             this.tasksProgressBar.Location = new System.Drawing.Point(0, 712);
             this.tasksProgressBar.Margin = new System.Windows.Forms.Padding(0);
             this.tasksProgressBar.Name = "tasksProgressBar";
-            this.tasksProgressBar.Size = new System.Drawing.Size(200, 20);
+            this.tasksProgressBar.Size = new System.Drawing.Size(278, 20);
             this.tasksProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.tasksProgressBar.TabIndex = 5;
             // 
@@ -145,7 +145,7 @@
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 180F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 800F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.layersListBox, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.solutionsPanel, 2, 0);
@@ -174,9 +174,9 @@
             this.solutionsPanel.Controls.Add(this.solutionsListBox);
             this.solutionsPanel.Controls.Add(this.tasksProgressBar);
             this.solutionsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.solutionsPanel.Location = new System.Drawing.Point(1061, 3);
+            this.solutionsPanel.Location = new System.Drawing.Point(983, 3);
             this.solutionsPanel.Name = "solutionsPanel";
-            this.solutionsPanel.Size = new System.Drawing.Size(200, 732);
+            this.solutionsPanel.Size = new System.Drawing.Size(278, 732);
             this.solutionsPanel.TabIndex = 6;
             // 
             // solutionsListBox
@@ -187,8 +187,9 @@
             this.solutionsListBox.IntegralHeight = false;
             this.solutionsListBox.Location = new System.Drawing.Point(0, 0);
             this.solutionsListBox.Name = "solutionsListBox";
-            this.solutionsListBox.Size = new System.Drawing.Size(200, 712);
+            this.solutionsListBox.Size = new System.Drawing.Size(278, 712);
             this.solutionsListBox.TabIndex = 13;
+            this.solutionsListBox.DoubleClick += new System.EventHandler(this.solutionsListBox_DoubleClick);
             // 
             // MainForm
             // 
