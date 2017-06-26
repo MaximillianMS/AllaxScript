@@ -548,7 +548,7 @@ namespace AllaxScript
                 }
                 if(mode==1)
                 {
-                    var count = 2;
+                    var count = 0;
                     foreach (var i in Enumerable.Range(0, count))
                         AddRound(Net);
                     Menu1_2_2(1, 1, 1);
