@@ -30,15 +30,37 @@ namespace FormsGUI
             net = e.CreateSPNetInstance(settings);
             addFullRound();
             addLastRound();
+            //DoTesting();
+            //this.Close();
         }
+        /*private void DoTesting()
+        {
+            addRound();
+            addRound();
+            addRound();
+            addRound();
+            addRound();
+            addRound();
+            addRound();
+            runAnalysis();
+            toolStrip1.Enabled = false;
+            menuStrip1.Enabled = false;
+            layersListBox.Enabled = false;
+            solutionsListBox.Items.Clear();
+            solutionsPanel.Width = 250;
 
+        }*/
         private void E_OnTaskDone(ITask T)
         {
             //int i = 0;
         }
         private void E_OnAllTasksDone(ITask T)
         {
+            toolStrip1.Enabled = true;
+            layersListBox.Enabled = true;
+            menuStrip1.Enabled = true;
             MessageBox.Show("All done!");
+            //this.Close();
         }
         public void E_AddSolution(Solution s)
         {
@@ -188,6 +210,9 @@ namespace FormsGUI
         private void sPNetToolStripMenuItem_Click(object sender, EventArgs e)
         {
             runAnalysis();
+            toolStrip1.Enabled = false;
+            menuStrip1.Enabled = false;
+            layersListBox.Enabled = false;
             solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
         }
