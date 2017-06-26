@@ -166,6 +166,7 @@ namespace Allax
             {
                 SolParams.Engine.SetMultiThreadPrevalence(SolParams.P);
             }
+            WayConverter.CopyOutToIn(SolParams.Way, SolParams.Way.layers.Count - 3, SolParams.Way.layers.Count - 2);
             SolParams.Engine.GetSettings().AddSolutionFunc(new Solution(SolParams.P, SolParams.Way));
 
         }
