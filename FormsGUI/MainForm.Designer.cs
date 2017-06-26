@@ -102,7 +102,7 @@
             // sLayerToolStripMenuItem
             // 
             this.sLayerToolStripMenuItem.Name = "sLayerToolStripMenuItem";
-            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.sLayerToolStripMenuItem.Text = "Round";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
             // 
