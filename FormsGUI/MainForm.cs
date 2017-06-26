@@ -389,7 +389,7 @@ namespace FormsGUI
 
         private void LoadNet(PanelSerializator.PanelData data)
         {
-            //createSPNet(data.wordsize, data)
+            createSPNet((byte)data.wordsize, (byte)(data.wordsize / data.blocks_wide));
         }
 
         private void finishAnalysisToolStripMenuItem_Click(object sender, EventArgs e)
