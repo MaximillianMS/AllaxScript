@@ -163,6 +163,7 @@ namespace FormsGUI
                     if (d.ShowDialog() == DialogResult.OK)
                     {
                         B.Init(d.Value);
+                        SPNetGraph.layers[layer].blocks[i].init_sequence = d.Value;
                     }
                     else
                     {
@@ -374,13 +375,38 @@ namespace FormsGUI
                 var fs = File.OpenRead(fd.FileName);
                 var data = PanelSerializator.DeSerialize(fs);
                 LoadNet(data);
+                sPNetToolStripMenuItem.Enabled = true;
                 fs.Close();
             }
         }
 
         private void LoadNet(PanelSerializator.PanelData data)
         {
-            //createSPNet(data.wordsize, data)
+            createSPNet((byte)(data.wordsize * data.blocks_wide), (byte)data.wordsize);
+            for (int i = 0; i < data.layers.Count(); i+=3)
+            {
+                if (data.layers[i + 2].type == AllaxBlock.BLOCK_TYPE.K)
+                {
+                    addLastRound();
+                }
+                else
+                {
+                    addKLayer();
+                    addSLayer();
+                    addPLayer();
+                    var PBlockInit = data.layers[i + 2].blocks[0].Init;
+                    InitPLayer(i + 2, PBlockInit);
+                    for (int j = 0; j < data.layers[i + 1].blocks.Count; j++)
+                    {
+                        var SBlockInit = data.layers[i + 1].blocks[j].Init;
+                        var B = net.GetLayers()[i + 1].GetBlocks()[j];
+                        B.Init(SBlockInit);
+                        SPNetGraph.layers[i + 1].blocks[j].init_sequence = SBlockInit;
+                    }
+                }
+            }
+            refreshLayers();
+              
         }
 
         private void finishAnalysisToolStripMenuItem_Click(object sender, EventArgs e)
