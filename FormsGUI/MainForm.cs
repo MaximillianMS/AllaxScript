@@ -410,13 +410,16 @@ namespace FormsGUI
                         
                         if (b.Inputs != 0)
                         {
-                            if(l.type != LayerType.PLayer)
+                            if (l.type != LayerType.PLayer)
                                 SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
+                            else
+                                SPNetGraph.layers[i].blocks[j].PBlockWeb(WayConverter.ToList(b.Inputs, b.BlockSize));
                                                         
                         }
                         else
                         {
                             SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.WhiteSmoke;
+                            SPNetGraph.layers[i].blocks[j].removePBlockWeb()
                         }
                     }
                     SPNetGraph.setLayerColors(i, redConnectors);
