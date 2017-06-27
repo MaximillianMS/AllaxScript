@@ -255,13 +255,16 @@ namespace Allax
             {
                 if (TaskQueue.Count == 0)
                 {
-                    AddTasks(Params.MaxThreads);
+                    AddTasks(Params.MaxThreads*1000);
                 }
                 if (TaskQueue.Count > 0)
                 {
-                    Task = TaskQueue.Dequeue();
+
                     if (Thread.GetState() == WorkerThreadState.Free)
+                    {
+                        Task = TaskQueue.Dequeue();
                         Thread.Init(new WorkerThreadParams(Task));
+                    }
                     else
                     {
                         if (Thread.GetState() == WorkerThreadState.Finished)
@@ -273,7 +276,7 @@ namespace Allax
                             throw new Exception();
                         }
                     }
-                        Thread.Start();
+                    Thread.Start();
                 }
                 else
                 {
