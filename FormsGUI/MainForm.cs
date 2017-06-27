@@ -124,7 +124,7 @@ namespace FormsGUI
                 return;
             }
             int layer = net.GetLayers().Count - 1;
-            InitPLayer(layer, PBlockInit, net);
+            InitPLayer(layer, PBlockInit);
 
             if (sameBlocks)
             {
@@ -132,7 +132,7 @@ namespace FormsGUI
                 if (d.ShowDialog() == DialogResult.OK)
                 {
                     SBlockInit = d.Value;
-                    InitSLayer(layer - 1, SBlockInit, net);
+                    InitSLayer(layer - 1, SBlockInit);
                 }
                 else
                 {
@@ -179,15 +179,18 @@ namespace FormsGUI
 
         }
 
-        static void InitPLayer(int L, List<byte> PBlockInit, ISPNet Net)
+        private void InitPLayer(int L, List<byte> PBlockInit)
         {
-            Net.GetLayers()[L].GetBlocks()[0].Init(PBlockInit);
+            net.GetLayers()[L].GetBlocks()[0].Init(PBlockInit);
+            SPNetGraph.layers[L].blocks[0].init_sequence = PBlockInit;
         }
-        static void InitSLayer(int L, List<byte> SBlockInit, ISPNet Net)
+        private void InitSLayer(int L, List<byte> SBlockInit)
         { 
-            foreach (var B in Net.GetLayers()[L].GetBlocks())
+            for (int i = 0; i < net.GetLayers()[L].GetBlocks().Count; i++)
             {
+                var B = net.GetLayers()[L].GetBlocks()[i];
                 B.Init(SBlockInit);
+                SPNetGraph.layers[L].blocks[i].init_sequence = SBlockInit;
             }
         }
         static void AddRound(Allax.ISPNet Net)
@@ -262,9 +265,9 @@ namespace FormsGUI
                 solutionsListBox.Items.Clear();
                 solutionsListBox.Items.AddRange(items.ToArray());
                 //Magical constant that makes the width similar to the actual width of a string
-                int longestLength = (int)(solutionsListBox.Items[solutionsListBox.Items.Count - 1].ToString().Length * (solutionsListBox.Font.SizeInPoints - 2.75));//*0.72));
+                /*int longestLength = (int)(solutionsListBox.Items[solutionsListBox.Items.Count - 1].ToString().Length * (solutionsListBox.Font.SizeInPoints - 2.75));//*0.72));
                 if (solutionsListBox.Size.Width < longestLength)
-                    solutionsPanel.Width = longestLength;
+                    solutionsPanel.Width = longestLength;*/
             }
         }
 
@@ -309,12 +312,18 @@ namespace FormsGUI
         
         private void createSPNet(byte wordLength, byte sBlockSize)
         {
+            tableLayoutPanel1.Controls.RemoveByKey("AllaxPanel");
             SPNetSettings settings = new SPNetSettings(wordLength, sBlockSize);
             currentSettings = settings;
             net = eng.CreateSPNetInstance(settings);
+            solutions.Clear();
+            layerList.Clear();
+            refreshLayers();
+            refreshSolutions();
             SPNetGraph = new AllaxPanel(settings.WordLength, settings.SBoxCount, 24);
             SPNetGraph.Dock = DockStyle.Fill;
             SPNetGraph.Parent = tableLayoutPanel1;
+            SPNetGraph.Name = "AllaxPanel";
             //SPNetGraph.BackColor = System.Drawing.Color.Aquamarine;
             tableLayoutPanel1.Controls.Add(SPNetGraph, 1, 0);
             
@@ -334,16 +343,23 @@ namespace FormsGUI
 
         private void saveNetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (File.Exists("sb.db"))
+            var fs = File.OpenWrite("sb.db");
+            eng.SerializeDB(fs, false);
+            fs.Close();
+            SaveFileDialog fd = new SaveFileDialog
             {
-                //???
-            }
-            else
-            {
-                var fs = File.OpenWrite("sb.db");
-                eng.SerializeDB(fs, false);
-            }
+                Filter = "Файл SP-сети (*.spnet) | *.spnet",
+                
+                Title = "Сохранить сеть"
+            };
             
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                fs = File.OpenWrite(fd.FileName);
+                PanelSerializator.Serialize(SPNetGraph, fs);
+                fs.Close();
+            }
+
         }
 
         private void loadNetToolStripMenuItem_Click(object sender, EventArgs e)
@@ -352,7 +368,28 @@ namespace FormsGUI
             {
                 var fs = File.OpenRead("sb.db");
                 eng.InjectSBlockDB(fs, false);
+                fs.Close();
             }
+            
+            OpenFileDialog fd = new OpenFileDialog
+            {
+                Filter = "Файл SP-сети (*.spnet) | *.spnet",
+
+                Title = "Загрузить сеть"
+            };
+
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                var fs = File.OpenRead(fd.FileName);
+                var data = PanelSerializator.DeSerialize(fs);
+                LoadNet(data);
+                fs.Close();
+            }
+        }
+
+        private void LoadNet(PanelSerializator.PanelData data)
+        {
+            //createSPNet(data.wordsize, data)
         }
 
         private void finishAnalysisToolStripMenuItem_Click(object sender, EventArgs e)
