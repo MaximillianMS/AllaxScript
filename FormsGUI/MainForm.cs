@@ -406,20 +406,20 @@ namespace FormsGUI
                     for (int j = 0; j < l.blocks.Count; j++)
                     {
                         var b = l.blocks[j];
-                        redConnectors.AddRange(WayConverter.ToList(b.Inputs, b.BlockSize));
+                        redConnectors.AddRange(WayConverter.ToList(b.Outputs, b.BlockSize));
                         
                         if (b.Inputs != 0)
                         {
                             if (l.type != LayerType.PLayer)
                                 SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
                             else
-                                SPNetGraph.layers[i].blocks[j].PBlockWeb(WayConverter.ToList(b.Inputs, b.BlockSize));
+                                SPNetGraph.layers[i].blocks[j].drawPBlockWeb(WayConverter.ToList(b.Inputs, b.BlockSize));
                                                         
                         }
                         else
                         {
                             SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.WhiteSmoke;
-                            SPNetGraph.layers[i].blocks[j].removePBlockWeb()
+                            SPNetGraph.layers[i].blocks[j].removePBlockWeb();
                         }
                     }
                     SPNetGraph.setLayerColors(i, redConnectors);
