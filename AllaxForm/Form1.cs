@@ -23,6 +23,7 @@ namespace AllaxForm
             panel.addPLayer();
             panel.addSLayer();
             this.Controls.Add(panel);
+            panel.setLayerColors(0, new List<bool>() { true, false, true, true, true, false, true, true, true, false, true, true, true, false, true, true, });
             //this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
         }
 

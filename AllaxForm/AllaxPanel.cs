@@ -134,13 +134,14 @@ namespace AllaxForm
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
             this.initializeSizes();
+           
             //this.initializeDragDrop();
         }
 
         public void addColorLayer()
         {
             List<bool> n = new List<bool>();
-            for (int i = 0; i < this.wordsize; i++)
+            for (int i = 0; i < this.wordsize * this.blocks_wide; i++)
                 n.Add(false);
             this.coloreds.Add(n);
         }
@@ -168,8 +169,8 @@ namespace AllaxForm
              public const double narrow_block_width = (1.0 / 4) * (3.0 / 4);
              public const double block_width_distance = (1.0 / 4) * (1.0 / 4);
              public const double block_height_distance = (3.0 / 16) / 13;*/
-            block_height = (1.0 / blocks_tall) * (3.0 / 4);
-            block_height_distance = (1.0 / blocks_tall) * (1.0 / 4);
+            block_height = (1.0 / blocks_tall) * (3.0 / 5);
+            block_height_distance = (1.0 / blocks_tall) * (2.0 / 5);
 
             wide_block_width = 1;
             narrow_block_width = (1.0 / blocks_wide) * (3.0 / 4);
@@ -241,7 +242,7 @@ namespace AllaxForm
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
             this.layers.Add(newblockl);
-            this.Controls.Add(newblock);
+            this.Controls.Add(newblock); addColorLayer();
             Invalidate();
         }
 
@@ -260,7 +261,7 @@ namespace AllaxForm
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
             this.layers.Add(newblockl);
-            this.Controls.Add(newblock);
+            this.Controls.Add(newblock); addColorLayer();
             Invalidate();
         }
 
@@ -284,7 +285,7 @@ namespace AllaxForm
             }
             newblockl.layer_index = this.layers.Count;
             newblockl.type = AllaxBlock.BLOCK_TYPE.S;
-            this.layers.Add(newblockl);
+            this.layers.Add(newblockl); addColorLayer();
             Invalidate();
         }
     }
