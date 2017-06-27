@@ -241,6 +241,7 @@ namespace AllaxForm
             newblockl.layer_index = this.layers.Count;
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
+            newblock.connectors = this.wordsize * this.blocks_wide;
             this.layers.Add(newblockl);
             this.Controls.Add(newblock); addColorLayer();
             Invalidate();
@@ -260,6 +261,7 @@ namespace AllaxForm
             newblockl.layer_index = this.layers.Count;
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
+            newblock.connectors = this.wordsize * this.blocks_wide;
             this.layers.Add(newblockl);
             this.Controls.Add(newblock); addColorLayer();
             Invalidate();
@@ -279,6 +281,7 @@ namespace AllaxForm
                     (int)((narrow_block_width + block_width_distance) * i * this.Size.Width) + (int)(block_width_distance * this.Size.Width/2), 
                     height_pos);
                 newblockl.blocks.Add(newblock);
+                newblock.connectors = this.wordsize;
                 newblock.index_in_layer = i;
                 newblock.layer_index = this.layers.Count;
                 this.Controls.Add(newblock);
