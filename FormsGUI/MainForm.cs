@@ -67,8 +67,14 @@ namespace FormsGUI
             if (layersListBox.InvokeRequired)
             {
                 AllTasksDoneCallback d = new AllTasksDoneCallback(E_OnAllTasksDone);
-                if (!this.Disposing)
+                try
+                {
                     this.Invoke(d, new object[] { T });
+                }
+                catch(ObjectDisposedException)
+                {
+                    ;
+                }
             }
             else
             {
@@ -95,8 +101,14 @@ namespace FormsGUI
             if (tasksProgressBar.InvokeRequired)
             {
                 RefreshProgressBarCallback d = new RefreshProgressBarCallback(E_ProgressChanged);
-                if (!Disposing)
+                try
+                {
                     this.Invoke(d, new object[] { progress });
+                }
+                catch (ObjectDisposedException)
+                {
+                    ;
+                }
             }
             else
             {
@@ -250,8 +262,14 @@ namespace FormsGUI
             if (solutionsListBox.InvokeRequired)
             {
                 RefreshSolutionsCallback d = new RefreshSolutionsCallback(refreshSolutions);
-                if (!this.Disposing)
+                try
+                {
                     this.Invoke(d);
+                }
+                catch (ObjectDisposedException)
+                {
+                    ;
+                }
             }
             else
             {
@@ -282,9 +300,9 @@ namespace FormsGUI
         {
             var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2);
             var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2);
-            var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
+            //var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
-            var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2, R3}, AnalisysType.Linear));
+            var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2}, AnalisysType.Linear));
             //DelLastRound(net);
             addLastRound();
             eng.PerformAnalisys(AP);  
@@ -411,13 +429,17 @@ namespace FormsGUI
                 for(int i = 0; i < s.Way.layers.Count; i++)
                 {
                     var l = s.Way.layers[i];
+                    List<bool> redConnectors = new List<bool>();
                     for (int j = 0; j < l.blocks.Count; j++)
                     {
                         var b = l.blocks[j];
+                        redConnectors.AddRange(WayConverter.ToList(b.Inputs, b.BlockSize));
+
                         if (b.Inputs != 0)
                         {
                             SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
-                            //SPNetGraph.layers[i].blocks[j].
+                            
+                            
                         }
                         else
                         {
