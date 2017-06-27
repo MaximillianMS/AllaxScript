@@ -106,7 +106,9 @@ namespace AllaxForm
             {
                 if (inputsToDraw[i] == false) continue;
                 Point from = topC[i]; Point to = botC[init_sequence[i] - 1];
-                g.DrawLine(pen, from.X, from.Y , to.X, to.Y);
+                int vertical_correction_f = (int)(this.Size.Height * 0.07);
+                int vertical_correction_t = (int)(this.Size.Height * 0.1);
+                g.DrawLine(pen, from.X, from.Y+vertical_correction_f , to.X, to.Y-vertical_correction_t);
             }
         }
 

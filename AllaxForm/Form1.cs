@@ -17,16 +17,17 @@ namespace AllaxForm
         {
             InitializeComponent();
             panel = new AllaxPanel(4, 4, 12);
-            panel.Size = new Size(500, 500);
+            panel.Size = new Size(1000, 500);
             panel.BackColor = Color.AliceBlue;
             panel.addKLayer();
             panel.addPLayer();
+            panel.addKLayer();
             panel.layers[1].blocks[0].init_sequence = new List<byte>() { 1, 3, 5, 7, 9, 11, 13, 15, 2, 4, 6, 8, 10, 12, 14, 16 };
             panel.layers[1].blocks[0].drawPBlockWeb(new List<bool>() { true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, });
             this.Controls.Add(panel);
             panel.setLayerColors(0, new List<bool>() { true, false, true, true, true, false, true, true, true, false, true, true, true, false, true, true, });
             //this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
-            panel.layers[1].blocks[0].removePBlockWeb();
+            //panel.layers[1].blocks[0].removePBlockWeb();
         }
 
         private void panel1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
