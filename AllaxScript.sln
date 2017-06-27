@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxScript", "AllaxScript.csproj", "{A7240CD1-B08D-43D0-9685-9B5741DCF221}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormsGUI", "FormsGUI\FormsGUI.csproj", "{25D09230-E4A4-4C50-91EF-1E2CE738FD68}"
+	ProjectSection(ProjectDependencies) = postProject
+		{080E8CB5-8BA4-4392-9CEB-0C84FF1DCD2F} = {080E8CB5-8BA4-4392-9CEB-0C84FF1DCD2F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxForm", "AllaxForm\AllaxForm.csproj", "{080E8CB5-8BA4-4392-9CEB-0C84FF1DCD2F}"
 EndProject

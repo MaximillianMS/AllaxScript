@@ -43,6 +43,8 @@
             this.layersListBox = new System.Windows.Forms.ListBox();
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
+            this.linearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.differrentialToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -117,11 +119,13 @@
             // 
             // sPNetToolStripMenuItem
             // 
+            this.sPNetToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.linearToolStripMenuItem,
+            this.differrentialToolStripMenuItem});
             this.sPNetToolStripMenuItem.Enabled = false;
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.sPNetToolStripMenuItem.Text = "Начать";
-            this.sPNetToolStripMenuItem.Click += new System.EventHandler(this.sPNetToolStripMenuItem_Click);
             // 
             // finishAnalysisToolStripMenuItem
             // 
@@ -191,6 +195,20 @@
             this.solutionsListBox.TabIndex = 13;
             this.solutionsListBox.DoubleClick += new System.EventHandler(this.solutionsListBox_DoubleClick);
             // 
+            // linearToolStripMenuItem
+            // 
+            this.linearToolStripMenuItem.Name = "linearToolStripMenuItem";
+            this.linearToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.linearToolStripMenuItem.Text = "Линейный";
+            this.linearToolStripMenuItem.Click += new System.EventHandler(this.linearToolStripMenuItem_Click);
+            // 
+            // differrentialToolStripMenuItem
+            // 
+            this.differrentialToolStripMenuItem.Name = "differrentialToolStripMenuItem";
+            this.differrentialToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.differrentialToolStripMenuItem.Text = "Дифференциальный";
+            this.differrentialToolStripMenuItem.Click += new System.EventHandler(this.differrentialToolStripMenuItem_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -228,6 +246,8 @@
         private System.Windows.Forms.ToolStripMenuItem finishAnalysisToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveNetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem loadNetToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem linearToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem differrentialToolStripMenuItem;
     }
 }
 

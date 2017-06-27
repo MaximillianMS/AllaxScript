@@ -138,7 +138,7 @@ namespace AllaxForm
             //this.initializeDragDrop();
         }
 
-        public void addColorLayer()
+        private void addColorLayer()
         {
             List<bool> n = new List<bool>();
             for (int i = 0; i < this.wordsize * this.blocks_wide; i++)
@@ -183,8 +183,8 @@ namespace AllaxForm
         public void paint()
         {
             Graphics g = this.CreateGraphics();
-            Pen pen = new Pen(Color.Black, 1);
-            Pen penc = new Pen(Color.Red, 1);
+            Pen pen = new Pen(Color.Black, 3);
+            Pen penc = new Pen(Color.Red, 3);
             for (int i = 0; i < this.layers.Count - 1; i++)
             {
                 // drawing lines from layer i to layer i+1

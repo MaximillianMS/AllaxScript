@@ -18,6 +18,7 @@ namespace FormsGUI
         AllaxPanel SPNetGraph;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
+        bool isLastRoundAdded = false;
         delegate void RefreshSolutionsCallback();
         delegate void AllTasksDoneCallback(ITask task);
         delegate void RefreshProgressBarCallback(double progress);
@@ -132,7 +133,7 @@ namespace FormsGUI
             }
             else
             {
-                DelLastRound(net);
+                DelLastRound();
                 return;
             }
             int layer = net.GetLayers().Count - 1;
@@ -148,7 +149,7 @@ namespace FormsGUI
                 }
                 else
                 {
-                    DelLastRound(net);
+                    DelLastRound();
                     return;
                 }
             }
@@ -165,7 +166,7 @@ namespace FormsGUI
                     }
                     else
                     {
-                        DelLastRound(net);
+                        DelLastRound();
                         return;
                     }
                 }
@@ -178,13 +179,14 @@ namespace FormsGUI
             addKLayer();
             addSLayer();
             addKLayer();
+            isLastRoundAdded = true;
             refreshLayers();
         }
 
         private void addRound()
         {
             /*if (net.GetLayers().Count >= 6)
-                DelLastRound(net);*/
+                DelLastRound();*/
             addFullRound();
             //AddLastRound(net);
             refreshLayers();
@@ -205,29 +207,12 @@ namespace FormsGUI
                 SPNetGraph.layers[L].blocks[i].init_sequence = SBlockInit;
             }
         }
-        static void AddRound(Allax.ISPNet Net)
+        private void DelLastRound()
         {
-            DelLastRound(Net);
-            AddFullRound(Net);
-            AddLastRound(Net);
-        }
-        static void AddFullRound(Allax.ISPNet Net)
-        {
-            Net.AddLayer(Allax.LayerType.KLayer);
-            Net.AddLayer(Allax.LayerType.SLayer);
-            Net.AddLayer(Allax.LayerType.PLayer);
-        }
-        static void AddLastRound(Allax.ISPNet Net)
-        {
-            Net.AddLayer(Allax.LayerType.KLayer);
-            Net.AddLayer(Allax.LayerType.SLayer);
-            Net.AddLayer(Allax.LayerType.KLayer);
-        }
-        static void DelLastRound(Allax.ISPNet Net)
-        {
-            Net.DeleteLayer((byte)(Net.GetLayers().Count-1));
-            Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
-            Net.DeleteLayer((byte)(Net.GetLayers().Count - 1));
+            net.DeleteLayer((byte)(net.GetLayers().Count-1));
+            net.DeleteLayer((byte)(net.GetLayers().Count - 1));
+            net.DeleteLayer((byte)(net.GetLayers().Count - 1));
+            isLastRoundAdded = false;
         }
 
         private void addPLayer()
@@ -296,30 +281,17 @@ namespace FormsGUI
             addRound();
         }
         
-        private void runAnalysis()
+        private void runAnalysis(bool isDifferential = false)
         {
             var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2);
             var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2);
             //var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
             var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2}, AnalisysType.Linear));
-            //DelLastRound(net);
-            addLastRound();
+            AP.Alg.Type = isDifferential ? AnalisysType.Differencial : AnalisysType.Linear;
+            if (!isLastRoundAdded)
+                addLastRound();
             eng.PerformAnalisys(AP);  
-        }
-
-        private void sPNetToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            runAnalysis();
-            //toolStrip1.Enabled = false;
-            //menuStrip1.Enabled = false;
-            addToolStripMenuItem.Enabled = false;
-            sPNetToolStripMenuItem.Enabled = false;
-            finishAnalysisToolStripMenuItem.Enabled = true;
-            fileToolStripMenuItem.Enabled = false;
-            layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
-            solutionsPanel.Width = 250;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -336,9 +308,10 @@ namespace FormsGUI
             net = eng.CreateSPNetInstance(settings);
             solutions.Clear();
             layerList.Clear();
+            isLastRoundAdded = false;
             refreshLayers();
             refreshSolutions();
-            SPNetGraph = new AllaxPanel(settings.WordLength, settings.SBoxCount, 24);
+            SPNetGraph = new AllaxPanel(settings.SBoxSize, settings.SBoxCount, 15);
             SPNetGraph.Dock = DockStyle.Fill;
             SPNetGraph.Parent = tableLayoutPanel1;
             SPNetGraph.Name = "AllaxPanel";
@@ -426,7 +399,7 @@ namespace FormsGUI
             if (solutionsListBox.SelectedItem != null)
             {
                 var s = solutions[solutionsListBox.SelectedIndex];
-                for(int i = 0; i < s.Way.layers.Count; i++)
+                for(int i = 0; i < s.Way.layers.Count - 2; i++)
                 {
                     var l = s.Way.layers[i];
                     List<bool> redConnectors = new List<bool>();
@@ -434,18 +407,20 @@ namespace FormsGUI
                     {
                         var b = l.blocks[j];
                         redConnectors.AddRange(WayConverter.ToList(b.Inputs, b.BlockSize));
-
+                        
                         if (b.Inputs != 0)
                         {
-                            SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
-                            
-                            
+                            if(l.type != LayerType.PLayer)
+                                SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.Red;
+                                                        
                         }
                         else
                         {
                             SPNetGraph.layers[i].blocks[j].BackColor = System.Drawing.Color.WhiteSmoke;
                         }
                     }
+                    SPNetGraph.setLayerColors(i, redConnectors);
+                    SPNetGraph.paint();
                 }
             }
         }
@@ -453,6 +428,34 @@ namespace FormsGUI
         private void MainForm_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void linearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            runAnalysis(false);
+            //toolStrip1.Enabled = false;
+            //menuStrip1.Enabled = false;
+            addToolStripMenuItem.Enabled = false;
+            sPNetToolStripMenuItem.Enabled = false;
+            finishAnalysisToolStripMenuItem.Enabled = true;
+            fileToolStripMenuItem.Enabled = false;
+            layersListBox.Enabled = false;
+            solutionsListBox.Items.Clear();
+            solutionsPanel.Width = 250;
+        }
+
+        private void differrentialToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            runAnalysis(true);
+            //toolStrip1.Enabled = false;
+            //menuStrip1.Enabled = false;
+            addToolStripMenuItem.Enabled = false;
+            sPNetToolStripMenuItem.Enabled = false;
+            finishAnalysisToolStripMenuItem.Enabled = true;
+            fileToolStripMenuItem.Enabled = false;
+            layersListBox.Enabled = false;
+            solutionsListBox.Items.Clear();
+            solutionsPanel.Width = 250;
         }
     }
 }
