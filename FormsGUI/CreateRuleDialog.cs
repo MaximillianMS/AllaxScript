@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Allax;
 
 namespace FormsGUI
 {
@@ -21,25 +22,38 @@ namespace FormsGUI
         {
             this.wordLength = wordLength;    
             this.sBlockCount = sBlockCount;
-            startingInputMaskedTextBox.Mask = "".PadLeft(16, '0');
+            startingInputMaskedTextBox.Mask = "".PadLeft(wordLength, '0');
+            sBlockInputCountNumericUpDown.Maximum = sBlockCount;
+            sBlockLayerCountNumericUpDown.Maximum = sBlockCount;
+            SolverTypeComboBox.SelectedIndex = 1;
         }
 
         public byte wordLength = 16;
         public byte sBlockCount = 4;
 
+        public Allax.Rule rule;
+
         private void createButton_Click(object sender, EventArgs e)
         {
-            if (sBlockInputCountNumericUpDown.Value % sBlockLayerCountNumericUpDown.Value != 0)
+            rule = new Allax.Rule(AvailableSolverTypes.GetAllTypes()[SolverTypeComboBox.SelectedIndex], (int)sBlockLayerCountNumericUpDown.Value, (int)sBlockInputCountNumericUpDown.Value, false);
+            if (useConstInputCheckBox.Checked)
             {
-                MessageBox.Show("Недопустимые значения длины слова и размера S-Блока");
+                if (!startingInputMaskedTextBox.MaskCompleted)
+                {
+                    MessageBox.Show("Начальное заполнение не задано");
+                    return;
+                }
+                List<bool> l = new List<bool>();
+                foreach (char c in startingInputMaskedTextBox.Text)
+                {
+                    l.Add(Convert.ToBoolean(c));
+                }
+                Allax.SolverInputs i = new Allax.SolverInputs(Allax.WayConverter.ToLong(l), l.Count);
+                rule.UseCustomInput = true;
+                rule.Input = i;
+                rule.MaxStartBlocks = sBlockCount;
             }
-            else
-            {
-                this.DialogResult = DialogResult.OK;
-                wordLength = (byte)sBlockInputCountNumericUpDown.Value;
-                //sBlockSize = (byte)sBlockLayerCountNumericUpDown.Value;
-                //sBlockCount = (byte)(wordLength / sBlockSize);
-            }
+            this.DialogResult = DialogResult.OK;
         }
 
         private void CreateRuleDialog_FormClosing(object sender, FormClosingEventArgs e)
@@ -64,15 +78,15 @@ namespace FormsGUI
             }
             else
             {
-                startingInputMaskedTextBox.Enabled = true;
-                sBlockInputCountLabel.Enabled = false;
-                sBlockInputCountNumericUpDown.Enabled = false;
+                startingInputMaskedTextBox.Enabled = false;
+                sBlockInputCountLabel.Enabled = true;
+                sBlockInputCountNumericUpDown.Enabled = true;
             }
         }
 
         private void startingInputMaskedTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar != '0' || e.KeyChar != '1')
+            if (e.KeyChar != '0' && e.KeyChar != '1')
             {
                 e.Handled = true;
             }

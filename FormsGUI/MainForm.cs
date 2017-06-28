@@ -118,7 +118,7 @@ namespace FormsGUI
             }
             //double Progress = progress;
         }
-        private void addFullRound(bool sameBlocks = true)
+        private bool addFullRound(bool sameBlocks = true)
         {
             var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
             var SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
@@ -135,7 +135,7 @@ namespace FormsGUI
             else
             {
                 DelLastRound();
-                return;
+                return false;
             }
             int layer = net.GetLayers().Count - 1;
             InitPLayer(layer, PBlockInit);
@@ -151,7 +151,7 @@ namespace FormsGUI
                 else
                 {
                     DelLastRound();
-                    return;
+                    return false;
                 }
             }
             else
@@ -169,10 +169,11 @@ namespace FormsGUI
                     else
                     {
                         DelLastRound();
-                        return;
+                        return false;
                     }
                 }
             }
+            return true;
             //refreshList();
 
         }
@@ -185,12 +186,13 @@ namespace FormsGUI
             refreshLayers();
         }
 
-        private void addRound()
+        private bool addRound()
         {
             if (isLastRoundAdded)
                 DelLastRound();
-            addFullRound();
+            var ret = addFullRound();
             refreshLayers();
+            return ret;
 
         }
 
@@ -278,8 +280,8 @@ namespace FormsGUI
 
         private void sLayerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            sPNetToolStripMenuItem.Enabled = true;
-            addRound();
+            if (addRound())
+                sPNetToolStripMenuItem.Enabled = true;
         }
         
         private void runAnalysis(bool isDifferential = false)
@@ -309,6 +311,7 @@ namespace FormsGUI
             net = eng.CreateSPNetInstance(settings);
             solutions.Clear();
             layerList.Clear();
+            activeRules.Clear();
             isLastRoundAdded = false;
             refreshLayers();
             refreshSolutions();
@@ -485,6 +488,20 @@ namespace FormsGUI
             layersListBox.Enabled = false;
             solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
+        }
+
+        private void addRuleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CreateRuleDialog d = new CreateRuleDialog(currentSettings.SBoxCount, currentSettings.WordLength);
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                activeRules.Add(d.rule);
+            }
+        }
+
+        private void clearRulesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            activeRules.Clear();
         }
     }
 }

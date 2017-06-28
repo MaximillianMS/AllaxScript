@@ -69,7 +69,7 @@
             this.sBlockLayerCountNumericUpDown.Size = new System.Drawing.Size(60, 20);
             this.sBlockLayerCountNumericUpDown.TabIndex = 2;
             this.sBlockLayerCountNumericUpDown.Value = new decimal(new int[] {
-            4,
+            1,
             0,
             0,
             0});
@@ -105,22 +105,27 @@
             // 
             // startingInputMaskedTextBox
             // 
+            this.startingInputMaskedTextBox.AllowPromptAsInput = false;
             this.startingInputMaskedTextBox.CutCopyMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
             this.startingInputMaskedTextBox.Enabled = false;
             this.startingInputMaskedTextBox.Location = new System.Drawing.Point(11, 83);
             this.startingInputMaskedTextBox.Name = "startingInputMaskedTextBox";
+            this.startingInputMaskedTextBox.RejectInputOnFirstFailure = true;
+            this.startingInputMaskedTextBox.ResetOnPrompt = false;
+            this.startingInputMaskedTextBox.ResetOnSpace = false;
             this.startingInputMaskedTextBox.Size = new System.Drawing.Size(399, 20);
             this.startingInputMaskedTextBox.TabIndex = 9;
             this.startingInputMaskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.startingInputMaskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
             this.startingInputMaskedTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.startingInputMaskedTextBox_KeyPress);
             // 
             // SolverTypeComboBox
             // 
             this.SolverTypeComboBox.FormattingEnabled = true;
             this.SolverTypeComboBox.Items.AddRange(new object[] {
+            "Полный",
             "Жадный",
-            "Частичный",
-            "Полный"});
+            "Частичный"});
             this.SolverTypeComboBox.Location = new System.Drawing.Point(289, 157);
             this.SolverTypeComboBox.Name = "SolverTypeComboBox";
             this.SolverTypeComboBox.Size = new System.Drawing.Size(121, 21);
@@ -149,7 +154,7 @@
             0,
             0});
             this.sBlockInputCountNumericUpDown.Minimum = new decimal(new int[] {
-            16,
+            1,
             0,
             0,
             0});
@@ -157,7 +162,7 @@
             this.sBlockInputCountNumericUpDown.Size = new System.Drawing.Size(60, 20);
             this.sBlockInputCountNumericUpDown.TabIndex = 1;
             this.sBlockInputCountNumericUpDown.Value = new decimal(new int[] {
-            16,
+            1,
             0,
             0,
             0});

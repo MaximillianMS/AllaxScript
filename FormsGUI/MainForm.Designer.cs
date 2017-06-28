@@ -46,8 +46,7 @@
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
             this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bruteForceRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.specificRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearRulesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -100,7 +99,8 @@
             // 
             this.addToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.sLayerToolStripMenuItem,
-            this.addRuleToolStripMenuItem});
+            this.addRuleToolStripMenuItem,
+            this.clearRulesToolStripMenuItem});
             this.addToolStripMenuItem.Name = "addToolStripMenuItem";
             this.addToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
             this.addToolStripMenuItem.Text = "Добавить";
@@ -215,24 +215,17 @@
             // 
             // addRuleToolStripMenuItem
             // 
-            this.addRuleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.bruteForceRuleToolStripMenuItem,
-            this.specificRuleToolStripMenuItem});
             this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
             this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.addRuleToolStripMenuItem.Text = "Правило";
+            this.addRuleToolStripMenuItem.Click += new System.EventHandler(this.addRuleToolStripMenuItem_Click);
             // 
-            // bruteForceRuleToolStripMenuItem
+            // clearRulesToolStripMenuItem
             // 
-            this.bruteForceRuleToolStripMenuItem.Name = "bruteForceRuleToolStripMenuItem";
-            this.bruteForceRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.bruteForceRuleToolStripMenuItem.Text = "Полный Перебор";
-            // 
-            // specificRuleToolStripMenuItem
-            // 
-            this.specificRuleToolStripMenuItem.Name = "specificRuleToolStripMenuItem";
-            this.specificRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.specificRuleToolStripMenuItem.Text = "Конкретный Вход";
+            this.clearRulesToolStripMenuItem.Name = "clearRulesToolStripMenuItem";
+            this.clearRulesToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.clearRulesToolStripMenuItem.Text = "Удалить Правила";
+            this.clearRulesToolStripMenuItem.Click += new System.EventHandler(this.clearRulesToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -274,8 +267,7 @@
         private System.Windows.Forms.ToolStripMenuItem linearToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem differrentialToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addRuleToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bruteForceRuleToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem specificRuleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clearRulesToolStripMenuItem;
     }
 }
 
