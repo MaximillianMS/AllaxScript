@@ -68,7 +68,7 @@ namespace FormsGUI
         }
         private void E_OnAllTasksDone(ITask T)
         {
-            if (layersListBox.InvokeRequired)
+            if (this.InvokeRequired)
             {
                 AllTasksDoneCallback d = new AllTasksDoneCallback(E_OnAllTasksDone);
                 try
@@ -82,7 +82,7 @@ namespace FormsGUI
             }
             else
             {
-                layersListBox.Enabled = true;
+                //rulesListBox.Enabled = true;
                 addToolStripMenuItem.Enabled = true;
                 sPNetToolStripMenuItem.Enabled = true;
                 finishAnalysisToolStripMenuItem.Enabled = false;
@@ -243,8 +243,8 @@ namespace FormsGUI
             {
                 layerList.Add(l.GetLayerType().ToString());
             }
-            layersListBox.Items.Clear();
-            layersListBox.Items.AddRange(layerList.ToArray());
+            //rulesListBox.Items.Clear();
+            //rulesListBox.Items.AddRange(layerList.ToArray());
         }
 
         private void refreshSolutions()
@@ -288,11 +288,16 @@ namespace FormsGUI
         
         private void runAnalysis(bool isDifferential = false)
         {
-            var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2);
-            var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2);
+            if (activeRules.Count == 0)
+            {
+                activeRules.Add(new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2));
+                activeRules.Add(new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2));
+                refreshRules();
+                
+            }
             //var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
-            var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2}, AnalisysType.Linear));
+            var AP = new AnalisysParams(new Algorithm(activeRules, AnalisysType.Linear));
             AP.Alg.Type = isDifferential ? AnalisysType.Differencial : AnalisysType.Linear;
             if (!isLastRoundAdded)
                 addLastRound();
@@ -422,7 +427,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = true;
             finishAnalysisToolStripMenuItem.Enabled = false;
             fileToolStripMenuItem.Enabled = true;
-            layersListBox.Enabled = true;
+            //rulesListBox.Enabled = true;
         }
 
         private void solutionsListBox_DoubleClick(object sender, EventArgs e)
@@ -475,7 +480,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
-            layersListBox.Enabled = false;
+            //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
         }
 
@@ -490,7 +495,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
-            layersListBox.Enabled = false;
+            //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
         }
         delegate void SaverFunc();
@@ -548,11 +553,28 @@ namespace FormsGUI
             {
                 activeRules.Add(d.rule);
             }
+            refreshRules();
+        }
+
+        private void refreshRules()
+        {
+            rulesTableLayoutPanel.Controls.Clear();
+            foreach (Rule r in activeRules)
+            {
+                var l = new Label();
+                l.Text += "Тип решения: " + r.SolverType.ToString() + "\n";
+                l.Text += "Max S-Блоков на слое:" + r.MaxActiveBlocksOnLayer + "\n";
+                l.Text += r.UseCustomInput ? "Константный вход" : "Max S-блоков на входе" + r.MaxStartBlocks;
+                l.Height = 40;
+                l.Width = 200;
+                rulesTableLayoutPanel.Controls.Add(l);
+            }
         }
 
         private void clearRulesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             activeRules.Clear();
+            refreshRules();
         }
     }
 }

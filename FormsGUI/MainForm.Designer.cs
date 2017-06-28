@@ -35,19 +35,19 @@
             this.loadNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearRulesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.analysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.differrentialToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.finishAnalysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.сохранитьСкриншотСетиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tasksProgressBar = new System.Windows.Forms.ProgressBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.layersListBox = new System.Windows.Forms.ListBox();
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
-            this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearRulesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.сохранитьСкриншотСетиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rulesTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -110,15 +110,23 @@
             // sLayerToolStripMenuItem
             // 
             this.sLayerToolStripMenuItem.Name = "sLayerToolStripMenuItem";
-            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.sLayerToolStripMenuItem.Text = "Раунд";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
             // 
             // addRuleToolStripMenuItem
             // 
             this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
-            this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.addRuleToolStripMenuItem.Text = "Правило";
+            this.addRuleToolStripMenuItem.Click += new System.EventHandler(this.addRuleToolStripMenuItem_Click);
+            // 
+            // clearRulesToolStripMenuItem
+            // 
+            this.clearRulesToolStripMenuItem.Name = "clearRulesToolStripMenuItem";
+            this.clearRulesToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.clearRulesToolStripMenuItem.Text = "Удалить Правила";
+            this.clearRulesToolStripMenuItem.Click += new System.EventHandler(this.clearRulesToolStripMenuItem_Click);
             // 
             // analysisToolStripMenuItem
             // 
@@ -161,6 +169,13 @@
             this.finishAnalysisToolStripMenuItem.Text = "Прервать";
             this.finishAnalysisToolStripMenuItem.Click += new System.EventHandler(this.finishAnalysisToolStripMenuItem_Click);
             // 
+            // сохранитьСкриншотСетиToolStripMenuItem
+            // 
+            this.сохранитьСкриншотСетиToolStripMenuItem.Name = "сохранитьСкриншотСетиToolStripMenuItem";
+            this.сохранитьСкриншотСетиToolStripMenuItem.Size = new System.Drawing.Size(163, 20);
+            this.сохранитьСкриншотСетиToolStripMenuItem.Text = "Сохранить скриншот сети";
+            this.сохранитьСкриншотСетиToolStripMenuItem.Click += new System.EventHandler(this.сохранитьСкриншотСетиToolStripMenuItem_Click);
+            // 
             // tasksProgressBar
             // 
             this.tasksProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -174,11 +189,11 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 180F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 200F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 800F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel1.Controls.Add(this.layersListBox, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.solutionsPanel, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.rulesTableLayoutPanel, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -187,24 +202,12 @@
             this.tableLayoutPanel1.Size = new System.Drawing.Size(1264, 738);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
-            // layersListBox
-            // 
-            this.layersListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.layersListBox.FormattingEnabled = true;
-            this.layersListBox.IntegralHeight = false;
-            this.layersListBox.Location = new System.Drawing.Point(3, 3);
-            this.layersListBox.Name = "layersListBox";
-            this.layersListBox.Size = new System.Drawing.Size(174, 732);
-            this.layersListBox.TabIndex = 0;
-            // 
             // solutionsPanel
             // 
             this.solutionsPanel.Controls.Add(this.solutionsListBox);
             this.solutionsPanel.Controls.Add(this.tasksProgressBar);
             this.solutionsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.solutionsPanel.Location = new System.Drawing.Point(983, 3);
+            this.solutionsPanel.Location = new System.Drawing.Point(1003, 3);
             this.solutionsPanel.Name = "solutionsPanel";
             this.solutionsPanel.Size = new System.Drawing.Size(278, 732);
             this.solutionsPanel.TabIndex = 6;
@@ -221,23 +224,20 @@
             this.solutionsListBox.TabIndex = 13;
             this.solutionsListBox.DoubleClick += new System.EventHandler(this.solutionsListBox_DoubleClick);
             // 
-            // сохранитьСкриншотСетиToolStripMenuItem
+            // rulesTableLayoutPanel
             // 
-            this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
-            this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.addRuleToolStripMenuItem.Text = "Правило";
-            this.addRuleToolStripMenuItem.Click += new System.EventHandler(this.addRuleToolStripMenuItem_Click);
-            // 
-            // clearRulesToolStripMenuItem
-            // 
-            this.clearRulesToolStripMenuItem.Name = "clearRulesToolStripMenuItem";
-            this.clearRulesToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.clearRulesToolStripMenuItem.Text = "Удалить Правила";
-            this.clearRulesToolStripMenuItem.Click += new System.EventHandler(this.clearRulesToolStripMenuItem_Click);
-            this.сохранитьСкриншотСетиToolStripMenuItem.Name = "сохранитьСкриншотСетиToolStripMenuItem";
-            this.сохранитьСкриншотСетиToolStripMenuItem.Size = new System.Drawing.Size(163, 20);
-            this.сохранитьСкриншотСетиToolStripMenuItem.Text = "Сохранить скриншот сети";
-            this.сохранитьСкриншотСетиToolStripMenuItem.Click += new System.EventHandler(this.сохранитьСкриншотСетиToolStripMenuItem_Click);
+            this.rulesTableLayoutPanel.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.rulesTableLayoutPanel.ColumnCount = 1;
+            this.rulesTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.rulesTableLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.rulesTableLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.rulesTableLayoutPanel.Location = new System.Drawing.Point(3, 3);
+            this.rulesTableLayoutPanel.Name = "rulesTableLayoutPanel";
+            this.rulesTableLayoutPanel.RowCount = 2;
+            this.rulesTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.rulesTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 732);
+            this.rulesTableLayoutPanel.TabIndex = 7;
             // 
             // MainForm
             // 
@@ -267,7 +267,6 @@
         private System.Windows.Forms.ToolStripMenuItem sLayerToolStripMenuItem;
         private System.Windows.Forms.ProgressBar tasksProgressBar;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.ListBox layersListBox;
         private System.Windows.Forms.Panel solutionsPanel;
         private System.Windows.Forms.ListBox solutionsListBox;
         private System.Windows.Forms.ToolStripMenuItem createNetToolStripMenuItem;
@@ -283,6 +282,7 @@
         private System.Windows.Forms.ToolStripMenuItem bruteForceRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem specificRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem сохранитьСкриншотСетиToolStripMenuItem;
+        private System.Windows.Forms.TableLayoutPanel rulesTableLayoutPanel;
     }
 }
 

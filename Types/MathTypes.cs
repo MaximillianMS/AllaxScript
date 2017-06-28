@@ -344,9 +344,9 @@ namespace Allax
         private readonly String name;
         private readonly int value;
 
-        public static readonly AvailableSolverTypes BruteforceSolver = new AvailableSolverTypes(1, "Bruteforce Solver");
-        public static readonly AvailableSolverTypes GreedySolver = new AvailableSolverTypes(2, "Greedy Solver");
-        public static readonly AvailableSolverTypes AdvancedSolver = new AvailableSolverTypes(3, "Advanced Solver");
+        public static readonly AvailableSolverTypes BruteforceSolver = new AvailableSolverTypes(1, "Полный перебор");
+        public static readonly AvailableSolverTypes GreedySolver = new AvailableSolverTypes(2, "Жадный");
+        public static readonly AvailableSolverTypes AdvancedSolver = new AvailableSolverTypes(3, "Частичный перебор");
         public static List<AvailableSolverTypes> GetAllTypes()
         {
             return new List<AvailableSolverTypes> { BruteforceSolver, GreedySolver, AdvancedSolver };

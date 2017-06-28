@@ -118,7 +118,6 @@
             this.startingInputMaskedTextBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.startingInputMaskedTextBox.TextMaskFormat = System.Windows.Forms.MaskFormat.ExcludePromptAndLiterals;
             this.startingInputMaskedTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.startingInputMaskedTextBox_KeyDown);
-            this.startingInputMaskedTextBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.startingInputMaskedTextBox_KeyPress);
             // 
             // SolverTypeComboBox
             // 

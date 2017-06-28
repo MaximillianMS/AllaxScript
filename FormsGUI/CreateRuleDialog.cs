@@ -46,7 +46,7 @@ namespace FormsGUI
                 List<bool> l = new List<bool>();
                 foreach (char c in startingInputMaskedTextBox.Text)
                 {
-                    l.Add(Convert.ToBoolean(c));
+                    l.Add(Convert.ToBoolean(Convert.ToInt32(c)));
                 }
                 Allax.SolverInputs i = new Allax.SolverInputs(Allax.WayConverter.ToLong(l), l.Count);
                 rule.UseCustomInput = true;
@@ -83,18 +83,10 @@ namespace FormsGUI
                 sBlockInputCountNumericUpDown.Enabled = true;
             }
         }
-
-        private void startingInputMaskedTextBox_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar != '0' && e.KeyChar != '1')
-            {
-                e.Handled = true;
-            }
-        }
-
+        
         private void startingInputMaskedTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyValue != '0' && e.KeyValue != '1')
+            if (!(e.KeyCode == Keys.D0 || e.KeyCode == Keys.NumPad0 || e.KeyCode == Keys.D1 || e.KeyCode == Keys.NumPad1))
             {
                 e.SuppressKeyPress = true;
             }
