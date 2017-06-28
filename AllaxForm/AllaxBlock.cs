@@ -18,7 +18,10 @@ namespace AllaxForm
 
         public int layer_index;
         public int index_in_layer;
+        private Label label;
+        public int connectors;
         public List<byte> init_sequence = new List<byte>();
+
         public void init(BLOCK_TYPE type, int width, int height)
         {
             InitializeComponent();
@@ -39,6 +42,9 @@ namespace AllaxForm
 
         public AllaxBlock(BLOCK_TYPE type, int width, int height)
         {
+
+            this.Paint += paint;
+            SetStyle(ControlStyles.ResizeRedraw, true);
             this.init(type, width, height);
         }
 
@@ -68,13 +74,42 @@ namespace AllaxForm
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
-            Label label = new Label();
+            label = new Label();
             label.Text = "S";
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
 
             this.Controls.Add(label);
+        }
+
+        private List<bool> inputsToDraw;
+        public void drawPBlockWeb(List<bool> inputs)
+        {
+            this.inputsToDraw = inputs; Invalidate();
+        }
+        public void removePBlockWeb()
+        {
+            this.inputsToDraw = null;
+            this.label.Visible = true;
+        }
+        private void paint(object sender, System.Windows.Forms.PaintEventArgs e)
+
+        {
+            if (this.inputsToDraw == null) return;
+            this.label.Visible = false;
+            Graphics g = this.CreateGraphics();
+            Pen pen = new Pen(Color.Red, 2);
+            List<Point> topC = this.topConnectorsRelative();
+            List<Point> botC = this.bottomConnectorsRelative();
+            for (int i = 0; i < this.connectors; i++)
+            {
+                if (inputsToDraw[i] == false) continue;
+                Point from = topC[i]; Point to = botC[init_sequence[i] - 1];
+                int vertical_correction_f = (int)(this.Size.Height * 0.07);
+                int vertical_correction_t = (int)(this.Size.Height * 0.1);
+                g.DrawLine(pen, from.X, from.Y+vertical_correction_f , to.X, to.Y-vertical_correction_t);
+            }
         }
 
 
@@ -84,7 +119,7 @@ namespace AllaxForm
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
-            Label label = new Label();
+            label = new Label();
             label.Text = "P";
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
@@ -98,7 +133,7 @@ namespace AllaxForm
             this.BackColor = Color.White;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 
-            Label label = new Label();
+            label = new Label();
             label.Text = "K";
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
@@ -110,7 +145,7 @@ namespace AllaxForm
         public List<Point> topConnectorsRelative()
         {
             List<Point> res = new List<Point>(); int step;
-            switch (this.type)
+            /*switch (this.type)
             {
                 case (BLOCK_TYPE.K):
                 case (BLOCK_TYPE.P):
@@ -123,7 +158,10 @@ namespace AllaxForm
                     for (int i = 1; i < (4 + 1); i++)
                         res.Add(new Point(step * i, 0));
                     break;
-            }
+            }*/
+            step = this.Size.Width / (this.connectors+1);
+            for (int i = 1; i < (this.connectors + 1); i++)
+                res.Add(new Point(step * i, 0));
             return res;
         }
 

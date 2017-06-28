@@ -113,6 +113,9 @@ namespace AllaxForm
         public double narrow_block_width = (1.0 / 4) * (3.0/4);
         public double block_width_distance = (1.0 / 4) * (1.0 / 4);
         public double block_height_distance = (3.0 / 16) / 13;
+
+        public List<List<bool>> coloreds = new List<List<bool>>();
+
         public struct Layer
         {
             public AllaxBlock.BLOCK_TYPE type;
@@ -131,7 +134,16 @@ namespace AllaxForm
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
             this.initializeSizes();
+           
             //this.initializeDragDrop();
+        }
+
+        private void addColorLayer()
+        {
+            List<bool> n = new List<bool>();
+            for (int i = 0; i < this.wordsize * this.blocks_wide; i++)
+                n.Add(false);
+            this.coloreds.Add(n);
         }
 
         /*private void initializeDragDrop()
@@ -157,23 +169,28 @@ namespace AllaxForm
              public const double narrow_block_width = (1.0 / 4) * (3.0 / 4);
              public const double block_width_distance = (1.0 / 4) * (1.0 / 4);
              public const double block_height_distance = (3.0 / 16) / 13;*/
-            block_height = (1.0 / blocks_tall) * (3.0 / 4);
-            block_height_distance = (1.0 / blocks_tall) * (1.0 / 4);
+            block_height = (1.0 / blocks_tall) * (3.0 / 5);
+            block_height_distance = (1.0 / blocks_tall) * (2.0 / 5);
 
             wide_block_width = 1;
             narrow_block_width = (1.0 / blocks_wide) * (3.0 / 4);
             block_width_distance = (1.0 / blocks_wide) * (1.0 / 4);
     }
-
-        private void testpaint(object sender, System.Windows.Forms.PaintEventArgs e)
-
+        public void setLayerColors(int layerindex, List<bool> coloring_mask)
         {
-            Graphics g = this.CreateGraphics(); Pen pen = new Pen(Color.Black, 1);
-            for (int i=0; i<this.layers.Count-1; i++)
+            this.coloreds[layerindex] = coloring_mask;
+        }
+        public void paint()
+        {
+            Graphics g = this.CreateGraphics();
+            Pen pen = new Pen(Color.Black, 3);
+            Pen penc = new Pen(Color.Red, 3);
+            for (int i = 0; i < this.layers.Count - 1; i++)
             {
                 // drawing lines from layer i to layer i+1
                 List<Point> topC = new List<Point>();
-                foreach (AllaxBlock b in this.layers[i].blocks) {
+                foreach (AllaxBlock b in this.layers[i].blocks)
+                {
                     foreach (Point p in b.bottomConnectorsRelative())
                     {
                         Point abs = new Point(p.X + b.Location.X, p.Y + b.Location.Y);
@@ -181,7 +198,7 @@ namespace AllaxForm
                     }
                 }
                 List<Point> botC = new List<Point>();
-                foreach (AllaxBlock b in this.layers[i+1].blocks)
+                foreach (AllaxBlock b in this.layers[i + 1].blocks)
                 {
                     foreach (Point p in b.topConnectorsRelative())
                     {
@@ -192,11 +209,22 @@ namespace AllaxForm
 
                 for (int j = 0; j < topC.Count; j++)
                 {
-                    g.DrawLine(pen, 
+                    Pen p;
+                    if (this.coloreds[i][j] == true)
+                        p = penc;
+                    else
+                        p = pen;
+                    g.DrawLine(p,
                         topC[j].X, topC[j].Y,
                         botC[j].X, botC[j].Y);
                 }
             }
+        }
+
+        private void testpaint(object sender, System.Windows.Forms.PaintEventArgs e)
+
+        {
+            paint();
         }
 
         public void addKLayer()
@@ -213,8 +241,9 @@ namespace AllaxForm
             newblockl.layer_index = this.layers.Count;
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
+            newblock.connectors = this.wordsize * this.blocks_wide;
             this.layers.Add(newblockl);
-            this.Controls.Add(newblock);
+            this.Controls.Add(newblock); addColorLayer();
             Invalidate();
         }
 
@@ -232,8 +261,9 @@ namespace AllaxForm
             newblockl.layer_index = this.layers.Count;
             newblock.index_in_layer = 0;
             newblock.layer_index = newblockl.layer_index;
+            newblock.connectors = this.wordsize * this.blocks_wide;
             this.layers.Add(newblockl);
-            this.Controls.Add(newblock);
+            this.Controls.Add(newblock); addColorLayer();
             Invalidate();
         }
 
@@ -251,13 +281,14 @@ namespace AllaxForm
                     (int)((narrow_block_width + block_width_distance) * i * this.Size.Width) + (int)(block_width_distance * this.Size.Width/2), 
                     height_pos);
                 newblockl.blocks.Add(newblock);
+                newblock.connectors = this.wordsize;
                 newblock.index_in_layer = i;
                 newblock.layer_index = this.layers.Count;
                 this.Controls.Add(newblock);
             }
             newblockl.layer_index = this.layers.Count;
             newblockl.type = AllaxBlock.BLOCK_TYPE.S;
-            this.layers.Add(newblockl);
+            this.layers.Add(newblockl); addColorLayer();
             Invalidate();
         }
     }
