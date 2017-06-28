@@ -39,6 +39,7 @@ namespace AllaxForm
             SetStyle(ControlStyles.ResizeRedraw, true);
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
+            this.VScroll = true;
             this.initializeSizes();
            
             //this.initializeDragDrop();

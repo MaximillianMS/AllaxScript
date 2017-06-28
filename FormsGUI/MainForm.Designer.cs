@@ -35,9 +35,6 @@
             this.loadNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bruteForceRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.specificRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.analysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -119,24 +116,9 @@
             // 
             // addRuleToolStripMenuItem
             // 
-            this.addRuleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.bruteForceRuleToolStripMenuItem,
-            this.specificRuleToolStripMenuItem});
             this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
             this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.addRuleToolStripMenuItem.Text = "Правило";
-            // 
-            // bruteForceRuleToolStripMenuItem
-            // 
-            this.bruteForceRuleToolStripMenuItem.Name = "bruteForceRuleToolStripMenuItem";
-            this.bruteForceRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.bruteForceRuleToolStripMenuItem.Text = "Полный Перебор";
-            // 
-            // specificRuleToolStripMenuItem
-            // 
-            this.specificRuleToolStripMenuItem.Name = "specificRuleToolStripMenuItem";
-            this.specificRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.specificRuleToolStripMenuItem.Text = "Конкретный Вход";
             // 
             // analysisToolStripMenuItem
             // 
