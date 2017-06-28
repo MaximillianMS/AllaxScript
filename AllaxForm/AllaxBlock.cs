@@ -45,6 +45,8 @@ namespace AllaxForm
 
             this.Paint += paint;
             SetStyle(ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.StandardClick, true);
+            SetStyle(ControlStyles.StandardDoubleClick, true);
             this.init(type, width, height);
         }
 

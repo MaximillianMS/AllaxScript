@@ -133,6 +133,8 @@ namespace AllaxForm
             this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.StandardClick, true);
+            SetStyle(ControlStyles.StandardDoubleClick, true);
             this.initializeSizes();
            
             //this.initializeDragDrop();

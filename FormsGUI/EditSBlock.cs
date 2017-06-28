@@ -42,7 +42,9 @@ namespace FormsGUI
             Value.Clear();
             foreach(string s in textBox.Text.Split(' '))
             {
-                Value.Add(Byte.Parse(s));
+                byte t;
+                Byte.TryParse(s, out t);
+                Value.Add(t);
             }
         }
 
@@ -73,7 +75,7 @@ namespace FormsGUI
                     Temp[Ind] += 1;
                 }
                 return Temp.All(x => x == 1);
-            }))(Value, !isPBlock);
+            }))(Value, !isPBlock) && Value.Count == (int)Math.Pow(2, SBlockSize);
         }
 
         private void EditSBlock_FormClosing(object sender, FormClosingEventArgs e)
