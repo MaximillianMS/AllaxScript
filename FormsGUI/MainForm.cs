@@ -504,7 +504,29 @@ namespace FormsGUI
                 {
                     g.CopyFromScreen(point, Point.Empty, bounds.Size);
                 }
-                bitmap.Save("d://My_Img.png", ImageFormat.Png);
+                SaveFileDialog d = new SaveFileDialog()
+                { Filter = "PNG (*.PNG) | *.PNG",
+                    Title = "Сохранить скриншот"};
+                DialogResult res= DialogResult.None;
+                var logicToInvokeInsideUIThread = new MethodInvoker(() =>
+                {
+
+                    res = d.ShowDialog();
+                    
+                });
+
+                if (InvokeRequired)
+                {
+                    Invoke(logicToInvokeInsideUIThread);
+                }
+                else
+                {
+                    logicToInvokeInsideUIThread.Invoke();
+                }
+                if (res==DialogResult.OK)
+                {
+                    bitmap.Save(d.FileName, ImageFormat.Png);
+                }
             }
         }
         private void сохранитьСкриншотСетиToolStripMenuItem_Click(object sender, EventArgs e)
