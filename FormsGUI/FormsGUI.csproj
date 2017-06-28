@@ -66,11 +66,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CreateRuleDialog.cs">
+  <Compile Include="CreateRuleDialog.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CreateRuleDialog.Designer.cs">
       <DependentUpon>CreateRuleDialog.cs</DependentUpon>
+    </Compile>
+	<Compile Include="AddingRules.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddingRules.Designer.cs">
+      <DependentUpon>AddingRules.cs</DependentUpon>
     </Compile>
     <Compile Include="CreateNetDialog.cs">
       <SubType>Form</SubType>
@@ -92,9 +98,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="CreateRuleDialog.resx">
-      <DependentUpon>CreateRuleDialog.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="CreateNetDialog.resx">
       <DependentUpon>CreateNetDialog.cs</DependentUpon>
     </EmbeddedResource>

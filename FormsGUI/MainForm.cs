@@ -6,6 +6,8 @@ using System.IO;
 using Allax;
 using AllaxForm;
 using System.Threading;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace FormsGUI
 {
@@ -300,7 +302,7 @@ namespace FormsGUI
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.eng.AbortAnalisys();
-            Thread.Sleep(3000);
+            Thread.Sleep(1000);
         }
         
         private void createSPNet(byte wordLength, byte sBlockSize)
@@ -464,6 +466,8 @@ namespace FormsGUI
 
         private void linearToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(false);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -472,12 +476,13 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
             layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
         }
 
         private void differrentialToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(true);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -486,8 +491,54 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
             layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
+        }
+        delegate void SaverFunc();
+        private void Saver()
+        {
+            Thread.Sleep(500);
+            Rectangle bounds = SPNetGraph.Bounds;
+            bounds.Inflate(3, 3);
+            var point = this.Location;
+            point.Offset(SPNetGraph.Parent.Location);
+            point.Offset(SPNetGraph.Location);
+            point.Offset(6, this.menuStrip1.Height + 6);
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.CopyFromScreen(point, Point.Empty, bounds.Size);
+                }
+                SaveFileDialog d = new SaveFileDialog()
+                { Filter = "PNG (*.PNG) | *.PNG",
+                    Title = "Сохранить скриншот"};
+                DialogResult res= DialogResult.None;
+                var logicToInvokeInsideUIThread = new MethodInvoker(() =>
+                {
+
+                    res = d.ShowDialog();
+                    
+                });
+
+                if (InvokeRequired)
+                {
+                    Invoke(logicToInvokeInsideUIThread);
+                }
+                else
+                {
+                    logicToInvokeInsideUIThread.Invoke();
+                }
+                if (res==DialogResult.OK)
+                {
+                    bitmap.Save(d.FileName, ImageFormat.Png);
+                }
+            }
+        }
+        private void сохранитьСкриншотСетиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Maximized;
+            SaverFunc sf = new SaverFunc(Saver);
+            sf.BeginInvoke(null, null);
         }
 
         private void addRuleToolStripMenuItem_Click(object sender, EventArgs e)
