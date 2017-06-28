@@ -70,7 +70,7 @@ namespace Allax
             if (this.GetState() == WorkerThreadState.Finished)
                 return;
             Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
-            this.Params.State = WorkerThreadState.Loaded;
+            this.SetState(WorkerThreadState.Loaded);
         }
         /// <summary>
         /// Async start
@@ -93,10 +93,12 @@ namespace Allax
                     throw new NotImplementedException();
                     return;
                 }
+                if (Params.State == WorkerThreadState.Finished)
+                    return;
                 try
                 {
                     //Tr = new System.Threading.Thread(ThreadWork) { IsBackground = true };
-                    Params.State = WorkerThreadState.Started;
+                    this.SetState(WorkerThreadState.Started);
                     Tr.Start();
                 }
                 catch (Exception e)
@@ -149,7 +151,7 @@ namespace Allax
         }
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
-
+        private static readonly object syncRoot = new object();
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -185,7 +187,10 @@ namespace Allax
 
         public void SetState(WorkerThreadState State)
         {
-            Params.State = State;
+            lock (syncRoot)
+            {
+                Params.State = State;
+            }
         }
         #endregion
     }
@@ -276,7 +281,8 @@ namespace Allax
                             throw new Exception();
                         }
                     }
-                    Thread.Start();
+                    if (Thread.GetState() == WorkerThreadState.Loaded)
+                        Thread.Start();
                 }
                 else
                 {

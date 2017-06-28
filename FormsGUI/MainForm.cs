@@ -300,7 +300,7 @@ namespace FormsGUI
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.eng.AbortAnalisys();
-            Thread.Sleep(3000);
+            Thread.Sleep(1000);
         }
         
         private void createSPNet(byte wordLength, byte sBlockSize)
@@ -463,6 +463,8 @@ namespace FormsGUI
 
         private void linearToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(false);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -471,12 +473,13 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
             layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
         }
 
         private void differrentialToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(true);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -485,7 +488,6 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
             layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
         }
         delegate void SaverFunc();
