@@ -91,5 +91,13 @@ namespace FormsGUI
                 e.Handled = true;
             }
         }
+
+        private void startingInputMaskedTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyValue != '0' && e.KeyValue != '1')
+            {
+                e.SuppressKeyPress = true;
+            }
+        }
     }
 }
