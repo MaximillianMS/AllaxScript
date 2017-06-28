@@ -6,6 +6,8 @@ using System.IO;
 using Allax;
 using AllaxForm;
 using System.Threading;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace FormsGUI
 {
@@ -485,6 +487,31 @@ namespace FormsGUI
             layersListBox.Enabled = false;
             solutionsListBox.Items.Clear();
             solutionsPanel.Width = 250;
+        }
+        delegate void SaverFunc();
+        private void Saver()
+        {
+            Thread.Sleep(500);
+            Rectangle bounds = SPNetGraph.Bounds;
+            bounds.Inflate(3, 3);
+            var point = this.Location;
+            point.Offset(SPNetGraph.Parent.Location);
+            point.Offset(SPNetGraph.Location);
+            point.Offset(6, this.menuStrip1.Height + 6);
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.CopyFromScreen(point, Point.Empty, bounds.Size);
+                }
+                bitmap.Save("d://My_Img.png", ImageFormat.Png);
+            }
+        }
+        private void сохранитьСкриншотСетиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Maximized;
+            SaverFunc sf = new SaverFunc(Saver);
+            sf.BeginInvoke(null, null);
         }
     }
 }

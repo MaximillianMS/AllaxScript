@@ -35,6 +35,9 @@
             this.loadNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sLayerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bruteForceRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.specificRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.analysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sPNetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.linearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -45,9 +48,7 @@
             this.layersListBox = new System.Windows.Forms.ListBox();
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
-            this.addRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bruteForceRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.specificRuleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.сохранитьСкриншотСетиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -58,7 +59,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.addToolStripMenuItem,
-            this.analysisToolStripMenuItem});
+            this.analysisToolStripMenuItem,
+            this.сохранитьСкриншотСетиToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1264, 24);
@@ -108,9 +110,30 @@
             // sLayerToolStripMenuItem
             // 
             this.sLayerToolStripMenuItem.Name = "sLayerToolStripMenuItem";
-            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sLayerToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
             this.sLayerToolStripMenuItem.Text = "Раунд";
             this.sLayerToolStripMenuItem.Click += new System.EventHandler(this.sLayerToolStripMenuItem_Click);
+            // 
+            // addRuleToolStripMenuItem
+            // 
+            this.addRuleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.bruteForceRuleToolStripMenuItem,
+            this.specificRuleToolStripMenuItem});
+            this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
+            this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+            this.addRuleToolStripMenuItem.Text = "Правило";
+            // 
+            // bruteForceRuleToolStripMenuItem
+            // 
+            this.bruteForceRuleToolStripMenuItem.Name = "bruteForceRuleToolStripMenuItem";
+            this.bruteForceRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.bruteForceRuleToolStripMenuItem.Text = "Полный Перебор";
+            // 
+            // specificRuleToolStripMenuItem
+            // 
+            this.specificRuleToolStripMenuItem.Name = "specificRuleToolStripMenuItem";
+            this.specificRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.specificRuleToolStripMenuItem.Text = "Конкретный Вход";
             // 
             // analysisToolStripMenuItem
             // 
@@ -128,7 +151,7 @@
             this.differrentialToolStripMenuItem});
             this.sPNetToolStripMenuItem.Enabled = false;
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.sPNetToolStripMenuItem.Text = "Начать";
             // 
             // linearToolStripMenuItem
@@ -149,7 +172,7 @@
             // 
             this.finishAnalysisToolStripMenuItem.Enabled = false;
             this.finishAnalysisToolStripMenuItem.Name = "finishAnalysisToolStripMenuItem";
-            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.finishAnalysisToolStripMenuItem.Text = "Прервать";
             this.finishAnalysisToolStripMenuItem.Click += new System.EventHandler(this.finishAnalysisToolStripMenuItem_Click);
             // 
@@ -213,26 +236,12 @@
             this.solutionsListBox.TabIndex = 13;
             this.solutionsListBox.DoubleClick += new System.EventHandler(this.solutionsListBox_DoubleClick);
             // 
-            // addRuleToolStripMenuItem
+            // сохранитьСкриншотСетиToolStripMenuItem
             // 
-            this.addRuleToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.bruteForceRuleToolStripMenuItem,
-            this.specificRuleToolStripMenuItem});
-            this.addRuleToolStripMenuItem.Name = "addRuleToolStripMenuItem";
-            this.addRuleToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.addRuleToolStripMenuItem.Text = "Правило";
-            // 
-            // bruteForceRuleToolStripMenuItem
-            // 
-            this.bruteForceRuleToolStripMenuItem.Name = "bruteForceRuleToolStripMenuItem";
-            this.bruteForceRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.bruteForceRuleToolStripMenuItem.Text = "Полный Перебор";
-            // 
-            // specificRuleToolStripMenuItem
-            // 
-            this.specificRuleToolStripMenuItem.Name = "specificRuleToolStripMenuItem";
-            this.specificRuleToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.specificRuleToolStripMenuItem.Text = "Конкретный Вход";
+            this.сохранитьСкриншотСетиToolStripMenuItem.Name = "сохранитьСкриншотСетиToolStripMenuItem";
+            this.сохранитьСкриншотСетиToolStripMenuItem.Size = new System.Drawing.Size(163, 20);
+            this.сохранитьСкриншотСетиToolStripMenuItem.Text = "Сохранить скриншот сети";
+            this.сохранитьСкриншотСетиToolStripMenuItem.Click += new System.EventHandler(this.сохранитьСкриншотСетиToolStripMenuItem_Click);
             // 
             // MainForm
             // 
@@ -276,6 +285,7 @@
         private System.Windows.Forms.ToolStripMenuItem addRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bruteForceRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem specificRuleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem сохранитьСкриншотСетиToolStripMenuItem;
     }
 }
 
