@@ -18,6 +18,7 @@ namespace FormsGUI
         AllaxPanel SPNetGraph;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
+        List<Rule> activeRules = new List<Rule>();
         bool isLastRoundAdded = false;
         delegate void RefreshSolutionsCallback();
         delegate void AllTasksDoneCallback(ITask task);
@@ -138,7 +139,7 @@ namespace FormsGUI
             }
             int layer = net.GetLayers().Count - 1;
             InitPLayer(layer, PBlockInit);
-
+            sameBlocks = MessageBox.Show("Использовать различные S-Блоки в данном раунде?", "Различные S-Блоки?", MessageBoxButtons.YesNo) != DialogResult.Yes;
             if (sameBlocks)
             {
                 d = new EditSBlock(currentSettings.SBoxSize, SBlockInit, false);
@@ -158,12 +159,12 @@ namespace FormsGUI
                 MessageBox.Show("Пожалуйста введите заполнение для " + currentSettings.SBoxCount + " S-Блоков\n" + "В случае отмены ввода хотя-бы одного блока создание слоя будет отменено");
                 for (int i = 0; i < currentSettings.SBoxCount; i++)
                 {
-                    var B = net.GetLayers()[layer].GetBlocks()[i];
+                    var B = net.GetLayers()[layer - 1].GetBlocks()[i];
                     d = new EditSBlock(currentSettings.SBoxSize, new List<byte>());
                     if (d.ShowDialog() == DialogResult.OK)
                     {
                         B.Init(d.Value);
-                        SPNetGraph.layers[layer].blocks[i].init_sequence = d.Value;
+                        SPNetGraph.layers[layer - 1].blocks[i].init_sequence = d.Value;
                     }
                     else
                     {
@@ -186,10 +187,9 @@ namespace FormsGUI
 
         private void addRound()
         {
-            /*if (net.GetLayers().Count >= 6)
-                DelLastRound();*/
+            if (isLastRoundAdded)
+                DelLastRound();
             addFullRound();
-            //AddLastRound(net);
             refreshLayers();
 
         }
@@ -210,7 +210,7 @@ namespace FormsGUI
         }
         private void DelLastRound()
         {
-            net.DeleteLayer((byte)(net.GetLayers().Count-1));
+            net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             isLastRoundAdded = false;
