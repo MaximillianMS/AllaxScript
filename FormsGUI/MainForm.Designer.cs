@@ -279,8 +279,6 @@
         private System.Windows.Forms.ToolStripMenuItem differrentialToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem clearRulesToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bruteForceRuleToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem specificRuleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem сохранитьСкриншотСетиToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel rulesTableLayoutPanel;
     }
