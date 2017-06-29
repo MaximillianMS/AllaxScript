@@ -28,7 +28,7 @@ namespace AllaxForm
             this.type = type;
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
-            DoubleClick += AllaxBlock_DoubleClick;
+            Click += AllaxBlock_DoubleClick;
             switch (type)
             {
                 case BLOCK_TYPE.S:

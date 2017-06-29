@@ -75,7 +75,7 @@ namespace FormsGUI
                     Temp[Ind] += 1;
                 }
                 return Temp.All(x => x == 1);
-            }))(Value, !isPBlock) && Value.Count == (int)Math.Pow(2, SBlockSize);
+            }))(Value, !isPBlock) && ((isPBlock)?(Value.Count == SBlockSize):(Value.Count == (int)Math.Pow(2, SBlockSize)));
         }
 
         private void EditSBlock_FormClosing(object sender, FormClosingEventArgs e)

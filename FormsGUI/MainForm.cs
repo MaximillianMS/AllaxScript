@@ -130,7 +130,7 @@ namespace FormsGUI
             addKLayer();
             addSLayer();
             addPLayer();
-            EditSBlock d = new EditSBlock(currentSettings.SBoxSize, PBlockInit, true);
+            EditSBlock d = new EditSBlock(currentSettings.WordLength, PBlockInit, true);
             if (d.ShowDialog() == DialogResult.OK)
             {
                 PBlockInit = d.Value;
