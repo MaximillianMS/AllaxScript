@@ -1,110 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AllaxForm
 {
-    public static class PanelSerializator
-    {
-        [Serializable()]
-        public class LayerPanelData
-        {
-            public AllaxBlock.BLOCK_TYPE type;
-            public List<BlockPanelData> blocks;
-            public int layer_index;
-        }
-        [Serializable()]
-        public class BlockPanelData
-        {
-            public List<byte> Init;
-            public AllaxBlock.BLOCK_TYPE type;
-            public int layer_index;
-            public int index_in_layer;
-        }
-        [Serializable()]
-        public class PanelData
-        {
-            public int wordsize;
-            public int blocks_wide;
-            public int blocks_tall;
-            public List<LayerPanelData> layers = new List<LayerPanelData>();
-        }
-        public static byte[] Zip(string str)
-        {
-            var bytes = Encoding.UTF8.GetBytes(str);
-            return Zip(bytes);
-        }
-        public static byte[] Zip(byte[] bytes)
-        {
-            using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
-            {
-                using (var gs = new GZipStream(mso, CompressionMode.Compress))
-                {
-                    msi.CopyTo(gs);
-                }
-
-                return mso.ToArray();
-            }
-        }
-        public static byte[] Unzip(byte[] bytes)
-        {
-            using (var msi = new MemoryStream(bytes))
-            using (var mso = new MemoryStream())
-            {
-                using (var gs = new GZipStream(msi, CompressionMode.Decompress))
-                {
-                    gs.CopyTo(mso);
-                }
-                return mso.ToArray();
-            }
-        }
-        public static void Serialize(AllaxPanel panel, FileStream FS)
-        {
-            var PD = new PanelData() { wordsize = panel.wordsize, blocks_wide = panel.blocks_wide, blocks_tall = panel.blocks_tall, layers = new List<LayerPanelData>(panel.layers.Count)};
-            foreach(var L in panel.layers)
-            {
-                var LD = new LayerPanelData() { type = L.type, layer_index = L.layer_index, blocks = new List<BlockPanelData>(L.blocks.Count) };
-                foreach (var B in L.blocks)
-                {
-                    LD.blocks.Add(new BlockPanelData() { index_in_layer = B.index_in_layer, layer_index = B.layer_index, type = B.type, Init = new List<byte>(B.init_sequence), });
-                }
-                PD.layers.Add(LD);
-            }
-            using (var stream = new MemoryStream())
-            {
-                var formatter = new BinaryFormatter();
-                formatter.Serialize(stream, PD);
-                stream.Flush();
-                stream.Position = 0;
-                var arr = stream.ToArray();
-                arr = Zip(Zip(arr));
-                FS.Write(arr, 0, arr.Length);
-            }
-        }
-        public static PanelData DeSerialize(FileStream FS)
-        {
-            var arr = new byte[FS.Length - FS.Position];
-            FS.Read(arr, (int)FS.Position, arr.Length);
-            arr = Unzip(Unzip(arr));
-            PanelData PD;
-            using (var stream = new MemoryStream(arr))
-            {
-                var formatter = new BinaryFormatter();
-                PD = (PanelData)formatter.Deserialize(stream);
-            }
-            return PD;
-        }
-    }
     public partial class AllaxPanel : Panel
     {
         // All values as fractions of the panel's size
@@ -135,6 +39,9 @@ namespace AllaxForm
             this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
+            SetStyle(ControlStyles.StandardClick, true);
+            SetStyle(ControlStyles.StandardDoubleClick, true);
+            this.VScroll = true;
             this.initializeSizes();
             //this.initializeDragDrop();
         }
@@ -152,22 +59,7 @@ namespace AllaxForm
                 n.Add(false);
             this.coloreds.Add(n);
         }
-
-        /*private void initializeDragDrop()
-        {
-            this.AllowDrop = true;
-            this.DragEnter += new DragEventHandler(allax_DragEnter);
-            this.DragDrop += new DragEventHandler(allax_DragDrop);
-        }
-        public void allax_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
-        }
-        public void allax_DragDrop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
-        }*/
-
+        
 
         private void initializeSizes()
         {
@@ -297,6 +189,108 @@ namespace AllaxForm
             newblockl.type = AllaxBlock.BLOCK_TYPE.S;
             this.layers.Add(newblockl); addColorLayer();
             Invalidate();
+        }
+
+        public void removeLayer()
+        {
+            if (this.layers.Count == 0) return;
+            Layer layer = this.layers[this.layers.Count-1];
+            foreach (AllaxBlock b in layer.blocks)
+                this.Controls.Remove(b);
+            this.layers.Remove(layer);
+            Invalidate();
+        }
+    }
+    public static class PanelSerializator
+    {
+        [Serializable()]
+        public class LayerPanelData
+        {
+            public AllaxBlock.BLOCK_TYPE type;
+            public List<BlockPanelData> blocks;
+            public int layer_index;
+        }
+        [Serializable()]
+        public class BlockPanelData
+        {
+            public List<byte> Init;
+            public AllaxBlock.BLOCK_TYPE type;
+            public int layer_index;
+            public int index_in_layer;
+        }
+        [Serializable()]
+        public class PanelData
+        {
+            public int wordsize;
+            public int blocks_wide;
+            public int blocks_tall;
+            public List<LayerPanelData> layers = new List<LayerPanelData>();
+        }
+        public static byte[] Zip(string str)
+        {
+            var bytes = Encoding.UTF8.GetBytes(str);
+            return Zip(bytes);
+        }
+        public static byte[] Zip(byte[] bytes)
+        {
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(mso, CompressionMode.Compress))
+                {
+                    msi.CopyTo(gs);
+                }
+
+                return mso.ToArray();
+            }
+        }
+        public static byte[] Unzip(byte[] bytes)
+        {
+            using (var msi = new MemoryStream(bytes))
+            using (var mso = new MemoryStream())
+            {
+                using (var gs = new GZipStream(msi, CompressionMode.Decompress))
+                {
+                    gs.CopyTo(mso);
+                }
+                return mso.ToArray();
+            }
+        }
+        public static void Serialize(AllaxPanel panel, FileStream FS)
+        {
+            var PD = new PanelData() { wordsize = panel.wordsize, blocks_wide = panel.blocks_wide, blocks_tall = panel.blocks_tall, layers = new List<LayerPanelData>(panel.layers.Count) };
+            foreach (var L in panel.layers)
+            {
+                var LD = new LayerPanelData() { type = L.type, layer_index = L.layer_index, blocks = new List<BlockPanelData>(L.blocks.Count) };
+                foreach (var B in L.blocks)
+                {
+                    LD.blocks.Add(new BlockPanelData() { index_in_layer = B.index_in_layer, layer_index = B.layer_index, type = B.type, Init = new List<byte>(B.init_sequence), });
+                }
+                PD.layers.Add(LD);
+            }
+            using (var stream = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                formatter.Serialize(stream, PD);
+                stream.Flush();
+                stream.Position = 0;
+                var arr = stream.ToArray();
+                arr = Zip(Zip(arr));
+                FS.Write(arr, 0, arr.Length);
+            }
+        }
+        public static PanelData DeSerialize(FileStream FS)
+        {
+            var arr = new byte[FS.Length - FS.Position];
+            FS.Read(arr, (int)FS.Position, arr.Length);
+            arr = Unzip(Unzip(arr));
+            PanelData PD;
+            using (var stream = new MemoryStream(arr))
+            {
+                var formatter = new BinaryFormatter();
+                PD = (PanelData)formatter.Deserialize(stream);
+            }
+            return PD;
         }
     }
 }

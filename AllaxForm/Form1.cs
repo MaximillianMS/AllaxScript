@@ -26,7 +26,7 @@ namespace AllaxForm
             panel.layers[1].blocks[0].drawPBlockWeb(new List<bool>() { true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, });
             this.Controls.Add(panel);
             panel.setLayerColors(0, new List<bool>() { true, false, true, true, true, false, true, true, true, false, true, true, true, false, true, true, });
-            //this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
+            this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             //panel.layers[1].blocks[0].removePBlockWeb();
         }
 
@@ -37,7 +37,7 @@ namespace AllaxForm
 
         private void panel1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            panel.addSLayer();
+            panel.removeLayer();
         }
     }
 }

@@ -6,6 +6,8 @@ using System.IO;
 using Allax;
 using AllaxForm;
 using System.Threading;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace FormsGUI
 {
@@ -18,6 +20,7 @@ namespace FormsGUI
         AllaxPanel SPNetGraph;
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
+        List<Rule> activeRules = new List<Rule>();
         bool isLastRoundAdded = false;
         bool analysisActive = false;
         delegate void RefreshSolutionsCallback();
@@ -66,7 +69,7 @@ namespace FormsGUI
         }
         private void E_OnAllTasksDone(ITask T)
         {
-            if (layersListBox.InvokeRequired)
+            if (this.InvokeRequired)
             {
                 AllTasksDoneCallback d = new AllTasksDoneCallback(E_OnAllTasksDone);
                 try
@@ -80,7 +83,7 @@ namespace FormsGUI
             }
             else
             {
-                layersListBox.Enabled = true;
+                //rulesListBox.Enabled = true;
                 addToolStripMenuItem.Enabled = true;
                 sPNetToolStripMenuItem.Enabled = true;
                 finishAnalysisToolStripMenuItem.Enabled = false;
@@ -119,7 +122,7 @@ namespace FormsGUI
             }
             //double Progress = progress;
         }
-        private void addFullRound(bool sameBlocks = true)
+        private bool addFullRound(bool sameBlocks = true)
         {
             var PBlockInit = new List<byte> { 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16 };
             var SBlockInit = new List<byte> { 14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7 };
@@ -136,11 +139,11 @@ namespace FormsGUI
             else
             {
                 DelLastRound();
-                return;
+                return false;
             }
             int layer = net.GetLayers().Count - 1;
             InitPLayer(layer, PBlockInit);
-
+            sameBlocks = MessageBox.Show("Использовать различные S-Блоки в данном раунде?", "Различные S-Блоки?", MessageBoxButtons.YesNo) != DialogResult.Yes;
             if (sameBlocks)
             {
                 d = new EditSBlock(currentSettings.SBoxSize, SBlockInit, false);
@@ -152,7 +155,7 @@ namespace FormsGUI
                 else
                 {
                     DelLastRound();
-                    return;
+                    return false;
                 }
             }
             else
@@ -160,20 +163,21 @@ namespace FormsGUI
                 MessageBox.Show("Пожалуйста введите заполнение для " + currentSettings.SBoxCount + " S-Блоков\n" + "В случае отмены ввода хотя-бы одного блока создание слоя будет отменено");
                 for (int i = 0; i < currentSettings.SBoxCount; i++)
                 {
-                    var B = net.GetLayers()[layer].GetBlocks()[i];
+                    var B = net.GetLayers()[layer - 1].GetBlocks()[i];
                     d = new EditSBlock(currentSettings.SBoxSize, new List<byte>());
                     if (d.ShowDialog() == DialogResult.OK)
                     {
                         B.Init(d.Value);
-                        SPNetGraph.layers[layer].blocks[i].init_sequence = d.Value;
+                        SPNetGraph.layers[layer - 1].blocks[i].init_sequence = d.Value;
                     }
                     else
                     {
                         DelLastRound();
-                        return;
+                        return false;
                     }
                 }
             }
+            return true;
             //refreshList();
 
         }
@@ -186,13 +190,13 @@ namespace FormsGUI
             refreshLayers();
         }
 
-        private void addRound()
+        private bool addRound()
         {
-            /*if (net.GetLayers().Count >= 6)
-                DelLastRound();*/
-            addFullRound();
-            //AddLastRound(net);
+            if (isLastRoundAdded)
+                DelLastRound();
+            var ret = addFullRound();
             refreshLayers();
+            return ret;
 
         }
 
@@ -212,7 +216,7 @@ namespace FormsGUI
         }
         private void DelLastRound()
         {
-            net.DeleteLayer((byte)(net.GetLayers().Count-1));
+            net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             isLastRoundAdded = false;
@@ -241,8 +245,8 @@ namespace FormsGUI
             {
                 layerList.Add(l.GetLayerType().ToString());
             }
-            layersListBox.Items.Clear();
-            layersListBox.Items.AddRange(layerList.ToArray());
+            //rulesListBox.Items.Clear();
+            //rulesListBox.Items.AddRange(layerList.ToArray());
         }
 
         private void refreshSolutions()
@@ -280,17 +284,22 @@ namespace FormsGUI
 
         private void sLayerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            sPNetToolStripMenuItem.Enabled = true;
-            addRound();
+            if (addRound())
+                sPNetToolStripMenuItem.Enabled = true;
         }
         
         private void runAnalysis(bool isDifferential = false)
         {
-            var R1 = new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2);
-            var R2 = new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2);
+            if (activeRules.Count == 0)
+            {
+                activeRules.Add(new Allax.Rule(AvailableSolverTypes.BruteforceSolver, 2, 2));
+                activeRules.Add(new Allax.Rule(AvailableSolverTypes.GreedySolver, 2, 2));
+                refreshRules();
+                
+            }
             //var R3 = new Allax.Rule(AvailableSolverTypes.AdvancedSolver, 2, 2);
             //var F = new Allax.ADDSOLUTIONHANDLER(AddSolution);
-            var AP = new AnalisysParams(new Algorithm(new List<Allax.Rule> { R1, R2}, AnalisysType.Linear));
+            var AP = new AnalisysParams(new Algorithm(activeRules, AnalisysType.Linear));
             AP.Alg.Type = isDifferential ? AnalisysType.Differencial : AnalisysType.Linear;
             if (!isLastRoundAdded)
                 addLastRound();
@@ -301,7 +310,7 @@ namespace FormsGUI
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             this.eng.AbortAnalisys();
-            Thread.Sleep(3000);
+            Thread.Sleep(1000);
         }
         
         private void createSPNet(byte wordLength, byte sBlockSize)
@@ -312,6 +321,7 @@ namespace FormsGUI
             net = eng.CreateSPNetInstance(settings);
             solutions.Clear();
             layerList.Clear();
+            activeRules.Clear();
             isLastRoundAdded = false;
             refreshLayers();
             refreshSolutions();
@@ -422,7 +432,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = true;
             finishAnalysisToolStripMenuItem.Enabled = false;
             fileToolStripMenuItem.Enabled = true;
-            layersListBox.Enabled = true;
+            //rulesListBox.Enabled = true;
         }
 
         private void allaxBlock_DoubleClick(object sender, EventArgs e)
@@ -486,6 +496,8 @@ namespace FormsGUI
 
         private void linearToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(false);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -493,13 +505,14 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
-            layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
+            //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
         }
 
         private void differrentialToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            solutionsListBox.Items.Clear();
+            solutions.Clear();
             runAnalysis(true);
             //toolStrip1.Enabled = false;
             //menuStrip1.Enabled = false;
@@ -507,9 +520,86 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
-            layersListBox.Enabled = false;
-            solutionsListBox.Items.Clear();
+            //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
+        }
+        delegate void SaverFunc();
+        private void Saver()
+        {
+            Thread.Sleep(500);
+            Rectangle bounds = SPNetGraph.Bounds;
+            bounds.Inflate(3, 3);
+            var point = this.Location;
+            point.Offset(SPNetGraph.Parent.Location);
+            point.Offset(SPNetGraph.Location);
+            point.Offset(6, this.menuStrip1.Height + 6);
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
+            {
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.CopyFromScreen(point, Point.Empty, bounds.Size);
+                }
+                SaveFileDialog d = new SaveFileDialog()
+                { Filter = "PNG (*.PNG) | *.PNG",
+                    Title = "Сохранить скриншот"};
+                DialogResult res= DialogResult.None;
+                var logicToInvokeInsideUIThread = new MethodInvoker(() =>
+                {
+
+                    res = d.ShowDialog();
+                    
+                });
+
+                if (InvokeRequired)
+                {
+                    Invoke(logicToInvokeInsideUIThread);
+                }
+                else
+                {
+                    logicToInvokeInsideUIThread.Invoke();
+                }
+                if (res==DialogResult.OK)
+                {
+                    bitmap.Save(d.FileName, ImageFormat.Png);
+                }
+            }
+        }
+        private void сохранитьСкриншотСетиToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Maximized;
+            SaverFunc sf = new SaverFunc(Saver);
+            sf.BeginInvoke(null, null);
+        }
+
+        private void addRuleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CreateRuleDialog d = new CreateRuleDialog(currentSettings.SBoxCount, currentSettings.WordLength);
+            if (d.ShowDialog() == DialogResult.OK)
+            {
+                activeRules.Add(d.rule);
+            }
+            refreshRules();
+        }
+
+        private void refreshRules()
+        {
+            rulesTableLayoutPanel.Controls.Clear();
+            foreach (Rule r in activeRules)
+            {
+                var l = new Label();
+                l.Text += "Тип решения: " + r.SolverType.ToString() + "\n";
+                l.Text += "Max S-Блоков на слое:" + r.MaxActiveBlocksOnLayer + "\n";
+                l.Text += r.UseCustomInput ? "Константный вход" : "Max S-блоков на входе" + r.MaxStartBlocks;
+                l.Height = 40;
+                l.Width = 200;
+                rulesTableLayoutPanel.Controls.Add(l);
+            }
+        }
+
+        private void clearRulesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            activeRules.Clear();
+            refreshRules();
         }
     }
 }
