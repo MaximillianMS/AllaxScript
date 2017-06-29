@@ -21,14 +21,15 @@ namespace AllaxForm
         private Label label;
         public int connectors;
         public List<byte> init_sequence = new List<byte>();
-
         public void init(BLOCK_TYPE type, int width, int height)
         {
             InitializeComponent();
             this.type = type;
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
-            DoubleClick += AllaxBlock_DoubleClick;
+            MouseDown += AllaxBlock_DoubleClick;
+            this.Enabled = true;
+            this.BringToFront();
             switch (type)
             {
                 case BLOCK_TYPE.S:
