@@ -219,6 +219,9 @@ namespace FormsGUI
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
             net.DeleteLayer((byte)(net.GetLayers().Count - 1));
+            SPNetGraph.removeLayer();
+            SPNetGraph.removeLayer();
+            SPNetGraph.removeLayer();
             isLastRoundAdded = false;
         }
 

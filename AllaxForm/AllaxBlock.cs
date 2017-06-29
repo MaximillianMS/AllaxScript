@@ -26,6 +26,9 @@ namespace AllaxForm
         {
             InitializeComponent();
             this.type = type;
+            SetStyle(ControlStyles.StandardClick, true);
+            SetStyle(ControlStyles.StandardDoubleClick, true);
+            DoubleClick += AllaxBlock_DoubleClick;
             switch (type)
             {
                 case BLOCK_TYPE.S:
@@ -40,13 +43,16 @@ namespace AllaxForm
             }
         }
 
+        private void AllaxBlock_DoubleClick(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         public AllaxBlock(BLOCK_TYPE type, int width, int height)
         {
 
             this.Paint += paint;
             SetStyle(ControlStyles.ResizeRedraw, true);
-            SetStyle(ControlStyles.StandardClick, true);
-            SetStyle(ControlStyles.StandardDoubleClick, true);
             this.init(type, width, height);
         }
 
