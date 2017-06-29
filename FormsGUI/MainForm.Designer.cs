@@ -179,7 +179,7 @@
             // tasksProgressBar
             // 
             this.tasksProgressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tasksProgressBar.Location = new System.Drawing.Point(0, 712);
+            this.tasksProgressBar.Location = new System.Drawing.Point(0, 691);
             this.tasksProgressBar.Margin = new System.Windows.Forms.Padding(0);
             this.tasksProgressBar.Name = "tasksProgressBar";
             this.tasksProgressBar.Size = new System.Drawing.Size(278, 20);
@@ -199,7 +199,7 @@
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1264, 738);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1264, 717);
             this.tableLayoutPanel1.TabIndex = 6;
             // 
             // solutionsPanel
@@ -209,7 +209,7 @@
             this.solutionsPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.solutionsPanel.Location = new System.Drawing.Point(1003, 3);
             this.solutionsPanel.Name = "solutionsPanel";
-            this.solutionsPanel.Size = new System.Drawing.Size(278, 732);
+            this.solutionsPanel.Size = new System.Drawing.Size(278, 711);
             this.solutionsPanel.TabIndex = 6;
             // 
             // solutionsListBox
@@ -220,7 +220,7 @@
             this.solutionsListBox.IntegralHeight = false;
             this.solutionsListBox.Location = new System.Drawing.Point(0, 0);
             this.solutionsListBox.Name = "solutionsListBox";
-            this.solutionsListBox.Size = new System.Drawing.Size(278, 712);
+            this.solutionsListBox.Size = new System.Drawing.Size(278, 691);
             this.solutionsListBox.TabIndex = 13;
             this.solutionsListBox.DoubleClick += new System.EventHandler(this.solutionsListBox_DoubleClick);
             // 
@@ -236,14 +236,14 @@
             this.rulesTableLayoutPanel.RowCount = 2;
             this.rulesTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.rulesTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 732);
+            this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 711);
             this.rulesTableLayoutPanel.TabIndex = 7;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1264, 762);
+            this.ClientSize = new System.Drawing.Size(1264, 741);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;

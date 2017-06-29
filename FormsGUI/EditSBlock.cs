@@ -40,12 +40,43 @@ namespace FormsGUI
         private void textBox_TextChanged(object sender, EventArgs e)
         {
             Value.Clear();
-            foreach(string s in textBox.Text.Split(' '))
+            var ret = Value;
             {
-                byte t;
-                Byte.TryParse(s, out t);
-                Value.Add(t);
+
+                var Seq = this.textBox.Text;
+                Seq = Seq.Trim();
+                string[] Values;
+                if (Seq.Contains(","))
+                {
+                    Seq.Replace(" ", string.Empty);
+                    Values = Seq.Split(',');
+                }
+                else
+                {
+                    if (Seq.Contains(";"))
+                    {
+                        Seq.Replace(" ", string.Empty);
+                        Values = Seq.Split(';');
+                    }
+                    else
+                        Values = Seq.Split(' ');
+                }
+                for (int i = 0; i < Values.Length; i++)
+                {
+                    if (Values[i] != "")
+                    {
+                        byte t;
+                        Byte.TryParse(Values[i], out t);
+                        Value.Add(t);
+                    }
+                }
             }
+            //             foreach(string s in textBox.Text.Split(' '))
+            //             {
+            //                 byte t;
+            //                 Byte.TryParse(s, out t);
+            //                 Value.Add(t);
+            //             }
         }
 
         private void okButton_Click(object sender, EventArgs e)

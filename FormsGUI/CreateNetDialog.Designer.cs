@@ -63,7 +63,7 @@
             0,
             0});
             this.wordLengthNumericUpDown.Minimum = new decimal(new int[] {
-            16,
+            8,
             0,
             0,
             0});
@@ -86,7 +86,7 @@
             0,
             0});
             this.sBlockSizeNumericUpDown.Minimum = new decimal(new int[] {
-            1,
+            4,
             0,
             0,
             0});

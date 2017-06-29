@@ -23,7 +23,7 @@ namespace FormsGUI
 
         private void createButton_Click(object sender, EventArgs e)
         {
-            if (wordLengthNumericUpDown.Value % sBlockSizeNumericUpDown.Value != 0)
+            if ((wordLengthNumericUpDown.Value % sBlockSizeNumericUpDown.Value != 0)||(wordLengthNumericUpDown.Value<sBlockSizeNumericUpDown.Value))
             {
                 MessageBox.Show("Недопустимые значения длины слова и размера S-Блока");
             }
