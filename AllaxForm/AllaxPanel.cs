@@ -52,22 +52,7 @@ namespace AllaxForm
                 n.Add(false);
             this.coloreds.Add(n);
         }
-
-        /*private void initializeDragDrop()
-        {
-            this.AllowDrop = true;
-            this.DragEnter += new DragEventHandler(allax_DragEnter);
-            this.DragDrop += new DragEventHandler(allax_DragDrop);
-        }
-        public void allax_DragEnter(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
-        }
-        public void allax_DragDrop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop)) e.Effect = DragDropEffects.Copy;
-        }*/
-
+        
 
         private void initializeSizes()
         {
@@ -196,6 +181,16 @@ namespace AllaxForm
             newblockl.layer_index = this.layers.Count;
             newblockl.type = AllaxBlock.BLOCK_TYPE.S;
             this.layers.Add(newblockl); addColorLayer();
+            Invalidate();
+        }
+
+        public void removeLayer()
+        {
+            if (this.layers.Count == 0) return;
+            Layer layer = this.layers[this.layers.Count-1];
+            foreach (AllaxBlock b in layer.blocks)
+                this.Controls.Remove(b);
+            this.layers.Remove(layer);
             Invalidate();
         }
     }
