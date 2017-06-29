@@ -127,15 +127,22 @@ namespace AllaxForm
         public readonly int blocks_wide;
         public readonly int blocks_tall;
         public List<Layer> layers = new List<Layer>();
-  
-        public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall)
+        private MouseEventHandler Control_DoubleClick;
+
+        public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall, MouseEventHandler doubleClickHandler)
         {
+            Control_DoubleClick = doubleClickHandler;
             this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
             this.initializeSizes();
-           
             //this.initializeDragDrop();
+        }
+
+        protected override void OnControlAdded(ControlEventArgs e)
+        {
+            e.Control.MouseDoubleClick += Control_DoubleClick;
+            base.OnControlAdded(e);
         }
 
         private void addColorLayer()

@@ -19,6 +19,7 @@ namespace FormsGUI
         List<string> layerList = new List<string>();
         List<Solution> solutions = new List<Solution>();
         bool isLastRoundAdded = false;
+        bool analysisActive = false;
         delegate void RefreshSolutionsCallback();
         delegate void AllTasksDoneCallback(ITask task);
         delegate void RefreshProgressBarCallback(double progress);
@@ -85,6 +86,7 @@ namespace FormsGUI
                 finishAnalysisToolStripMenuItem.Enabled = false;
                 fileToolStripMenuItem.Enabled = true;
                 MessageBox.Show("All done!");
+                analysisActive = false;
                 //this.Close();
             }
         }
@@ -292,6 +294,7 @@ namespace FormsGUI
             AP.Alg.Type = isDifferential ? AnalisysType.Differencial : AnalisysType.Linear;
             if (!isLastRoundAdded)
                 addLastRound();
+            analysisActive = true;
             eng.PerformAnalisys(AP);  
         }
 
@@ -312,7 +315,9 @@ namespace FormsGUI
             isLastRoundAdded = false;
             refreshLayers();
             refreshSolutions();
-            SPNetGraph = new AllaxPanel(settings.SBoxSize, settings.SBoxCount, 15);
+            SPNetGraph = new AllaxPanel(settings.SBoxSize, settings.SBoxCount, 15, allaxBlock_DoubleClick);
+            
+            //SPNetGraph.DoubleClick += allaxBlock_DoubleClick;
             SPNetGraph.Dock = DockStyle.Fill;
             SPNetGraph.Parent = tableLayoutPanel1;
             SPNetGraph.Name = "AllaxPanel";
@@ -418,6 +423,26 @@ namespace FormsGUI
             finishAnalysisToolStripMenuItem.Enabled = false;
             fileToolStripMenuItem.Enabled = true;
             layersListBox.Enabled = true;
+        }
+
+        private void allaxBlock_DoubleClick(object sender, EventArgs e)
+        {
+            if (!analysisActive)
+            {
+                AllaxBlock b = (AllaxBlock)sender;
+                if (b.type == AllaxBlock.BLOCK_TYPE.S)
+                {
+                    EditSBlock s = new EditSBlock(currentSettings.SBoxSize, b.init_sequence);
+                    if (s.ShowDialog() == DialogResult.OK)
+                        net.GetLayers()[b.layer_index].GetBlocks()[b.index_in_layer].Init(s.Value);
+                }
+                else if (b.type == AllaxBlock.BLOCK_TYPE.P)
+                {
+                    EditSBlock s = new EditSBlock(currentSettings.SBoxSize, b.init_sequence, true);
+                    if (s.ShowDialog() == DialogResult.OK)
+                        net.GetLayers()[b.layer_index].GetBlocks()[b.index_in_layer].Init(s.Value);
+                }
+            }
         }
 
         private void solutionsListBox_DoubleClick(object sender, EventArgs e)

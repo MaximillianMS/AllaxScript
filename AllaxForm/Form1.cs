@@ -16,7 +16,7 @@ namespace AllaxForm
         public Form1()
         {
             InitializeComponent();
-            panel = new AllaxPanel(4, 4, 12);
+            panel = new AllaxPanel(4, 4, 12, block_DoubleClick);
             panel.Size = new Size(1000, 500);
             panel.BackColor = Color.AliceBlue;
             panel.addKLayer();
@@ -28,6 +28,11 @@ namespace AllaxForm
             panel.setLayerColors(0, new List<bool>() { true, false, true, true, true, false, true, true, true, false, true, true, true, false, true, true, });
             //this.panel.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             //panel.layers[1].blocks[0].removePBlockWeb();
+        }
+
+        private void block_DoubleClick(object sender, EventArgs e)
+        {
+
         }
 
         private void panel1_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
