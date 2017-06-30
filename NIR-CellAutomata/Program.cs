@@ -141,6 +141,8 @@ namespace CellAllax
     }
     class CA : ICloneable
     {
+        Graph G;
+        LocalFunc F;
         public delegate int LocalFunc(List<int> Values);
         public void ResetValues()
         {
@@ -188,8 +190,6 @@ namespace CellAllax
                 G[i] = value;
             }
         }
-        Graph G;
-        LocalFunc F;
         public void NextStep(int Steps = 1, bool MultiThread = false)
         {
             var New = NextStep(this, Steps, MultiThread);
@@ -228,50 +228,54 @@ namespace CellAllax
             return G.Cells.Count;
         }
     }
-    class FeistelNetRound
-    {
-        public List<int> InL;
-        public List<int> InR;
-        public List<int> OutL;
-        public List<int> OutR;
-        public FeistelNetRound(List<int> InL, List<int> InR, List<int> Key, List<int> Constant)
-        {
-            this.InL = new List<int>(InL);
-            this.InR = new List<int>(InR);
-            this.Key = new List<int>(Key);
-            this.Constant = new List<int>(Constant);
-        }
-        public void ProcessRound(bool LastRound = false)
-        {
-            if ((InR.Count + Key.Count + Constant.Count) > Automata.GetCellCount())
-                throw new Exception("Input length for CA more than cells it contains.");
-            Automata.ResetValues();
-            OutL = new List<int>(InR);
-            Automata.SetValues(InR.Concat(Key).Concat(Constant).ToList());
-            Automata.NextStep(AutomataRoundSteps);
-            var automataResult = Automata.GetValues();
-            var automataResultCutted = automataResult.Skip(automataResult.Count - InL.Count).ToList();
-            OutR = new List<int>(Enumerable.Range(0, InL.Count).Select(i => ((InL[i] + automataResultCutted[i]) & 1)));
-            if (LastRound)
-            {
-                var temp = OutL;
-                OutL = OutR;
-                OutR = temp;
-            }
-        }
-        public CA Automata;
-        public List<int> Key;
-        public List<int> Constant;
-        public int AutomataRoundSteps;
-
-    }
     class FeistelNet
     {
-        public CA Automata;
+        class FeistelNetRound
+        {
+            public List<int> InL;
+            public List<int> InR;
+            public List<int> OutL;
+            public List<int> OutR;
+            public FeistelNetRound(CA Automata, int AutomataSteps, List<int> InL, List<int> InR, List<int> Key, List<int> Constant)
+            {
+                this.InL = new List<int>((InL != null) ? InL : new List<int>());
+                this.InR = new List<int>((InR != null) ? InR : new List<int>());
+                this.Key = new List<int>((Key != null) ? Key : new List<int>());
+                this.Constant = new List<int>((Constant != null) ? Constant : new List<int>());
+                this.Automata = (CA)Automata.Clone();
+                this.AutomataSteps = AutomataSteps;
+            }
+            public void ProcessRound(bool LastRound = false)
+            {
+                if ((InR.Count + Key.Count + Constant.Count) > Automata.GetCellCount())
+                    throw new Exception("Input length for CA more than cells it contains.");
+                Automata.ResetValues();
+                OutL = new List<int>(InR);
+                Automata.SetValues(InR.Concat(Key).Concat(Constant).ToList());
+                Automata.NextStep(AutomataSteps);
+                var automataResult = Automata.GetValues();
+                var automataResultCutted = automataResult.Skip(automataResult.Count - InL.Count).ToList();
+                OutR = new List<int>(Enumerable.Range(0, InL.Count).Select(i => ((InL[i] + automataResultCutted[i]) & 1)));
+                if (LastRound)
+                {
+                    var temp = OutL;
+                    OutL = OutR;
+                    OutR = temp;
+                }
+            }
+            public CA Automata;
+            public List<int> Key;
+            public List<int> Constant;
+            public int AutomataSteps;
+
+        }
+        public CA Automata; // Origin automata
         public List<int> MasterKey;
         public List<List<int>> RoundConstants;
         List<List<int>> RoundKeys;
         List<FeistelNetRound> Rounds;
+        private int RoundsCount;
+        private int AutomataSteps;
         private void GetRoundKeys()
         {
             RoundKeys = new List<List<int>>
@@ -282,22 +286,24 @@ namespace CellAllax
                 (from i in Enumerable.Range(0, MasterKey.Count/2) select MasterKey[(i+MasterKey.Count/4)%(MasterKey.Count/2)+MasterKey.Count/2]).ToList(),
             };
         }
-        public FeistelNet(CA Automata, List<int> MasterKey, List<List<int>> RoundConstants)
+        public FeistelNet(CA Automata, int AutomataSteps, List<int> MasterKey, List<List<int>> RoundConstants)
         {
-            this.Automata = Automata;
-            this.MasterKey = MasterKey;
-            this.RoundConstants = RoundConstants;
+            this.Automata = (CA)Automata.Clone();
+            this.MasterKey = new List<int>(MasterKey);
+            this.RoundConstants = new List<List<int>>(RoundConstants.Select(i => new List<int>(i)));
+            this.RoundsCount = RoundConstants.Count;
+            this.AutomataSteps = AutomataSteps;
             GetRoundKeys();
-            Rounds = new List<FeistelNetRound>(4);
-            Rounds.AddRange(from i in Enumerable.Range(0, 4) select new FeistelNetRound(null, null, RoundKeys[i], RoundConstants[i]));
         }
         public List<int> Encrypt(List<int> OpenText)
         {
-            Rounds[0].InL = (from i in Enumerable.Range(0, MasterKey.Count / 2) select MasterKey[i]).ToList();
-            Rounds[0].InR = (from i in Enumerable.Range(MasterKey.Count / 2, MasterKey.Count / 2) select MasterKey[i]).ToList();
-            for(int i=0;i<4;i++)
+            Rounds = new List<FeistelNetRound>(RoundsCount);
+            Rounds.AddRange(from i in Enumerable.Range(0, RoundsCount) select new FeistelNetRound(Automata, AutomataSteps, null, null, RoundKeys[i], RoundConstants[i]));
+            Rounds[0].InL = (from i in Enumerable.Range(0, OpenText.Count / 2) select OpenText[i]).ToList();
+            Rounds[0].InR = (from i in Enumerable.Range(OpenText.Count / 2, OpenText.Count / 2) select OpenText[i]).ToList();
+            for(int i=0;i<RoundsCount;i++)
             {
-                if (i != 3)
+                if (i != RoundsCount-1)
                 {
                     Rounds[i].ProcessRound();
                     Rounds[i + 1].InL = Rounds[i].OutL;
@@ -355,8 +361,13 @@ namespace CellAllax
             var G = new Graph(SplittedStr);
             var LF = new LocalFunc(6, "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1");
             var OrigCA = new CA(G, LF.GetResult);
-            OrigCA.SetValues(Enumerable.Range(0, 1 << 6).Select(i => 1).ToList());
-            OrigCA.NextStep(1);
+            var FN = new FeistelNet(OrigCA, 4, new List<int>(Enumerable.Repeat(0, 128)), new List<List<int>>(Enumerable.Repeat(new List<int>(Enumerable.Repeat(0, 54)), 4)));
+            //OrigCA.SetValues(Enumerable.Range(0, 1 << 6).Select(i => 1).ToList());
+            //OrigCA.NextStep(1);
+            var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList();
+            var CT = FN.Encrypt(OT);
+            var OT2 = FN.Encrypt(CT);
+            Console.WriteLine("{0:X}, {1:X}", WayConverter.ToLong((from i in Enumerable.Range(0, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()), WayConverter.ToLong((from i in Enumerable.Range(OT2.Count / 2, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()));
             Console.ReadLine();
         }
     }
