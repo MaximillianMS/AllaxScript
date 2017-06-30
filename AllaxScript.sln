@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FormsGUI", "FormsGUI\FormsG
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxForm", "AllaxForm\AllaxForm.csproj", "{080E8CB5-8BA4-4392-9CEB-0C84FF1DCD2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NIR-CellAutomata", "..\CellAutomata\NIR-CellAutomata.csproj", "{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NIR-CellAutomata", "NIR-CellAutomata\NIR-CellAutomata.csproj", "{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
