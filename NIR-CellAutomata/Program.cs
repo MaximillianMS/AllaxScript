@@ -139,7 +139,6 @@ namespace CellAllax
         }
         Dictionary<long, int> FuncMatrix;
     }
-
     class CA : ICloneable
     {
         public delegate int LocalFunc(List<int> Values);
@@ -347,8 +346,8 @@ namespace CellAllax
         static void Main(string[] args)
         {
 
-            string GraphsPath = @"C:\Documents\НИРС\НИРС-II\graphs-diam\graphs-diam.txt";
-            var nodes = 3822;
+            string GraphsPath = @"..\..\graphs-diam.txt";
+            var nodes = 182;
             var NodeList = ReadFromFile(GraphsPath, nodes);
             if (NodeList.ToString() == "")
                 return;
