@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Allax;
 using System.Threading;
 
-namespace CellAllax
+namespace Allax.Cell
 {
     class Cell
     {
@@ -146,7 +146,7 @@ namespace CellAllax
         public delegate int LocalFunc(List<int> Values);
         public void ResetValues()
         {
-            foreach(var N in G.Cells)
+            foreach (var N in G.Cells)
             {
                 N.Value = 0;
             }
@@ -288,9 +288,9 @@ namespace CellAllax
         }
         public FeistelNet(CA Automata, int AutomataSteps, int RoundsCount, List<int> MasterKey, List<List<int>> RoundConstants)
         {
-            this.Automata = (Automata!=null)?(CA)Automata.Clone():null;
-            this.MasterKey = (MasterKey!=null)?new List<int>(MasterKey):new List<int>();
-            this.RoundConstants = (RoundConstants!=null)?new List<List<int>>(RoundConstants.Select(i => new List<int>(i))): new List<List<int>>();
+            this.Automata = (Automata != null) ? (CA)Automata.Clone() : null;
+            this.MasterKey = (MasterKey != null) ? new List<int>(MasterKey) : new List<int>();
+            this.RoundConstants = (RoundConstants != null) ? new List<List<int>>(RoundConstants.Select(i => new List<int>(i))) : new List<List<int>>();
             this.RoundsCount = RoundsCount;
             this.AutomataSteps = AutomataSteps;
             GetRoundKeys();
@@ -319,7 +319,7 @@ namespace CellAllax
         private void PrepareRounds(List<int> OpenText, bool Encrypt)
         {
             Rounds = new List<FeistelNetRound>(RoundsCount);
-            Rounds.AddRange(from i in Enumerable.Range(0, RoundsCount) select new FeistelNetRound(Automata, AutomataSteps, null, null, 
+            Rounds.AddRange(from i in Enumerable.Range(0, RoundsCount) select new FeistelNetRound(Automata, AutomataSteps, null, null,
                 RoundKeys[(Encrypt) ? i : (RoundsCount - i - 1)], RoundConstants[(Encrypt) ? i : (RoundsCount - i - 1)]));
             Rounds[0].InL = (from i in Enumerable.Range(0, OpenText.Count / 2) select OpenText[i]).ToList();
             Rounds[0].InR = (from i in Enumerable.Range(OpenText.Count / 2, OpenText.Count / 2) select OpenText[i]).ToList();
@@ -328,7 +328,7 @@ namespace CellAllax
         {
             PrepareRounds(OpenText, true);
             ProcessRounds();
-            return Rounds[RoundsCount-1].OutL.Concat(Rounds[RoundsCount-1].OutR).ToList();
+            return Rounds[RoundsCount - 1].OutL.Concat(Rounds[RoundsCount - 1].OutR).ToList();
         }
         public List<int> Decrypt(List<int> CipherText)
         {
@@ -395,7 +395,7 @@ namespace CellAllax
             else
                 throw new Exception();
         }
-        public CACryptor(int AutomataSteps, int KeyLength, string strLocalFunc= "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1", int LocalFuncVarCount = 6 , int RoundsCount = 4, string GraphsPath = @"..\..\graphs-diam.txt")
+        public CACryptor(int AutomataSteps, int KeyLength, string strLocalFunc = "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1", int LocalFuncVarCount = 6, int RoundsCount = 4, string GraphsPath = @"..\..\graphs-diam.txt")
         {
             this.AutomataSteps = AutomataSteps;
             this.RoundsCount = RoundsCount;
@@ -424,7 +424,7 @@ namespace CellAllax
         }
         public void SetKey(List<bool> Key)
         {
-            if (Key==null || Key.Count != KeyLength)
+            if (Key == null || Key.Count != KeyLength)
                 throw new NotImplementedException();
             MasterKey = Key.ConvertAll(i => Convert.ToInt32(i));
             FN.SetMasterKey(MasterKey);
@@ -435,7 +435,7 @@ namespace CellAllax
         }
         public void SetConstants(List<List<bool>> Constants)
         {
-            if(Constants==null|| Constants.Count!=RoundsCount)
+            if (Constants == null || Constants.Count != RoundsCount)
             {
                 throw new NotImplementedException();
             }
@@ -449,22 +449,25 @@ namespace CellAllax
         }
         public void SetRandomConstants()
         {
-            SetConstants(new List<List<bool>>(Enumerable.Range(0, RoundsCount).Select(i => GetRandomBitList(ConstLength, (((ConstLength & 1) == 0) ? (ConstLength / 2) : (ConstLength / 2 + 1))).ConvertAll(j=>Convert.ToBoolean(j)))));
+            SetConstants(new List<List<bool>>(Enumerable.Range(0, RoundsCount).Select(i => GetRandomBitList(ConstLength, (((ConstLength & 1) == 0) ? (ConstLength / 2) : (ConstLength / 2 + 1))).ConvertAll(j => Convert.ToBoolean(j)))));
         }
         public List<bool> Encrypt(List<bool> OpenText)
         {
-            return FN.Encrypt(OpenText.ConvertAll(i=>Convert.ToInt32(i))).ConvertAll(j=>Convert.ToBoolean(j));
+            return FN.Encrypt(OpenText.ConvertAll(i => Convert.ToInt32(i))).ConvertAll(j => Convert.ToBoolean(j));
         }
         public List<bool> Decrypt(List<bool> CipherText)
         {
-            return FN.Decrypt(CipherText.ConvertAll(i => Convert.ToInt32(i))).ConvertAll(i=>Convert.ToBoolean(i));
+            return FN.Decrypt(CipherText.ConvertAll(i => Convert.ToInt32(i))).ConvertAll(i => Convert.ToBoolean(i));
         }
     }
+}
+namespace CATesting
+{
     class Program
     {
         static void Main(string[] args)
         {
-            var CACr = new CACryptor(4, 128);
+            var CACr = new Allax.Cell.CACryptor(4, 128);
             var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList().ConvertAll(i => Convert.ToBoolean(i));
             var CT = CACr.Encrypt(OT);
             Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i])).ToList()));

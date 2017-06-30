@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Allax;
-namespace CellAllax
+namespace Allax.Cell
 {
     class EngineForTaskerAndWorker : IEngine
     {

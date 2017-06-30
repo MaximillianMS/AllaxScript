@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CellAllax
+namespace Allax.Cell
 {
     class SignalWorker : Allax.Worker
     {
