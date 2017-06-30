@@ -295,15 +295,11 @@ namespace CellAllax
             this.AutomataSteps = AutomataSteps;
             GetRoundKeys();
         }
-        public List<int> Encrypt(List<int> OpenText)
+        private void ProcessRounds()
         {
-            Rounds = new List<FeistelNetRound>(RoundsCount);
-            Rounds.AddRange(from i in Enumerable.Range(0, RoundsCount) select new FeistelNetRound(Automata, AutomataSteps, null, null, RoundKeys[i], RoundConstants[i]));
-            Rounds[0].InL = (from i in Enumerable.Range(0, OpenText.Count / 2) select OpenText[i]).ToList();
-            Rounds[0].InR = (from i in Enumerable.Range(OpenText.Count / 2, OpenText.Count / 2) select OpenText[i]).ToList();
-            for(int i=0;i<RoundsCount;i++)
+            for (int i = 0; i < RoundsCount; i++)
             {
-                if (i != RoundsCount-1)
+                if (i != RoundsCount - 1)
                 {
                     Rounds[i].ProcessRound();
                     Rounds[i + 1].InL = Rounds[i].OutL;
@@ -312,10 +308,28 @@ namespace CellAllax
                 else
                 {
                     Rounds[i].ProcessRound(true);
-                    return Rounds[i].OutL.Concat(Rounds[i].OutR).ToList();
                 }
             }
-            return null;
+        }
+        private void PrepareRounds(List<int> OpenText, bool Encrypt)
+        {
+            Rounds = new List<FeistelNetRound>(RoundsCount);
+            Rounds.AddRange(from i in Enumerable.Range(0, RoundsCount) select new FeistelNetRound(Automata, AutomataSteps, null, null, 
+                RoundKeys[(Encrypt) ? i : (RoundsCount - i - 1)], RoundConstants[(Encrypt) ? i : (RoundsCount - i - 1)]));
+            Rounds[0].InL = (from i in Enumerable.Range(0, OpenText.Count / 2) select OpenText[i]).ToList();
+            Rounds[0].InR = (from i in Enumerable.Range(OpenText.Count / 2, OpenText.Count / 2) select OpenText[i]).ToList();
+        }
+        public List<int> Encrypt(List<int> OpenText)
+        {
+            PrepareRounds(OpenText, true);
+            ProcessRounds();
+            return Rounds[RoundsCount-1].OutL.Concat(Rounds[RoundsCount-1].OutR).ToList();
+        }
+        public List<int> Decrypt(List<int> OpenText)
+        {
+            PrepareRounds(OpenText, false);
+            ProcessRounds();
+            return Rounds[RoundsCount - 1].OutL.Concat(Rounds[RoundsCount - 1].OutR).ToList();
         }
     }
     class Program
@@ -349,6 +363,25 @@ namespace CellAllax
             }
             return sb;
         }
+        static List<int> GetRandomBitList(int Length, int WeightRequirement=-1)
+        {
+            if (Length <= 0)
+                return new List<int>();
+            var ret = new List<int>(Enumerable.Repeat(0, Length));
+            var retIndex = new List<int>(Enumerable.Range(0, Length));
+            var IntRangom = new Random();
+            WeightRequirement = (WeightRequirement == -1 || WeightRequirement > Length) ? IntRangom.Next(Length) + 1 : WeightRequirement;
+            for(int i=0;i<WeightRequirement;i++)
+            {
+                var Index = IntRangom.Next(retIndex.Count);
+                ret[retIndex[Index]] = 1;
+                retIndex.RemoveAt(Index);
+            }
+            if (ret.Sum() == WeightRequirement)
+                return ret;
+            else
+                throw new Exception();
+        }
         static void Main(string[] args)
         {
 
@@ -361,12 +394,19 @@ namespace CellAllax
             var G = new Graph(SplittedStr);
             var LF = new LocalFunc(6, "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1");
             var OrigCA = new CA(G, LF.GetResult);
-            var FN = new FeistelNet(OrigCA, 4, new List<int>(Enumerable.Repeat(0, 128)), new List<List<int>>(Enumerable.Repeat(new List<int>(Enumerable.Repeat(0, 54)), 4)));
-            //OrigCA.SetValues(Enumerable.Range(0, 1 << 6).Select(i => 1).ToList());
-            //OrigCA.NextStep(1);
+            var MasterKey = 
+                GetRandomBitList(128)
+                //Enumerable.Repeat(0, 128).ToList()
+                ;
+            var Constants = new List<List<int>>(Enumerable.Range(0, 4).Select(i => 
+            GetRandomBitList(54, 54 / 2)
+            //Enumerable.Repeat(0, 54).ToList()
+            ));
+            var FN = new FeistelNet(OrigCA, 4, MasterKey, Constants);
             var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList();
             var CT = FN.Encrypt(OT);
-            var OT2 = FN.Encrypt(CT);
+            Console.WriteLine("{0:X}, {1:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i] == 1) ? true : false).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i] == 1) ? true : false).ToList()));
+            var OT2 = FN.Decrypt(CT);
             Console.WriteLine("{0:X}, {1:X}", WayConverter.ToLong((from i in Enumerable.Range(0, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()), WayConverter.ToLong((from i in Enumerable.Range(OT2.Count / 2, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()));
             Console.ReadLine();
         }
