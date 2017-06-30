@@ -286,13 +286,18 @@ namespace CellAllax
                 (from i in Enumerable.Range(0, MasterKey.Count/2) select MasterKey[(i+MasterKey.Count/4)%(MasterKey.Count/2)+MasterKey.Count/2]).ToList(),
             };
         }
-        public FeistelNet(CA Automata, int AutomataSteps, List<int> MasterKey, List<List<int>> RoundConstants)
+        public FeistelNet(CA Automata, int AutomataSteps, int RoundsCount, List<int> MasterKey, List<List<int>> RoundConstants)
         {
-            this.Automata = (CA)Automata.Clone();
-            this.MasterKey = new List<int>(MasterKey);
-            this.RoundConstants = new List<List<int>>(RoundConstants.Select(i => new List<int>(i)));
-            this.RoundsCount = RoundConstants.Count;
+            this.Automata = (Automata!=null)?(CA)Automata.Clone():null;
+            this.MasterKey = (MasterKey!=null)?new List<int>(MasterKey):new List<int>();
+            this.RoundConstants = (RoundConstants!=null)?new List<List<int>>(RoundConstants.Select(i => new List<int>(i))): new List<List<int>>();
+            this.RoundsCount = RoundsCount;
             this.AutomataSteps = AutomataSteps;
+            GetRoundKeys();
+        }
+        public void SetMasterKey(List<int> Key)
+        {
+            this.MasterKey = new List<int>(Key);
             GetRoundKeys();
         }
         private void ProcessRounds()
@@ -325,15 +330,23 @@ namespace CellAllax
             ProcessRounds();
             return Rounds[RoundsCount-1].OutL.Concat(Rounds[RoundsCount-1].OutR).ToList();
         }
-        public List<int> Decrypt(List<int> OpenText)
+        public List<int> Decrypt(List<int> CipherText)
         {
-            PrepareRounds(OpenText, false);
+            PrepareRounds(CipherText, false);
             ProcessRounds();
             return Rounds[RoundsCount - 1].OutL.Concat(Rounds[RoundsCount - 1].OutR).ToList();
         }
     }
-    class Program
+    class CACryptor
     {
+        FeistelNet FN;
+        List<List<int>> Constants;
+        List<int> MasterKey;
+        int BlockLength = 128;
+        int KeyLength;
+        int RoundsCount;
+        int ConstLength;
+        int AutomataSteps;
         static StringBuilder ReadFromFile(string GraphsPath, int nodes)
         {
             var sb = new StringBuilder();
@@ -341,12 +354,12 @@ namespace CellAllax
             {
                 using (StreamReader sr = new StreamReader(aFile))
                 {
-                    while(!sr.EndOfStream)
+                    while (!sr.EndOfStream)
                     {
                         var temp = sr.ReadLine();
-                        if(temp.Contains(':'))
+                        if (temp.Contains(':'))
                         {
-                            if(!temp.Contains("diameter"))
+                            if (!temp.Contains("diameter"))
                             {
                                 if (Convert.ToInt32(temp.Substring(0, temp.IndexOf(':'))) == nodes)
                                 {
@@ -363,7 +376,7 @@ namespace CellAllax
             }
             return sb;
         }
-        static List<int> GetRandomBitList(int Length, int WeightRequirement=-1)
+        static List<int> GetRandomBitList(int Length, int WeightRequirement = -1)
         {
             if (Length <= 0)
                 return new List<int>();
@@ -371,7 +384,7 @@ namespace CellAllax
             var retIndex = new List<int>(Enumerable.Range(0, Length));
             var IntRangom = new Random();
             WeightRequirement = (WeightRequirement == -1 || WeightRequirement > Length) ? IntRangom.Next(Length) + 1 : WeightRequirement;
-            for(int i=0;i<WeightRequirement;i++)
+            for (int i = 0; i < WeightRequirement; i++)
             {
                 var Index = IntRangom.Next(retIndex.Count);
                 ret[retIndex[Index]] = 1;
@@ -382,32 +395,81 @@ namespace CellAllax
             else
                 throw new Exception();
         }
-        static void Main(string[] args)
+        public CACryptor(int AutomataSteps, int KeyLength, string strLocalFunc= "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1", int LocalFuncVarCount = 6 , int RoundsCount = 4, string GraphsPath = @"..\..\graphs-diam.txt")
         {
-
-            string GraphsPath = @"..\..\graphs-diam.txt";
-            var nodes = 182;
+            this.AutomataSteps = AutomataSteps;
+            this.RoundsCount = RoundsCount;
+            this.KeyLength = KeyLength;
+            int nodes;
+            if (this.KeyLength == 128)
+                nodes = 182;
+            else
+            {
+                if (this.KeyLength == 256)
+                    nodes = 282;
+                else
+                    throw new NotImplementedException();
+            }
             var NodeList = ReadFromFile(GraphsPath, nodes);
             if (NodeList.ToString() == "")
-                return;
-            var SplittedStr = NodeList.ToString().Split(new string[]{Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries)[2].Trim().TrimStart('[').TrimEnd(']').Replace(" ", string.Empty).Split(new string[] { "],[" }, StringSplitOptions.None);
+                throw new NotImplementedException();
+            var SplittedStr = NodeList.ToString().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)[2].Trim().TrimStart('[').TrimEnd(']').Replace(" ", string.Empty).Split(new string[] { "],[" }, StringSplitOptions.None);
             var G = new Graph(SplittedStr);
-            var LF = new LocalFunc(6, "x1x3x5+x3x4+x5x6+x3x5+x1x5+x1+x2+1");
+            var LF = new LocalFunc(LocalFuncVarCount, strLocalFunc);
             var OrigCA = new CA(G, LF.GetResult);
-            var MasterKey = 
-                GetRandomBitList(128)
-                //Enumerable.Repeat(0, 128).ToList()
-                ;
-            var Constants = new List<List<int>>(Enumerable.Range(0, 4).Select(i => 
-            GetRandomBitList(54, 54 / 2)
-            //Enumerable.Repeat(0, 54).ToList()
-            ));
-            var FN = new FeistelNet(OrigCA, 4, MasterKey, Constants);
-            var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList();
-            var CT = FN.Encrypt(OT);
-            Console.WriteLine("{0:X}, {1:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i] == 1) ? true : false).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i] == 1) ? true : false).ToList()));
-            var OT2 = FN.Decrypt(CT);
-            Console.WriteLine("{0:X}, {1:X}", WayConverter.ToLong((from i in Enumerable.Range(0, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()), WayConverter.ToLong((from i in Enumerable.Range(OT2.Count / 2, OT2.Count / 2) select (OT2[i] == 1) ? true : false).ToList()));
+            this.ConstLength = nodes - this.KeyLength / 2 - BlockLength / 2;
+            FN = new FeistelNet(OrigCA, AutomataSteps, RoundsCount, MasterKey, Constants);
+            SetRandomConstants();
+            SetRandomKey();
+        }
+        public void SetKey(List<bool> Key)
+        {
+            if (Key==null || Key.Count != KeyLength)
+                throw new NotImplementedException();
+            MasterKey = Key.ConvertAll(i => Convert.ToInt32(i));
+            FN.SetMasterKey(MasterKey);
+        }
+        public void SetRandomKey()
+        {
+            SetKey(GetRandomBitList(KeyLength).ConvertAll(i => Convert.ToBoolean(i)));
+        }
+        public void SetConstants(List<List<bool>> Constants)
+        {
+            if(Constants==null|| Constants.Count!=RoundsCount)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (Constants[0].Count != ConstLength)
+                    throw new NotImplementedException();
+                this.Constants = new List<List<int>>((from i in Constants select i.ConvertAll(j => Convert.ToInt32(j))));
+                FN.RoundConstants = this.Constants;
+            }
+        }
+        public void SetRandomConstants()
+        {
+            SetConstants(new List<List<bool>>(Enumerable.Range(0, RoundsCount).Select(i => GetRandomBitList(ConstLength, (((ConstLength & 1) == 0) ? (ConstLength / 2) : (ConstLength / 2 + 1))).ConvertAll(j=>Convert.ToBoolean(j)))));
+        }
+        public List<bool> Encrypt(List<bool> OpenText)
+        {
+            return FN.Encrypt(OpenText.ConvertAll(i=>Convert.ToInt32(i))).ConvertAll(j=>Convert.ToBoolean(j));
+        }
+        public List<bool> Decrypt(List<bool> CipherText)
+        {
+            return FN.Decrypt(CipherText.ConvertAll(i => Convert.ToInt32(i))).ConvertAll(i=>Convert.ToBoolean(i));
+        }
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            var CACr = new CACryptor(4, 128);
+            var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList().ConvertAll(i => Convert.ToBoolean(i));
+            var CT = CACr.Encrypt(OT);
+            Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i])).ToList()));
+            var OT2 = CACr.Decrypt(CT);
+            Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, OT2.Count / 2) select (OT2[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(OT2.Count / 2, OT2.Count / 2) select (OT2[i])).ToList()));
             Console.ReadLine();
         }
     }
