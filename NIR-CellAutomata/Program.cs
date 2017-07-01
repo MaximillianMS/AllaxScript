@@ -14,7 +14,7 @@ namespace Allax.Cell
         public int Value;
         public int Index;
         public List<int> NeighboursIndexes = new List<int>();
-        public List<Cell> Neighbours = new List<Cell>();
+        public List<Cell> Neighbors = new List<Cell>();
     }
     class Graph : ICloneable
     {
@@ -33,7 +33,7 @@ namespace Allax.Cell
                 foreach (var strIndex in splittedValues)
                 {
                     var intIndex = Convert.ToInt32(strIndex);
-                    Cells[i].Neighbours.Add(Cells[intIndex]);
+                    Cells[i].Neighbors.Add(Cells[intIndex]);
                     Cells[i].NeighboursIndexes.Add(intIndex);
                 }
             }
@@ -50,10 +50,10 @@ namespace Allax.Cell
             var NewCells = Cells.Select(i => new Cell() { Value = i.Value, Index = i.Index, NeighboursIndexes = new List<int>(i.NeighboursIndexes) }).ToList();
             foreach (var Cell in NewCells)
             {
-                Cell.Neighbours = new List<Cell>();
+                Cell.Neighbors = new List<Cell>();
                 for (int i = 0; i < Cell.NeighboursIndexes.Count; i++)
                 {
-                    Cell.Neighbours.Add(NewCells[Cell.NeighboursIndexes[i]]);
+                    Cell.Neighbors.Add(NewCells[Cell.NeighboursIndexes[i]]);
                 }
             }
             return new Graph() { Cells = NewCells };
@@ -172,7 +172,7 @@ namespace Allax.Cell
         }
         public int GetNextStepCellValue(int CellIndex)
         {
-            return F(G.Cells[CellIndex].Neighbours.Select(i => i.Value).ToList());
+            return F(G.Cells[CellIndex].Neighbors.Select(i => i.Value).ToList());
         }
         public object Clone()
         {
@@ -339,7 +339,7 @@ namespace Allax.Cell
     }
     class CACryptor
     {
-        FeistelNet FN;
+        public FeistelNet FN;
         List<List<int>> Constants;
         List<int> MasterKey;
         int BlockLength = 128;
@@ -468,6 +468,18 @@ namespace CATesting
         static void Main(string[] args)
         {
             var CACr = new Allax.Cell.CACryptor(4, 128);
+            //search special neighbors
+            for(int i=0;i<182;i++)
+            {
+                for(int j=0;j<6;j++)
+                {
+                    if (CACr.FN.Automata[i] == CACr.FN.Automata[i].Neighbors[j].Neighbors[j])
+
+                    {
+                        ;
+                    }
+                }
+            }
             var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList().ConvertAll(i => Convert.ToBoolean(i));
             var CT = CACr.Encrypt(OT);
             Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i])).ToList()));
