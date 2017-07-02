@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace AllaxForm
 {
-    public partial class AllaxPanel : Panel
+    public partial class AllaxPanel : Panel, IMessageFilter
     {
         // All values as fractions of the panel's size
         public double block_height = 1.0 / 25;
@@ -35,6 +35,7 @@ namespace AllaxForm
 
         public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall, MouseEventHandler doubleClickHandler)
         {
+            Application.AddMessageFilter(this);
             Control_DoubleClick = doubleClickHandler;
             this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
             this.Paint += testpaint;
@@ -48,7 +49,14 @@ namespace AllaxForm
 
         protected override void OnControlAdded(ControlEventArgs e)
         {
-            e.Control.MouseDoubleClick += Control_DoubleClick;
+            //e.Control.MouseDown += Control_DoubleClick;
+            foreach(Control Child in e.Control.Controls)
+            {
+                if(Child is Label)
+                {
+                    Child.MouseDoubleClick += (lambda_sender, lambda_e)=> { Control_DoubleClick(Child.Parent, lambda_e); };
+                }
+            }
             base.OnControlAdded(e);
         }
 
@@ -199,6 +207,25 @@ namespace AllaxForm
                 this.Controls.Remove(b);
             this.layers.Remove(layer);
             Invalidate();
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) Application.RemoveMessageFilter(this);
+            base.Dispose(disposing);
+        }
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.HWnd == this.Handle)
+            {
+                if (m.Msg == 0x201)
+                {  // Trap WM_LBUTTONDOWN
+                    Point pos = new Point(m.LParam.ToInt32() & 0xffff, m.LParam.ToInt32() >> 16);
+                    // Do something with this, return true if the control shouldn't see it
+                    //...
+                    //return true;
+                }
+            }
+            return false;
         }
     }
     public static class PanelSerializator

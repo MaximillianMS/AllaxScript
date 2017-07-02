@@ -4,13 +4,14 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AllaxForm
 {
-    public partial class AllaxBlock : Panel
+    public partial class AllaxBlock : Panel, IMessageFilter
     {
         public enum BLOCK_TYPE {S, P, K,};
 
@@ -27,7 +28,7 @@ namespace AllaxForm
             this.type = type;
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
-            MouseDown += AllaxBlock_DoubleClick;
+            MouseDown += AllaxBlock_MouseDown;
             this.Enabled = true;
             this.BringToFront();
             switch (type)
@@ -44,14 +45,9 @@ namespace AllaxForm
             }
         }
 
-        private void AllaxBlock_DoubleClick(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
 
         public AllaxBlock(BLOCK_TYPE type, int width, int height)
         {
-
             this.Paint += paint;
             SetStyle(ControlStyles.ResizeRedraw, true);
             this.init(type, width, height);
@@ -88,8 +84,8 @@ namespace AllaxForm
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
-
             this.Controls.Add(label);
+            label.SendToBack();
         }
 
         private List<bool> inputsToDraw;
@@ -187,6 +183,38 @@ namespace AllaxForm
         protected override void OnPaint(PaintEventArgs pe)
         {
             base.OnPaint(pe);
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int x;
+            public int y;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSLLHOOKSTRUCT
+        {
+            public POINT pt;
+            public uint mouseData;
+            public uint flags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.HWnd == this.Handle)
+            {
+                if (m.Msg == 0x201)
+                {  // Trap WM_LBUTTONDOWN
+                    Point pos = new Point(m.LParam.ToInt32() & 0xffff, m.LParam.ToInt32() >> 16);
+                    // Do something with this, return true if the control shouldn't see it
+                    //...
+                    MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(m.LParam, typeof(MSLLHOOKSTRUCT));
+
+                    //this.AllaxBlock_MouseDown((object)this, new MouseEventArgs(GET_, ))
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
