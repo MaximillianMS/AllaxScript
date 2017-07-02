@@ -8,6 +8,7 @@ using AllaxForm;
 using System.Threading;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace FormsGUI
 {
@@ -97,7 +98,8 @@ namespace FormsGUI
         {
             lock (syncRoot)
             {
-                solutions.Add(s);
+                //if (!solutions.Contains(s))
+                    solutions.Add(s);
                 solutions.Sort();
                 refreshSolutions();
             }
@@ -368,6 +370,17 @@ namespace FormsGUI
                 fs = File.OpenWrite(fd.FileName);
                 PanelSerializator.Serialize(SPNetGraph, fs);
                 fs.Close();
+                fs = File.OpenWrite(fd.FileName + "sol");
+                using (var stream = new MemoryStream())
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, solutions);
+                    stream.Flush();
+                    stream.Position = 0;
+                    var arr = stream.ToArray();
+                    arr = Engine.Zip(Engine.Zip(arr));
+                    fs.Write(arr, 0, arr.Length);
+                }
             }
 
         }
@@ -395,6 +408,20 @@ namespace FormsGUI
                 LoadNet(data);
                 sPNetToolStripMenuItem.Enabled = true;
                 fs.Close();
+                if (File.Exists(fd.FileName + "sol"))
+                {
+                    fs = File.OpenRead(fd.FileName + "sol");
+                    var arr = new byte[fs.Length - fs.Position];
+                    fs.Read(arr, (int)fs.Position, arr.Length);
+                    arr = Engine.Unzip(Engine.Unzip(arr));
+                    using (var stream = new MemoryStream(arr))
+                    {
+                        var formatter = new BinaryFormatter();
+                        solutions = (List<Solution>)formatter.Deserialize(stream);
+                    }
+                    refreshSolutions();
+                }
+
             }
         }
 
@@ -548,7 +575,7 @@ namespace FormsGUI
                     Title = "Сохранить скриншот"};
                 DialogResult res= DialogResult.None;
                 var logicToInvokeInsideUIThread = new MethodInvoker(() =>
-                {
+                { 
 
                     res = d.ShowDialog();
                     
@@ -570,9 +597,33 @@ namespace FormsGUI
         }
         private void сохранитьСкриншотСетиToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            WindowState = FormWindowState.Maximized;
+            /*WindowState = FormWindowState.Maximized;
             SaverFunc sf = new SaverFunc(Saver);
-            sf.BeginInvoke(null, null);
+            sf.BeginInvoke(null, null);*/
+            Bitmap bmp = new Bitmap(SPNetGraph.Width, SPNetGraph.Height);
+            SPNetGraph.DrawToBitmap(bmp, new Rectangle(Point.Empty, SPNetGraph.Size));
+            foreach (var l in SPNetGraph.layers)
+            {
+                foreach (var b in l.blocks)
+                {
+                    if (b.type == AllaxBlock.BLOCK_TYPE.P)
+                    {
+                        b.paint(bmp);
+                    }
+                }
+            }
+            SPNetGraph.paint(bmp);
+            SaveFileDialog fd = new SaveFileDialog
+            {
+                Filter = "PNG (*.png) | *.png",
+
+                Title = "Сохранить изображение сети"
+            };
+
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                bmp.Save(fd.FileName, ImageFormat.Png);
+            }
         }
 
         private void addRuleToolStripMenuItem_Click(object sender, EventArgs e)

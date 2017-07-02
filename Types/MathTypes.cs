@@ -130,6 +130,7 @@ namespace Allax
 //         [NonSerialized]
 //         public List<bool> _outputs;
     }
+    [Serializable()]
     public struct Prevalence
     {
         /// <summary>
@@ -323,17 +324,20 @@ namespace Allax
 		SLayer,
 		PLayer
 	}
+    [Serializable()]
 	public struct SPNetWayBlock
 	{
         public long Inputs;
         public long Outputs;
         public int BlockSize;
 	}
+    [Serializable()]
 	public struct SPNetWayLayer
 	{
 		public List<SPNetWayBlock> blocks;
 		public LayerType type;
 	}
+    [Serializable()]
 	public struct SPNetWay
 	{
 		public List<SPNetWayLayer> layers;
@@ -502,6 +506,7 @@ namespace Allax
         public bool CheckPrevalence;
         public Prevalence CurrentPrevalence;
     }
+    [Serializable()]
     public struct Solution : IComparable<Solution>
 	{
         public Solution(Prevalence p, SPNetWay w)

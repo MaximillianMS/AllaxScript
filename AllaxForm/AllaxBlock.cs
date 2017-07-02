@@ -104,13 +104,22 @@ namespace AllaxForm
             this.inputsToDraw = null;
             this.label.Visible = true;
         }
-        private void paint(object sender, System.Windows.Forms.PaintEventArgs e)
 
+        public void paint(Bitmap bmp = null)
         {
+            Graphics g;
+            if (bmp != null)
+            {
+                g = Graphics.FromImage(bmp);
+                g.TranslateTransform(this.Location.X, Location.Y);
+            }
+            else
+            {
+                g = this.CreateGraphics();
+            }
             if (this.inputsToDraw == null) return;
             this.label.Visible = false;
             this.label.Text = "";
-            Graphics g = this.CreateGraphics();
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Pen pen = new Pen(Color.Red, 2);
             List<Point> topC = this.topConnectorsRelative();
@@ -121,8 +130,13 @@ namespace AllaxForm
                 Point from = topC[i]; Point to = botC[init_sequence[i] - 1];
                 int vertical_correction_f = (int)(this.Size.Height * 0.07);
                 int vertical_correction_t = (int)(this.Size.Height * 0.1);
-                g.DrawLine(pen, from.X, from.Y+vertical_correction_f , to.X, to.Y-vertical_correction_t);
+                g.DrawLine(pen, from.X, from.Y + vertical_correction_f, to.X, to.Y - vertical_correction_t);
             }
+        }
+
+        private void paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        {
+            paint();
         }
 
 

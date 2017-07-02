@@ -80,9 +80,18 @@ namespace AllaxForm
         {
             this.coloreds[layerindex] = coloring_mask;
         }
-        public void paint()
+        public void paint(Bitmap bmp = null)
         {
-            Graphics g = this.CreateGraphics();
+            Graphics g;
+            if (bmp != null)
+            {
+                g = Graphics.FromImage(bmp);
+                
+            }
+            else
+            {
+                g = this.CreateGraphics();
+            }
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Pen pen = new Pen(Color.Black, 3);
             Pen penc = new Pen(Color.Red, 3);
