@@ -39,6 +39,7 @@
             this.sBlockInputCountNumericUpDown = new System.Windows.Forms.NumericUpDown();
             this.sBlockInputCountLabel = new System.Windows.Forms.Label();
             this.useConstInputCheckBox = new System.Windows.Forms.CheckBox();
+            this.ignorePrevalence = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.sBlockLayerCountNumericUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sBlockInputCountNumericUpDown)).BeginInit();
             this.SuspendLayout();
@@ -46,7 +47,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Location = new System.Drawing.Point(12, 4);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(160, 13);
             this.label1.TabIndex = 0;
@@ -179,7 +180,7 @@
             // useConstInputCheckBox
             // 
             this.useConstInputCheckBox.AutoSize = true;
-            this.useConstInputCheckBox.Location = new System.Drawing.Point(11, 44);
+            this.useConstInputCheckBox.Location = new System.Drawing.Point(11, 59);
             this.useConstInputCheckBox.Name = "useConstInputCheckBox";
             this.useConstInputCheckBox.Size = new System.Drawing.Size(285, 17);
             this.useConstInputCheckBox.TabIndex = 12;
@@ -187,11 +188,24 @@
             this.useConstInputCheckBox.UseVisualStyleBackColor = true;
             this.useConstInputCheckBox.CheckedChanged += new System.EventHandler(this.useConstInputCheckBox_CheckedChanged);
             // 
+            // ignorePrevalence
+            // 
+            this.ignorePrevalence.AutoSize = true;
+            this.ignorePrevalence.Checked = true;
+            this.ignorePrevalence.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ignorePrevalence.Location = new System.Drawing.Point(11, 26);
+            this.ignorePrevalence.Name = "ignorePrevalence";
+            this.ignorePrevalence.Size = new System.Drawing.Size(218, 17);
+            this.ignorePrevalence.TabIndex = 13;
+            this.ignorePrevalence.Text = "Использовать метод ветвей и границ";
+            this.ignorePrevalence.UseVisualStyleBackColor = true;
+            // 
             // CreateRuleDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(423, 269);
+            this.Controls.Add(this.ignorePrevalence);
             this.Controls.Add(this.useConstInputCheckBox);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.SolverTypeComboBox);
@@ -227,5 +241,6 @@
         private System.Windows.Forms.NumericUpDown sBlockInputCountNumericUpDown;
         private System.Windows.Forms.Label sBlockInputCountLabel;
         private System.Windows.Forms.CheckBox useConstInputCheckBox;
+        private System.Windows.Forms.CheckBox ignorePrevalence;
     }
 }

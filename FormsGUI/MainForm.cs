@@ -506,19 +506,21 @@ namespace FormsGUI
             if (!analysisActive)
             {
                 AllaxBlock b = (AllaxBlock)sender;
-                MatrixViewDialog d = new MatrixViewDialog(new List<List<short>> { new List<short> { 1, 2 }, new List<short> { 3, 4 } }, new List<List<short>> { new List<short> { 5, 6 }, new List<short> { 7, 8 } });
-                d.ShowDialog();
+                
                 if (b.type == AllaxBlock.BLOCK_TYPE.S)
                 {
-                    EditSBlock s = new EditSBlock(currentSettings.SBoxSize, b.init_sequence);
-                    if (s.ShowDialog() == DialogResult.OK)
-                        net.GetLayers()[b.layer_index].GetBlocks()[b.index_in_layer].Init(s.Value);
+                    var corrMatrix = eng.GetSBlockDBInstance().GetCorMatrix(WayConverter.ListToMatrix(b.init_sequence, b.connectors));
+                    var diffMatrix = eng.GetSBlockDBInstance().GetDifMatrix(WayConverter.ListToMatrix(b.init_sequence, b.connectors));
+
+                    if (MessageBox.Show(string.Join(" ,", b.init_sequence.ConvertAll(Convert.ToString)) + "\nОткрыть матрицы?", "Текущее заполнение", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        MatrixViewDialog d = new MatrixViewDialog(corrMatrix, diffMatrix);
+                        d.ShowDialog();
+                    }
                 }
                 else if (b.type == AllaxBlock.BLOCK_TYPE.P)
                 {
-                    EditSBlock s = new EditSBlock(currentSettings.WordLength, b.init_sequence, true);
-                    if (s.ShowDialog() == DialogResult.OK)
-                        net.GetLayers()[b.layer_index].GetBlocks()[b.index_in_layer].Init(s.Value);
+                    MessageBox.Show(string.Join(" ,", b.init_sequence.ConvertAll(Convert.ToString)), "Текущее заполнение");
                 }
             }
         }

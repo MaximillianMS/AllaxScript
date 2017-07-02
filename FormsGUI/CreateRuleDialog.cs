@@ -35,7 +35,7 @@ namespace FormsGUI
 
         private void createButton_Click(object sender, EventArgs e)
         {
-            rule = new Allax.Rule(AvailableSolverTypes.GetAllTypes()[SolverTypeComboBox.SelectedIndex], (int)sBlockLayerCountNumericUpDown.Value, (int)sBlockInputCountNumericUpDown.Value, false);
+            rule = new Allax.Rule(AvailableSolverTypes.GetAllTypes()[SolverTypeComboBox.SelectedIndex], (int)sBlockLayerCountNumericUpDown.Value, (int)sBlockInputCountNumericUpDown.Value, ignorePrevalence.Checked, false);
             if (useConstInputCheckBox.Checked)
             {
                 if (!startingInputMaskedTextBox.MaskCompleted)

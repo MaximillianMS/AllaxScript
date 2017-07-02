@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.corrMatrixTabPage = new System.Windows.Forms.TabPage();
             this.corrMatrixDataGridView = new System.Windows.Forms.DataGridView();
@@ -68,8 +70,18 @@
             this.corrMatrixDataGridView.AllowUserToDeleteRows = false;
             this.corrMatrixDataGridView.AllowUserToResizeColumns = false;
             this.corrMatrixDataGridView.AllowUserToResizeRows = false;
+            this.corrMatrixDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.corrMatrixDataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.corrMatrixDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.corrMatrixDataGridView.ColumnHeadersVisible = false;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.corrMatrixDataGridView.DefaultCellStyle = dataGridViewCellStyle1;
             this.corrMatrixDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.corrMatrixDataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.corrMatrixDataGridView.Location = new System.Drawing.Point(3, 3);
@@ -96,13 +108,24 @@
             this.diffMatrixDataGridView.AllowUserToDeleteRows = false;
             this.diffMatrixDataGridView.AllowUserToResizeColumns = false;
             this.diffMatrixDataGridView.AllowUserToResizeRows = false;
+            this.diffMatrixDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.diffMatrixDataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
             this.diffMatrixDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.diffMatrixDataGridView.ColumnHeadersVisible = false;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.diffMatrixDataGridView.DefaultCellStyle = dataGridViewCellStyle2;
             this.diffMatrixDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.diffMatrixDataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.diffMatrixDataGridView.Location = new System.Drawing.Point(3, 3);
             this.diffMatrixDataGridView.Name = "diffMatrixDataGridView";
             this.diffMatrixDataGridView.ReadOnly = true;
+            this.diffMatrixDataGridView.RowHeadersVisible = false;
             this.diffMatrixDataGridView.Size = new System.Drawing.Size(620, 534);
             this.diffMatrixDataGridView.TabIndex = 1;
             // 
