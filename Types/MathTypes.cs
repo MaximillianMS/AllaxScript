@@ -407,14 +407,16 @@ namespace Allax
     /// </summary>
     public struct Rule
     {
-        public Rule(AvailableSolverTypes SolverType, int MaxActiveBlocksOnLayer = 2, int MaxStartBlocks=1, bool UseCustomInput=false, SolverInputs Input = new SolverInputs())
+        public Rule(AvailableSolverTypes SolverType, int MaxActiveBlocksOnLayer = 2, int MaxStartBlocks=1, bool CheckPrevalence=true, bool UseCustomInput=false, SolverInputs Input = new SolverInputs())
         {
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.SolverType = SolverType;
             this.Input = Input;
             this.UseCustomInput = UseCustomInput;
             this.MaxStartBlocks = MaxStartBlocks;
+            this.CheckPrevalence = CheckPrevalence;
         }
+        public bool CheckPrevalence;
         public int MaxStartBlocks;
         public int MaxActiveBlocksOnLayer;
         public AvailableSolverTypes SolverType;
@@ -459,34 +461,15 @@ namespace Allax
     }
     public struct SPNetSettings
     {
-//         public static bool operator ==(SPNetSettings L, SPNetSettings R)
-//         {
-//             if((L.SBoxCount==R.SBoxCount)||(L.WordLength==R.WordLength)||(R.db==L.db))
-//             {
-//                 return true;
-//             }
-//             else
-//             {
-//                 return false;
-//             }
-//         }
-// 
-//         public static bool operator !=(SPNetSettings L, SPNetSettings R)
-//         {
-//             return !(L == R);
-//         }
-        public SPNetSettings(byte WordLength, byte SBoxSize/*, ISBlockDB DB = null*/)
+        public SPNetSettings(byte WordLength, byte SBoxSize)
         {
             this.WordLength = WordLength;
             this.SBoxSize = SBoxSize;
             this.SBoxCount = (byte)(this.WordLength / this.SBoxSize);
-            //this.db = DB;
         }
 		public byte WordLength;
-        //public byte round_count;
         public byte SBoxSize;
 		public byte SBoxCount;
-		//public ISBlockDB db;
     }
     public struct BlockStateExtrParams
     {

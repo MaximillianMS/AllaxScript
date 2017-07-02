@@ -83,7 +83,7 @@ namespace Allax
                 var Rule = Rules[i];
                 if (Rule.UseCustomInput == true)
                 {
-                    var SolParam = new SolverParams(WayConverter.ToWay(Net, Rule.Input), Params.Engine, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer);
+                    var SolParam = new SolverParams(WayConverter.ToWay(Net, Rule.Input), Params.Engine, Params.Alg.Type, Rule.MaxActiveBlocksOnLayer, Rule.CheckPrevalence);
                     var T = new Task(Solvers[Rule.SolverType].S, SolParam, new ExtraParams());
                     _tasks.Enqueue(T);
                 }
@@ -92,7 +92,8 @@ namespace Allax
                     var S = Solvers[Rule.SolverType];
                     S.IsUsedForBruteForce = true;
                     S.MaxActiveBlocksOnLayer = Rule.MaxActiveBlocksOnLayer;
-                    if(!Iterators.ContainsKey(Rule.SolverType))
+                    S.CheckPrevalence = Rule.CheckPrevalence;
+                    if (!Iterators.ContainsKey(Rule.SolverType))
                     {
                         Iterators.Add(Rule.SolverType, new InputsIterator(Net.GetSettings().SBoxCount, Net.GetSettings().SBoxSize, Rule.MaxStartBlocks));
                     }
@@ -144,7 +145,7 @@ namespace Allax
                         {
                             var NextInput = Iter.NextState();
                             var ws = WayConverter.ToWay(Params.Engine.GetSPNetInstance(), NextInput);
-                            ret.Add(new Task(S.Value.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer)));
+                            ret.Add(new Task(S.Value.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.Value.MaxActiveBlocksOnLayer, S.Value.CheckPrevalence)));
                         }
                     }
                     if (ret.Count >= count)

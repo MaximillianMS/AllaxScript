@@ -44,7 +44,7 @@ namespace Allax
                 }
                 ret = false; // Producing new branches mode.
                 var NetBlock = SolParams.Engine.GetSPNetInstance().GetLayers()[SolParams.lastNotEmptyLayerIndex].GetBlocks()[SolParams.BIndex];
-                var Params = new BlockStateExtrParams(WayBlock.Inputs, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, false);
+                var Params = new BlockStateExtrParams(WayBlock.Inputs, SolParams.Engine.GetMultiThreadPrevalence(), SolParams.P, SolParams.Type, true);
                 var States = NetBlock.ExtractStates(Params);
                 DepthFirstSearch(States, SolParams);
                 break;
@@ -114,8 +114,7 @@ namespace Allax
         {
             var LIndex = SolParams.lastNotEmptyLayerIndex;
             var Block = SolParams.Way.layers[LIndex].blocks[0];
-            var Params = new BlockStateExtrParams(Block.Inputs,
-                                                                new Prevalence(), new Prevalence(), SolParams.Type);
+            var Params = new BlockStateExtrParams(Block.Inputs, new Prevalence(), new Prevalence(), SolParams.Type);
             var States = SolParams.Engine.GetSPNetInstance().GetLayers()[LIndex].GetBlocks()[0].ExtractStates(Params);
             if (States.Count == 1)
             {

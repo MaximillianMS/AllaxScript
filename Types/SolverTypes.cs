@@ -8,16 +8,18 @@ namespace Allax
 {
     public struct SolverParams
     {
-        public SolverParams(SPNetWay Way, IEngine Engine, AnalisysType Type, int MaxActiveBlocksOnLayer)
+        public SolverParams(SPNetWay Way, IEngine Engine, AnalisysType Type, int MaxActiveBlocksOnLayer, bool CheckPrevalence)
         {
             this.Engine = Engine;
             this.Type=Type;
             this.Way = Way;
             this.P = new Prevalence(0, 0, Engine.GetSPNetInstance().GetSettings().SBoxSize);
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
+            this.CheckPrevalence = CheckPrevalence;
             this.BIndex = -1;
             this.lastNotEmptyLayerIndex = -1;
         }
+        public bool CheckPrevalence;
         public int BIndex;
         public int lastNotEmptyLayerIndex;
         public SPNetWay Way;

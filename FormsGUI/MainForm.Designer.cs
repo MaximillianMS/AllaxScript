@@ -42,13 +42,13 @@
             this.linearToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.differrentialToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.finishAnalysisToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeDuplicateSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.сохранитьСкриншотСетиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tasksProgressBar = new System.Windows.Forms.ProgressBar();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
             this.rulesTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.removeDuplicateSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -146,7 +146,7 @@
             this.differrentialToolStripMenuItem});
             this.sPNetToolStripMenuItem.Enabled = false;
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
             this.sPNetToolStripMenuItem.Text = "Начать";
             // 
             // linearToolStripMenuItem
@@ -167,9 +167,19 @@
             // 
             this.finishAnalysisToolStripMenuItem.Enabled = false;
             this.finishAnalysisToolStripMenuItem.Name = "finishAnalysisToolStripMenuItem";
-            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
+            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
             this.finishAnalysisToolStripMenuItem.Text = "Прервать";
             this.finishAnalysisToolStripMenuItem.Click += new System.EventHandler(this.finishAnalysisToolStripMenuItem_Click);
+            // 
+            // removeDuplicateSolutionsToolStripMenuItem
+            // 
+            this.removeDuplicateSolutionsToolStripMenuItem.Checked = true;
+            this.removeDuplicateSolutionsToolStripMenuItem.CheckOnClick = true;
+            this.removeDuplicateSolutionsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.removeDuplicateSolutionsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.removeDuplicateSolutionsToolStripMenuItem.Name = "removeDuplicateSolutionsToolStripMenuItem";
+            this.removeDuplicateSolutionsToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
+            this.removeDuplicateSolutionsToolStripMenuItem.Text = "Убирать одинаковые преобладания";
             // 
             // сохранитьСкриншотСетиToolStripMenuItem
             // 
@@ -239,16 +249,6 @@
             this.rulesTableLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 711);
             this.rulesTableLayoutPanel.TabIndex = 7;
-            // 
-            // removeDuplicateSolutionsToolStripMenuItem
-            // 
-            this.removeDuplicateSolutionsToolStripMenuItem.Checked = true;
-            this.removeDuplicateSolutionsToolStripMenuItem.CheckOnClick = true;
-            this.removeDuplicateSolutionsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.removeDuplicateSolutionsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.removeDuplicateSolutionsToolStripMenuItem.Name = "removeDuplicateSolutionsToolStripMenuItem";
-            this.removeDuplicateSolutionsToolStripMenuItem.Size = new System.Drawing.Size(271, 22);
-            this.removeDuplicateSolutionsToolStripMenuItem.Text = "Убирать одинаковые преобладания";
             // 
             // MainForm
             // 
