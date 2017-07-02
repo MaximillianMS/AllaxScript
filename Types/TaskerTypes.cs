@@ -4,12 +4,14 @@ namespace Allax
 {
     public struct Solver
     {
-        public Solver(ISolver s, bool isUsedForBruteForce = false, int MaxActiveBlocksOnLayer = 2)
+        public Solver(ISolver s, bool isUsedForBruteForce = false, int MaxActiveBlocksOnLayer = 2, bool CheckPrevalence = true)
         {
             this.MaxActiveBlocksOnLayer = MaxActiveBlocksOnLayer;
             this.S = s;
             this.IsUsedForBruteForce = isUsedForBruteForce;
+            this.CheckPrevalence = CheckPrevalence;
         }
+        public bool CheckPrevalence;
         public ISolver S;
         public bool IsUsedForBruteForce;
         public int MaxActiveBlocksOnLayer;
