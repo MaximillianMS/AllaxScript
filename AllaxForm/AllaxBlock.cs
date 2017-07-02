@@ -111,6 +111,7 @@ namespace AllaxForm
             this.label.Visible = false;
             this.label.Text = "";
             Graphics g = this.CreateGraphics();
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Pen pen = new Pen(Color.Red, 2);
             List<Point> topC = this.topConnectorsRelative();
             List<Point> botC = this.bottomConnectorsRelative();
@@ -216,8 +217,6 @@ namespace AllaxForm
                     // Do something with this, return true if the control shouldn't see it
                     //...
                     MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(m.LParam, typeof(MSLLHOOKSTRUCT));
-
-                    //this.AllaxBlock_MouseDown((object)this, new MouseEventArgs(GET_, ))
                     return false;
                 }
             }

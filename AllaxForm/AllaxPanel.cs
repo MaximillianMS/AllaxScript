@@ -83,6 +83,7 @@ namespace AllaxForm
         public void paint()
         {
             Graphics g = this.CreateGraphics();
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Pen pen = new Pen(Color.Black, 3);
             Pen penc = new Pen(Color.Red, 3);
             for (int i = 0; i < this.layers.Count - 1; i++)
