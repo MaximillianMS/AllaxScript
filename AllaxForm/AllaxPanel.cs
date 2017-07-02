@@ -49,14 +49,7 @@ namespace AllaxForm
 
         protected override void OnControlAdded(ControlEventArgs e)
         {
-            //e.Control.MouseDown += Control_DoubleClick;
-            foreach(Control Child in e.Control.Controls)
-            {
-                if(Child is Label)
-                {
-                    Child.MouseDoubleClick += (lambda_sender, lambda_e)=> { Control_DoubleClick(Child.Parent, lambda_e); };
-                }
-            }
+            e.Control.MouseDoubleClick += Control_DoubleClick;
             base.OnControlAdded(e);
         }
 

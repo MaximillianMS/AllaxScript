@@ -28,7 +28,7 @@ namespace AllaxForm
             this.type = type;
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
-            MouseDown += AllaxBlock_MouseDown;
+            //MouseDown += AllaxBlock_MouseDown;
             this.Enabled = true;
             this.BringToFront();
             switch (type)
@@ -85,7 +85,13 @@ namespace AllaxForm
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
             this.Controls.Add(label);
+            label.MouseDoubleClick += Label_MouseDoubleClick;
             label.SendToBack();
+        }
+
+        private void Label_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            this.OnMouseDoubleClick(e);
         }
 
         private List<bool> inputsToDraw;
@@ -103,6 +109,7 @@ namespace AllaxForm
         {
             if (this.inputsToDraw == null) return;
             this.label.Visible = false;
+            this.label.Text = "";
             Graphics g = this.CreateGraphics();
             Pen pen = new Pen(Color.Red, 2);
             List<Point> topC = this.topConnectorsRelative();
@@ -129,8 +136,9 @@ namespace AllaxForm
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
-
             this.Controls.Add(label);
+            label.MouseDoubleClick += Label_MouseDoubleClick;
+            label.SendToBack();
         }
         private void Kblock(int width, int height)
         {
@@ -143,7 +151,6 @@ namespace AllaxForm
             label.Font = new Font(FontFamily.GenericSansSerif, (float)0.5 * height);
             label.Size = this.Size;
             label.TextAlign = ContentAlignment.MiddleCenter;
-
             this.Controls.Add(label);
         }
 
@@ -211,7 +218,7 @@ namespace AllaxForm
                     MSLLHOOKSTRUCT hookStruct = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(m.LParam, typeof(MSLLHOOKSTRUCT));
 
                     //this.AllaxBlock_MouseDown((object)this, new MouseEventArgs(GET_, ))
-                    return true;
+                    return false;
                 }
             }
             return false;

@@ -431,6 +431,7 @@ namespace FormsGUI
         {
             eng.AbortAnalisys();
             Thread.Sleep(1000);
+            analysisActive = false;
             addToolStripMenuItem.Enabled = true;
             sPNetToolStripMenuItem.Enabled = true;
             finishAnalysisToolStripMenuItem.Enabled = false;
@@ -451,7 +452,7 @@ namespace FormsGUI
                 }
                 else if (b.type == AllaxBlock.BLOCK_TYPE.P)
                 {
-                    EditSBlock s = new EditSBlock(currentSettings.SBoxSize, b.init_sequence, true);
+                    EditSBlock s = new EditSBlock(currentSettings.WordLength, b.init_sequence, true);
                     if (s.ShowDialog() == DialogResult.OK)
                         net.GetLayers()[b.layer_index].GetBlocks()[b.index_in_layer].Init(s.Value);
                 }
