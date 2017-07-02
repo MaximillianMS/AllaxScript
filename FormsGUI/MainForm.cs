@@ -475,6 +475,8 @@ namespace FormsGUI
             if (!analysisActive)
             {
                 AllaxBlock b = (AllaxBlock)sender;
+                MatrixViewDialog d = new MatrixViewDialog(new List<List<short>> { new List<short> { 1, 2 }, new List<short> { 3, 4 } }, new List<List<short>> { new List<short> { 5, 6 }, new List<short> { 7, 8 } });
+                d.ShowDialog();
                 if (b.type == AllaxBlock.BLOCK_TYPE.S)
                 {
                     EditSBlock s = new EditSBlock(currentSettings.SBoxSize, b.init_sequence);
