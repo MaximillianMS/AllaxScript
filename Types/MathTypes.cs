@@ -491,7 +491,7 @@ namespace Allax
     public struct BlockStateExtrParams
     {
         public AnalisysType Type;
-        public BlockStateExtrParams(long Inputs/*, long Outputs*/, Prevalence MIN, Prevalence CurrentPrevalence, AnalisysType Type, bool CheckPrevalence = true)
+        public BlockStateExtrParams(long Inputs/*, long Outputs*/, Prevalence MIN, Prevalence CurrentPrevalence, AnalisysType Type, bool CheckPrevalence = false)
         {
             this.Inputs = Inputs;
             //this.Outputs = Outputs;
@@ -528,6 +528,18 @@ namespace Allax
                 return this.P.ActiveBlocksCount.CompareTo(other.P.ActiveBlocksCount);
             }
             return - Math.Abs(this.P.Delta).CompareTo(Math.Abs(other.P.Delta));
+        }
+    }
+    public class SolutionEqualityComparer : IEqualityComparer<Solution>
+    {
+        public bool Equals(Solution x, Solution y)
+        {
+            return x.CompareTo(y) == 0;
+        }
+
+        public int GetHashCode(Solution obj)
+        {
+            return obj.P.Delta.GetHashCode() ^ obj.P.ActiveBlocksCount.GetHashCode();
         }
     }
 }

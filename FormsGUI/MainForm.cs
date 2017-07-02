@@ -91,6 +91,7 @@ namespace FormsGUI
                 fileToolStripMenuItem.Enabled = true;
                 MessageBox.Show("All done!");
                 analysisActive = false;
+                removeDuplicateSolutionsToolStripMenuItem.Enabled = true;
                 //this.Close();
             }
         }
@@ -98,10 +99,12 @@ namespace FormsGUI
         {
             lock (syncRoot)
             {
-                //if (!solutions.Contains(s))
+                if ((!removeDuplicateSolutionsToolStripMenuItem.Checked) || (!solutions.Contains(s, new SolutionEqualityComparer())))
+                {
                     solutions.Add(s);
-                solutions.Sort();
-                refreshSolutions();
+                    solutions.Sort();
+                    refreshSolutions();
+                }
             }
         }
         public void E_ProgressChanged(double progress)
@@ -463,6 +466,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = true;
             finishAnalysisToolStripMenuItem.Enabled = false;
             fileToolStripMenuItem.Enabled = true;
+            removeDuplicateSolutionsToolStripMenuItem.Enabled = true;
             //rulesListBox.Enabled = true;
         }
 
@@ -536,6 +540,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
+            removeDuplicateSolutionsToolStripMenuItem.Enabled = false;
             //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
         }
@@ -551,6 +556,7 @@ namespace FormsGUI
             sPNetToolStripMenuItem.Enabled = false;
             finishAnalysisToolStripMenuItem.Enabled = true;
             fileToolStripMenuItem.Enabled = false;
+            removeDuplicateSolutionsToolStripMenuItem.Enabled = false;
             //rulesListBox.Enabled = false;
             solutionsPanel.Width = 250;
         }

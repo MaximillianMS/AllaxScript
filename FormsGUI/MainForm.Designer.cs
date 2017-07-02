@@ -48,6 +48,7 @@
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
             this.rulesTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.removeDuplicateSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -132,7 +133,8 @@
             // 
             this.analysisToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.sPNetToolStripMenuItem,
-            this.finishAnalysisToolStripMenuItem});
+            this.finishAnalysisToolStripMenuItem,
+            this.removeDuplicateSolutionsToolStripMenuItem});
             this.analysisToolStripMenuItem.Name = "analysisToolStripMenuItem";
             this.analysisToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.analysisToolStripMenuItem.Text = "Анализ";
@@ -183,7 +185,6 @@
             this.tasksProgressBar.Margin = new System.Windows.Forms.Padding(0);
             this.tasksProgressBar.Name = "tasksProgressBar";
             this.tasksProgressBar.Size = new System.Drawing.Size(278, 20);
-            this.tasksProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.tasksProgressBar.TabIndex = 5;
             // 
             // tableLayoutPanel1
@@ -239,6 +240,16 @@
             this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 711);
             this.rulesTableLayoutPanel.TabIndex = 7;
             // 
+            // removeDuplicateSolutionsToolStripMenuItem
+            // 
+            this.removeDuplicateSolutionsToolStripMenuItem.Checked = true;
+            this.removeDuplicateSolutionsToolStripMenuItem.CheckOnClick = true;
+            this.removeDuplicateSolutionsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.removeDuplicateSolutionsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.removeDuplicateSolutionsToolStripMenuItem.Name = "removeDuplicateSolutionsToolStripMenuItem";
+            this.removeDuplicateSolutionsToolStripMenuItem.Size = new System.Drawing.Size(271, 22);
+            this.removeDuplicateSolutionsToolStripMenuItem.Text = "Убирать одинаковые преобладания";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -281,6 +292,7 @@
         private System.Windows.Forms.ToolStripMenuItem clearRulesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem сохранитьСкриншотСетиToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel rulesTableLayoutPanel;
+        private System.Windows.Forms.ToolStripMenuItem removeDuplicateSolutionsToolStripMenuItem;
     }
 }
 
