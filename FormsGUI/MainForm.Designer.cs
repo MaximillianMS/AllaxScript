@@ -49,6 +49,7 @@
             this.solutionsPanel = new System.Windows.Forms.Panel();
             this.solutionsListBox = new System.Windows.Forms.ListBox();
             this.rulesTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.graphPanel = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.solutionsPanel.SuspendLayout();
@@ -146,7 +147,7 @@
             this.differrentialToolStripMenuItem});
             this.sPNetToolStripMenuItem.Enabled = false;
             this.sPNetToolStripMenuItem.Name = "sPNetToolStripMenuItem";
-            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
+            this.sPNetToolStripMenuItem.Size = new System.Drawing.Size(271, 22);
             this.sPNetToolStripMenuItem.Text = "Начать";
             // 
             // linearToolStripMenuItem
@@ -167,7 +168,7 @@
             // 
             this.finishAnalysisToolStripMenuItem.Enabled = false;
             this.finishAnalysisToolStripMenuItem.Name = "finishAnalysisToolStripMenuItem";
-            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
+            this.finishAnalysisToolStripMenuItem.Size = new System.Drawing.Size(271, 22);
             this.finishAnalysisToolStripMenuItem.Text = "Прервать";
             this.finishAnalysisToolStripMenuItem.Click += new System.EventHandler(this.finishAnalysisToolStripMenuItem_Click);
             // 
@@ -178,7 +179,7 @@
             this.removeDuplicateSolutionsToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.removeDuplicateSolutionsToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.removeDuplicateSolutionsToolStripMenuItem.Name = "removeDuplicateSolutionsToolStripMenuItem";
-            this.removeDuplicateSolutionsToolStripMenuItem.Size = new System.Drawing.Size(278, 22);
+            this.removeDuplicateSolutionsToolStripMenuItem.Size = new System.Drawing.Size(271, 22);
             this.removeDuplicateSolutionsToolStripMenuItem.Text = "Убирать одинаковые преобладания";
             // 
             // сохранитьСкриншотСетиToolStripMenuItem
@@ -205,6 +206,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.solutionsPanel, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.rulesTableLayoutPanel, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.graphPanel, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 24);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -250,6 +252,15 @@
             this.rulesTableLayoutPanel.Size = new System.Drawing.Size(194, 711);
             this.rulesTableLayoutPanel.TabIndex = 7;
             // 
+            // graphPanel
+            // 
+            this.graphPanel.AutoScroll = true;
+            this.graphPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphPanel.Location = new System.Drawing.Point(203, 3);
+            this.graphPanel.Name = "graphPanel";
+            this.graphPanel.Size = new System.Drawing.Size(794, 711);
+            this.graphPanel.TabIndex = 8;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -257,6 +268,7 @@
             this.ClientSize = new System.Drawing.Size(1264, 741);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
+            this.DoubleBuffered = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
             this.Text = "Анализ SP-Сетей";
@@ -293,6 +305,7 @@
         private System.Windows.Forms.ToolStripMenuItem сохранитьСкриншотСетиToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel rulesTableLayoutPanel;
         private System.Windows.Forms.ToolStripMenuItem removeDuplicateSolutionsToolStripMenuItem;
+        private System.Windows.Forms.Panel graphPanel;
     }
 }
 

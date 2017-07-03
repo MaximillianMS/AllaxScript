@@ -216,7 +216,7 @@ namespace Allax
                 if (Thread.GetState() != WorkerThreadState.Finished)
                 {
                     Logger.UltraLogger.Instance.AddToLog("Worker: Thread is not free. Cant init thread after end of previous task.", Logger.MsgType.Error);
-                    throw new NotImplementedException();
+                    //throw new NotImplementedException();
                 }
             }
         }
@@ -258,56 +258,60 @@ namespace Allax
             ITask Task;
             lock (syncRoot)
             {
-                if (TaskQueue.Count == 0)
+                try
                 {
-                    AddTasks(Params.MaxThreads*1000);
-                }
-                if (TaskQueue.Count > 0)
-                {
-
-                    if (Thread.GetState() == WorkerThreadState.Free)
+                    if (TaskQueue.Count == 0)
                     {
-                        Task = TaskQueue.Dequeue();
-                        Thread.Init(new WorkerThreadParams(Task));
+                        AddTasks(Params.MaxThreads * 1000);
                     }
-                    else
+                    if (TaskQueue.Count > 0)
                     {
-                        if (Thread.GetState() == WorkerThreadState.Finished)
+
+                        if (Thread.GetState() == WorkerThreadState.Free && (this.State != WorkerThreadState.Finished))
                         {
-                            ;
+                            Task = TaskQueue.Dequeue();
+                            Thread.Init(new WorkerThreadParams(Task));
                         }
                         else
                         {
-                            throw new Exception();
-                        }
-                    }
-                    if (Thread.GetState() == WorkerThreadState.Loaded)
-                        Thread.Start();
-                }
-                else
-                {
-                    //                     if (TaskQueue.Count > 0)
-                    //                     {
-                    //                         Logger.UltraLogger.Instance.AddToLog("Worker: Coudn't dequeue Task.", Logger.MsgType.Error);
-                    //                         OK = false;
-                    //                         throw new NotImplementedException();
-                    // 
-                    //                     }
-                    //                     else
-                    //                     {
-                    if (State != WorkerThreadState.Stopped)
-                    {
-                        Thread.SetState(WorkerThreadState.Finished);
-                        if (Threads.All(x => x.GetState() == WorkerThreadState.Finished))
-                        {
-                            State = WorkerThreadState.Stopped;
-                            if (!Params.ASync)
-                                ALLTASKSDONE(new Task());
+                            if (Thread.GetState() == WorkerThreadState.Finished)
+                            {
+                                ;
+                            }
                             else
-                                ALLTASKSDONE.BeginInvoke(new Task(), null, null);
+                            {
+                                return false;// throw new Exception();
+                            }
+                        }
+                        if (Thread.GetState() == WorkerThreadState.Loaded)
+                            Thread.Start();
+                    }
+                    else
+                    {
+                        //                     if (TaskQueue.Count > 0)
+                        //                     {
+                        //                         Logger.UltraLogger.Instance.AddToLog("Worker: Coudn't dequeue Task.", Logger.MsgType.Error);
+                        //                         OK = false;
+                        //                         throw new NotImplementedException();
+                        // 
+                        //                     }
+                        //                     else
+                        //                     {
+                        if (State != WorkerThreadState.Stopped)
+                        {
+                            Thread.SetState(WorkerThreadState.Finished);
+                            if (Threads.All(x => x.GetState() == WorkerThreadState.Finished))
+                            {
+                                State = WorkerThreadState.Stopped;
+                                if (!Params.ASync)
+                                    ALLTASKSDONE(new Task());
+                                else
+                                    ALLTASKSDONE.BeginInvoke(new Task(), null, null);
+                            }
                         }
                     }
                 }
+                catch { }
             }
             return OK;
         }
@@ -324,8 +328,8 @@ namespace Allax
                 }
                 if(!OK)
                 {
-                    throw new NotImplementedException();
-                    throw new Exception();
+                    //throw new NotImplementedException();
+                    //throw new Exception();
                 }
             }
             else

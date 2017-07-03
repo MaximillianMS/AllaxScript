@@ -14,7 +14,7 @@ namespace AllaxForm
         // All values as fractions of the panel's size
         public double block_height = 1.0 / 25;
         public double wide_block_width = 1;
-        public double narrow_block_width = (1.0 / 4) * (3.0/4);
+        public double narrow_block_width = (1.0 / 4) * (3.0 / 4);
         public double block_width_distance = (1.0 / 4) * (1.0 / 4);
         public double block_height_distance = (3.0 / 16) / 13;
 
@@ -32,17 +32,20 @@ namespace AllaxForm
         public readonly int blocks_tall;
         public List<Layer> layers = new List<Layer>();
         private MouseEventHandler Control_DoubleClick;
-
-        public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall, MouseEventHandler doubleClickHandler)
+        private MouseEventHandler Control_Click;
+        public AllaxPanel(int wordsize, int blocks_wide, int blocks_tall, MouseEventHandler doubleClickHandler, MouseEventHandler clickHandler)
         {
             Application.AddMessageFilter(this);
             Control_DoubleClick = doubleClickHandler;
+            Control_Click = clickHandler;
             this.wordsize = wordsize; this.blocks_wide = blocks_wide; this.blocks_tall = blocks_tall;
             this.Paint += testpaint;
             SetStyle(ControlStyles.ResizeRedraw, true);
             SetStyle(ControlStyles.StandardClick, true);
             SetStyle(ControlStyles.StandardDoubleClick, true);
             this.VScroll = true;
+            AutoSize = true;
+            this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             this.initializeSizes();
             //this.initializeDragDrop();
         }
@@ -50,6 +53,7 @@ namespace AllaxForm
         protected override void OnControlAdded(ControlEventArgs e)
         {
             e.Control.MouseDoubleClick += Control_DoubleClick;
+            e.Control.MouseClick += Control_Click;
             base.OnControlAdded(e);
         }
 
@@ -60,7 +64,7 @@ namespace AllaxForm
                 n.Add(false);
             this.coloreds.Add(n);
         }
-        
+
 
         private void initializeSizes()
         {
@@ -75,18 +79,80 @@ namespace AllaxForm
             wide_block_width = 1;
             narrow_block_width = (1.0 / blocks_wide) * (3.0 / 4);
             block_width_distance = (1.0 / blocks_wide) * (1.0 / 4);
-    }
+        }
         public void setLayerColors(int layerindex, List<bool> coloring_mask)
         {
             this.coloreds[layerindex] = coloring_mask;
         }
-        public void paint(Bitmap bmp = null)
+        //public void paint(Bitmap bmp = null)
+        //{
+        //    Graphics g;
+        //    if (bmp != null)
+        //    {
+        //        g = Graphics.FromImage(bmp);
+
+        //    }
+        //    else
+        //    {
+        //        g = this.CreateGraphics();
+        //    }
+        //    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        //    Pen pen = new Pen(Color.Black, 3);
+        //    Pen penc = new Pen(Color.Red, 3);
+        //    for (int i = 0; i < this.layers.Count - 1; i++)
+        //    {
+        //        // drawing lines from layer i to layer i+1
+        //        List<Point> topC = new List<Point>();
+        //        foreach (AllaxBlock b in this.layers[i].blocks)
+        //        {
+        //            foreach (Point p in b.bottomConnectorsRelative())
+        //            {
+        //                Point abs = new Point(p.X + b.Location.X, p.Y + b.Location.Y);
+        //                topC.Add(abs);
+        //            }
+        //        }
+        //        List<Point> botC = new List<Point>();
+        //        foreach (AllaxBlock b in this.layers[i + 1].blocks)
+        //        {
+        //            foreach (Point p in b.topConnectorsRelative())
+        //            {
+        //                Point abs = new Point(p.X + b.Location.X, p.Y + b.Location.Y);
+        //                botC.Add(abs);
+        //            }
+        //        }
+
+        //        for (int j = 0; j < topC.Count; j++)
+        //        {
+        //            Pen p;
+        //            if (this.coloreds[i][j] == true)
+        //                p = penc;
+        //            else
+        //                p = pen;
+        //            g.DrawLine(p,
+        //                topC[j].X, topC[j].Y,
+        //                botC[j].X, botC[j].Y);
+        //        }
+        //    }
+        //}
+    public class ConnectorColorMask
+    {
+        public ConnectorColorMask(bool Value, Color Color)
+        {
+            this.Value = Value;
+            this.Color = Color;
+        }
+
+        public bool Value;
+        public Color Color;
+    }
+        public List<List<ConnectorColorMask>> Mask = null;
+    public void paint(Bitmap bmp=null)
         {
             Graphics g;
             if (bmp != null)
             {
                 g = Graphics.FromImage(bmp);
-                
+
             }
             else
             {
@@ -94,7 +160,7 @@ namespace AllaxForm
             }
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Pen pen = new Pen(Color.Black, 3);
-            Pen penc = new Pen(Color.Red, 3);
+            //Pen penc = new Pen(Color.Red, 3);
             for (int i = 0; i < this.layers.Count - 1; i++)
             {
                 // drawing lines from layer i to layer i+1
@@ -116,12 +182,16 @@ namespace AllaxForm
                         botC.Add(abs);
                     }
                 }
-
                 for (int j = 0; j < topC.Count; j++)
                 {
                     Pen p;
-                    if (this.coloreds[i][j] == true)
-                        p = penc;
+                    if (Mask != null)
+                    {
+                        if (Mask[i][j].Value == true)
+                            p = new Pen(Mask[i][j].Color, 3);
+                        else
+                            p = pen;
+                    }
                     else
                         p = pen;
                     g.DrawLine(p,
@@ -130,9 +200,7 @@ namespace AllaxForm
                 }
             }
         }
-
         private void testpaint(object sender, System.Windows.Forms.PaintEventArgs e)
-
         {
             paint();
         }
