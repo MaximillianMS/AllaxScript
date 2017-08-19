@@ -469,17 +469,17 @@ namespace CATesting
         {
             var CACr = new Allax.Cell.CACryptor(4, 128);
             //search special neighbors
-            for(int i=0;i<182;i++)
-            {
-                for(int j=0;j<6;j++)
-                {
-                    if (CACr.FN.Automata[i] == CACr.FN.Automata[i].Neighbors[j].Neighbors[j])
-
-                    {
-                        ;
-                    }
-                }
-            }
+//             for(int i=0;i<182;i++)
+//             {
+//                 for(int j=0;j<6;j++)
+//                 {
+//                     if (CACr.FN.Automata[i] == CACr.FN.Automata[i].Neighbors[j].Neighbors[j])
+// 
+//                     {
+//                         ;
+//                     }
+//                 }
+//             }
             var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList().ConvertAll(i => Convert.ToBoolean(i));
             var CT = CACr.Encrypt(OT);
             Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i])).ToList()));
