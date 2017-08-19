@@ -86,6 +86,7 @@ namespace AllaxForm
             label.TextAlign = ContentAlignment.MiddleCenter;
             this.Controls.Add(label);
             label.MouseDoubleClick += Label_MouseDoubleClick;
+            label.MouseClick += Label_MouseClick;
             label.SendToBack();
         }
 
@@ -93,15 +94,24 @@ namespace AllaxForm
         {
             this.OnMouseDoubleClick(e);
         }
-
+        private void Label_MouseClick(object sender, MouseEventArgs e)
+        {
+            this.OnMouseClick(e);
+        }
         private List<bool> inputsToDraw;
+        private List<AllaxPanel.ConnectorColorMask> Mask;
         public void drawPBlockWeb(List<bool> inputs)
         {
             this.inputsToDraw = inputs; Invalidate();
         }
+        public void drawPBlockWeb(List<AllaxPanel.ConnectorColorMask> Mask)
+        {
+            this.Mask = Mask; Invalidate();
+        }
         public void removePBlockWeb()
         {
             this.inputsToDraw = null;
+            this.Mask = null;
             this.label.Visible = true;
         }
 
@@ -131,7 +141,20 @@ namespace AllaxForm
                 int vertical_correction_f = (int)(this.Size.Height * 0.07);
                 int vertical_correction_t = (int)(this.Size.Height * 0.1);
                 g.DrawLine(pen, from.X, from.Y + vertical_correction_f, to.X, to.Y - vertical_correction_t);
+
             }
+            if (this.Mask == null) return;
+            for (int i = 0; i < this.connectors; i++)
+            {
+                if (Mask[i].Value == false) continue;
+                pen = new Pen(Mask[i].Color, 2);
+                Point from = topC[i]; Point to = botC[init_sequence[i] - 1];
+                int vertical_correction_f = (int)(this.Size.Height * 0.07);
+                int vertical_correction_t = (int)(this.Size.Height * 0.1);
+                g.DrawLine(pen, from.X, from.Y + vertical_correction_f, to.X, to.Y - vertical_correction_t);
+
+            }
+
         }
 
         private void paint(object sender, System.Windows.Forms.PaintEventArgs e)

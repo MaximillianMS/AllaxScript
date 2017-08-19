@@ -16,7 +16,7 @@ namespace AllaxForm
         public Form1()
         {
             InitializeComponent();
-            panel = new AllaxPanel(4, 4, 12, block_DoubleClick);
+            panel = new AllaxPanel(4, 4, 12, block_DoubleClick, block_DoubleClick);
             panel.Size = new Size(1000, 500);
             panel.BackColor = Color.AliceBlue;
             panel.addKLayer();

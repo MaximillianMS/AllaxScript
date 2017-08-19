@@ -67,7 +67,7 @@ namespace Allax
                                 NextInput = Iter.NextState();
                                 var ws = WayConverter.ToWay(Net, NextInput);
 
-                                _tasks.Enqueue(new Task(S.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.MaxActiveBlocksOnLayer)));
+                                _tasks.Enqueue(new Task(S.S, new SolverParams(ws, Params.Engine, Params.Alg.Type, S.MaxActiveBlocksOnLayer, S.CheckPrevalence)));
                             }
                         }
                     }

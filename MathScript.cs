@@ -576,7 +576,7 @@ namespace Allax
             catch(Exception e)
             {
                 Logger.UltraLogger.Instance.ExportToFile();
-                throw new Exception(e.Message);
+                //throw new Exception(e.Message);
             }
         }
         private void TheWorker_ALLTASKSDONE(ITask T)
