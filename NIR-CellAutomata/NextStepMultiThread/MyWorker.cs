@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Allax.Cell
+namespace Allax.Cryptography
 {
     class SignalWorker : Allax.Worker
     {

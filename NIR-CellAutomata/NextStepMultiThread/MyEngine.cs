@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Allax;
-namespace Allax.Cell
+namespace Allax.Cryptography
 {
     class EngineForTaskerAndWorker : IEngine
     {
