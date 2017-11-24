@@ -51,3 +51,4 @@ bin/
 obj/
 *.suo
 publish/
+/.vs/AllaxScript/v15/Server/sqlite3

@@ -78,6 +78,7 @@
     <Compile Include="Types\WorkerTypes.cs" />
     <Compile Include="Loggers\UltraLogger.cs" />
     <Compile Include="Interfaces\IWorker.cs" />
+    <Compile Include="Workers\TrueWorker.cs" />
     <Compile Include="Workers\Worker.cs" />
   </ItemGroup>
   <ItemGroup>
