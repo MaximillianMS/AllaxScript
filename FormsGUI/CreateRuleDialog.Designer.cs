@@ -143,14 +143,9 @@
             // 
             // sBlockInputCountNumericUpDown
             // 
-            this.sBlockInputCountNumericUpDown.Increment = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
             this.sBlockInputCountNumericUpDown.Location = new System.Drawing.Point(350, 123);
             this.sBlockInputCountNumericUpDown.Maximum = new decimal(new int[] {
-            64,
+            8,
             0,
             0,
             0});

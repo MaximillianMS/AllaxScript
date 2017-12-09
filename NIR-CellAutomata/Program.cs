@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Allax;
 using Allax.Cryptography;
 using System.Threading;
+using System.Numerics;
 
 namespace Allax.Cryptography
 {
@@ -680,9 +681,106 @@ namespace CATesting
             this.Neighbors = new List<Allax.Cryptography.Cell>(C.Neighbors);
         }
     }
+    class DifferencialWatcher
+    {
+        List<List<Graph>> States=new List<List<Graph>>();
+        CA OriginAutomata;
+        List<CA> Automatas = new List<CA>();
+        List<int> Mask;
+        BigInteger Input;
+        public void ResetInput()
+        {
+            Input = 0;
+        }
+        public DifferencialWatcher(CA Aut)
+        {
+            this.OriginAutomata = Aut;
+        }
+        void Update()
+        {
+            States.Add(new List<Graph>());
+            for (int i = 0; i < Automatas.Count; i++)
+            {
+                var Automata = Automatas[i];
+                if (Automata != null)
+                {
+                    States.Last().Add((Graph)Automata.G.Clone());
+                }
+            }
+        }
+        public void Step()
+        {
+            foreach (var Automata in Automatas)
+            {
+                Automata.NextStep();
+            }
+            Update();
+        }
+        public void Step(int Count)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                Step();
+            }
+        }
+        public void SetAutomatas(List<List<int>> InitValues)
+        {
+            Automatas.Clear();
+            States.Clear();
+            for (int i = 0; i < InitValues.Count; i++)
+            {
+                Automatas.Add((CA)OriginAutomata.Clone());
+                Automatas.Last().SetValues(InitValues[i]);
+            }
+        }
+        public void SetDiffMask(List<int> Mask)
+        {
+            this.Mask = new List<int>(Mask);
+        }
+        public List<int> BigIntegerToList(BigInteger BI)
+        {
+            return Enumerable.Range(0, OriginAutomata.GetCellCount()).Select(i => (int)((BI >> i) & 1)).Reverse().ToList();
+        }
+        public BigInteger ListToBigInteger(List<int> L)
+        {
+            BigInteger ret = 0;
+            foreach(var Value in L)
+            {
+                ret = (ret << 1) + Value;
+            }
+            return ret;
+        }
+        public bool NextPair(int Step)
+        {
+            if (Input < BigInteger.Pow(2, OriginAutomata.GetCellCount()))
+            {
+                SetAutomatas(new List<List<int>> { BigIntegerToList(Input), BigIntegerToList(Input ^ ListToBigInteger(Mask))});
+                this.Step(Step);
+                Input = BigInteger.Add(Input, 1);
+                return true;
+            }
+            else
+                return false;
+        }
+        public List<Graph> GetPairDifference()
+        {
+            List<Graph> ret = new List<Graph>();
+            foreach(var StepStates in States)
+            {
+                var CellsDiff = StepStates[0].Cells.Select(i => i.Value ^ StepStates[1].Cells[i.Index].Value).ToList();
+                var GraphDiff = (Graph)StepStates[0].Clone();
+                for(int i =0;i< GraphDiff.Cells.Count;i++)
+                {
+                    GraphDiff.Cells[i].Value = CellsDiff[i];
+                }
+                ret.Add(GraphDiff);
+            }
+            return ret;
+        }
+    }
     class Program
     {
-        static CA Numerate(CA Aut, int LinearArgInd=1)
+        static CA Numerate(CA Aut, int LinearArgInd = 1)
         {
             Aut = (CA)Aut.Clone();
             var hk = new Allax.Cryptography.HK();
@@ -774,12 +872,10 @@ namespace CATesting
             }
             return V;
         }
-
-        static void Main(string[] args)
+        static void ShowMatixes(List<List<bool>> Func)
         {
-            var CACr = new Allax.Cryptography.CACryptor(7, 128);
-            var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
             var DB = new SBlockDB();
+            //Выведем матрицы корреляции и разности
             var Res = DB.GetCorMatrix(Func);
             foreach (var Ind in Enumerable.Range(0, Res[1].Count))
             {
@@ -792,119 +888,105 @@ namespace CATesting
                 WayConverter.ToList(Ind, 6).ForEach(X => Console.Write(string.Format("{0} ", Convert.ToInt32(X))));
                 Console.WriteLine(string.Format("{0}", Res2[Ind][1]));
             }
-            var NewAut = Numerate(CACr.FN.Automata);
 
-            CACr.FN.AssignAutomata(NewAut);
-            int[] Sum = new int[182];
-            for (int st = 0; st < 182; st++)
-            {
-                for (int i = 0; i < 182; i++)
-                {
-                    if (i != st)
-                    {
-                        var Result = CALinearAnalisys((CA)CACr.FN.Automata.Clone(), new List<int> { st});
-                        Result.Reverse();
-                        Sum[st] = Result.Skip(1).Sum(c => c.Count);
-                        break;
-                    }
-                }
-            }
-            var Best = Sum.Where(c => c != 0).Min();
-            var A = (CA)NewAut.Clone();
+        }
+        static void SearchCollision(CA A)
+        {
+
             var MaxStarts = 182;
-            var CollisionResult = new List<List<Cell>> (Enumerable.Range(0, A.GetCellCount()).Select(a=>new List<Cell>()));
+            var CollisionResult = new List<List<Cell>>(Enumerable.Range(0, A.GetCellCount()).Select(a => new List<Cell>()));
             foreach (var start in A.G.Cells)
             {
                 var B = new List<Cell>();
                 var C = new List<Cell>();
                 B.Add(start);
-                    while (B.Count < MaxStarts)
+                while (B.Count < MaxStarts)
+                {
+                    //Add C(x2)-B
+                    var AddedToB = false;
+                    var AddedToC = false;
+                    foreach (var b in B)
                     {
-                        //Add C(x2)-B
-                        var AddedToB = false;
-                        var AddedToC = false;
-                        foreach (var b in B)
+                        var C2 = b.Neighbors.Find(c => c.Neighbors[1] == b);
+                        if (!C.Contains(C2))
                         {
-                            var C2 = b.Neighbors.Find(c => c.Neighbors[1] == b);
-                            if (!C.Contains(C2))
-                            {
-                                C.Add(C2);
-                                AddedToC = true;
-                            }
+                            C.Add(C2);
+                            AddedToC = true;
                         }
-                        //Add B-(x2)C
-                        foreach (var c in C)
+                    }
+                    //Add B-(x2)C
+                    foreach (var c in C)
+                    {
+                        if (!B.Contains(c.Neighbors[1]))
                         {
-                            if (!B.Contains(c.Neighbors[1]))
-                            {
-                                B.Add(c.Neighbors[1]);
-                                AddedToB = true;
-                            }
+                            B.Add(c.Neighbors[1]);
+                            AddedToB = true;
                         }
-                        if (AddedToB || AddedToC)
+                    }
+                    if (AddedToB || AddedToC)
+                        continue;
+                    //Check Ci
+                    foreach (var c in C)
+                    {
+                        //Ci-Bi
+                        var Candidates0 = c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell));
+                        if (Candidates0.Count() >= 2)
+                        {
                             continue;
-                        //Check Ci
-                        foreach (var c in C)
+                        }
+                        else
                         {
-                            //Ci-Bi
-                            var Candidates0 = c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell));
-                            if (Candidates0.Count() >= 2)
+                            //search
+                            //Ci-NewBi-(x2)Cj
+                            var Candidates1 = c.Neighbors.Where(cell => cell != c.Neighbors[1] &&
+                                        C.Contains(cell.Neighbors.Find(cell2 => cell2.Neighbors[1] == cell)));
+                            //Ci-NewBi-(xi)Cj
+                            var Candidates2 = c.Neighbors.Where(cell => cell != c.Neighbors[1] &&
+                                        !cell.Neighbors.All(cell2 => !C.Where(cell3 => cell3 != c).Contains(cell2)));
+                            //Ci-NewBi
+                            var Candidates3 = c.Neighbors.Where(cell => cell != c.Neighbors[1]);
+                            Candidates1 = new Queue<Cell>(Candidates1.Where(cell => !Candidates0.Contains(cell)));
+                            Candidates2 = new Queue<Cell>(Candidates2.Where(cell => !Candidates0.Contains(cell) && !Candidates1.Contains(cell)));
+                            Candidates3 = new Queue<Cell>(Candidates3.Where(cell => !Candidates0.Contains(cell) && !Candidates1.Contains(cell) && !Candidates2.Contains(cell)));
+                            for (int i = Candidates0.Count(); i < 2; i++)
                             {
-                                continue;
-                            }
-                            else
-                            {
-                                //search
-                                //Ci-NewBi-(x2)Cj
-                                var Candidates1 = c.Neighbors.Where(cell => cell != c.Neighbors[1] && 
-                                            C.Contains(cell.Neighbors.Find(cell2 => cell2.Neighbors[1] == cell)));
-                                //Ci-NewBi-(xi)Cj
-                                var Candidates2 = c.Neighbors.Where(cell => cell != c.Neighbors[1] &&
-                                            !cell.Neighbors.All(cell2 => !C.Where(cell3=>cell3!=c).Contains(cell2)));
-                                //Ci-NewBi
-                                var Candidates3 = c.Neighbors.Where(cell => cell != c.Neighbors[1]);
-                                Candidates1 = new Queue<Cell> (Candidates1.Where(cell => !Candidates0.Contains(cell)));
-                                Candidates2 = new Queue<Cell>(Candidates2.Where(cell => !Candidates0.Contains(cell) && !Candidates1.Contains(cell)));
-                                Candidates3 = new Queue<Cell>(Candidates3.Where(cell => !Candidates0.Contains(cell) && !Candidates1.Contains(cell) && !Candidates2.Contains(cell)));
-                                for (int i = Candidates0.Count();i<2;i++)
+                                if (Candidates1.Count() != 0)
                                 {
-                                    if(Candidates1.Count()!=0)
-                                    {
-                                        B.Add(((Queue<Cell>)Candidates1).Dequeue());
-                                        AddedToB = true;
-                                        continue;
-                                    }
-                                    if (Candidates2.Count() != 0)
-                                    {
-                                        B.Add(((Queue<Cell>)Candidates2).Dequeue());
-                                        AddedToB = true;
-                                        continue;
-                                    }
-                                    if (Candidates3.Count() != 0)
-                                    {
-                                        B.Add(((Queue<Cell>)Candidates3).Dequeue());
-                                        AddedToB = true;
-                                        continue;
-                                    }
+                                    B.Add(((Queue<Cell>)Candidates1).Dequeue());
+                                    AddedToB = true;
+                                    continue;
+                                }
+                                if (Candidates2.Count() != 0)
+                                {
+                                    B.Add(((Queue<Cell>)Candidates2).Dequeue());
+                                    AddedToB = true;
+                                    continue;
+                                }
+                                if (Candidates3.Count() != 0)
+                                {
+                                    B.Add(((Queue<Cell>)Candidates3).Dequeue());
+                                    AddedToB = true;
+                                    continue;
                                 }
                             }
                         }
-                        if (AddedToB || AddedToC)
-                            continue;
-                        Console.WriteLine("\nB:");
-                        B.ForEach(c => Console.Write(string.Format("{0}-", c.Index)));
-                        Console.WriteLine("\nC:");
-                        C.ForEach(c =>
-                        
-                            Console.WriteLine(string.Format("C{0} (X1:{1},X2:{2},X6:{3})", c.Index, c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell)).ToList()[0].Index, c.Neighbors[1].Index, c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell)).ToList()[1].Index))
-                            
-                            );
+                    }
+                    if (AddedToB || AddedToC)
+                        continue;
+                    Console.WriteLine("\nB:");
+                    B.ForEach(c => Console.Write(string.Format("{0}-", c.Index)));
+                    Console.WriteLine("\nC:");
+                    C.ForEach(c =>
+
+                        Console.WriteLine(string.Format("C{0} (X1:{1},X2:{2},X6:{3})", c.Index, c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell)).ToList()[0].Index, c.Neighbors[1].Index, c.Neighbors.Where(cell => cell != c.Neighbors[1] && B.Contains(cell)).ToList()[1].Index))
+
+                        );
                     CollisionResult[start.Index] = B;
                     break;
-                    
+
                 }
             }
-            var BestCollision = CollisionResult.Find(a=>a.Count==CollisionResult.Select(b=>b.Count).Min());
+            var BestCollision = CollisionResult.Find(a => a.Count == CollisionResult.Select(b => b.Count).Min());
             Console.WriteLine("B:");
             foreach (var b in BestCollision)
             {
@@ -913,20 +995,21 @@ namespace CATesting
             Console.WriteLine("\nC:");
             foreach (var b in BestCollision)
             {
-                Console.Write(string.Format("{0}-", b.Neighbors.Find(c=>c.Neighbors[1]==b).Index));
+                Console.Write(string.Format("{0}-", b.Neighbors.Find(c => c.Neighbors[1] == b).Index));
             }
-            foreach (var B2 in A.G.Cells)
+
+            /*foreach (var B2 in A.G.Cells)
             {
                 var C2 = B2.Neighbors.Find(c => c.Neighbors[1] == B2);
-                foreach(var B1 in C2.Neighbors.Where(c=>c!=B2))
+                foreach (var B1 in C2.Neighbors.Where(c => c != B2))
                 {
-                    foreach(var B3 in C2.Neighbors.Where(c=>c!=B2&&c!=B1))
+                    foreach (var B3 in C2.Neighbors.Where(c => c != B2 && c != B1))
                     {
                         var C1 = B1.Neighbors.Find(c => c.Neighbors[1] == B1);
                         var C3 = B3.Neighbors.Find(c => c.Neighbors[1] == B3);
-                        if(C1.Neighbors.Contains(B2)&& C1.Neighbors.Contains(B3))
+                        if (C1.Neighbors.Contains(B2) && C1.Neighbors.Contains(B3))
                         {
-                            if(C3.Neighbors.Contains(B1)&& C3.Neighbors.Contains(B2))
+                            if (C3.Neighbors.Contains(B1) && C3.Neighbors.Contains(B2))
                             {
                                 ;
                             }
@@ -934,13 +1017,78 @@ namespace CATesting
                     }
                 }
 
-            }
+            }*/
+        }
+        static void TestCrypt(CACryptor CACr)
+        {
+
             var OT = (from i in WayConverter.ToList(0xDDAABBAAC, 64).Concat(WayConverter.ToList(0xCACACADAB, 64)) select Convert.ToInt32(i)).ToList().ConvertAll(i => Convert.ToBoolean(i));
             var CT = CACr.Encrypt(OT);
             Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, CT.Count / 2) select (CT[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(CT.Count / 2, CT.Count / 2) select (CT[i])).ToList()));
             var OT2 = CACr.Decrypt(CT);
             Console.WriteLine("{0,16:X}, {1,16:X}", WayConverter.ToLong((from i in Enumerable.Range(0, OT2.Count / 2) select (OT2[i])).ToList()), WayConverter.ToLong((from i in Enumerable.Range(OT2.Count / 2, OT2.Count / 2) select (OT2[i])).ToList()));
             Console.ReadLine();
+        }
+        static void TestLinAnalisys(CACryptor CACr)
+        {
+
+            int[] Sum = new int[182];
+            for (int st = 0; st < 182; st++)
+            {
+                for (int i = 0; i < 182; i++)
+                {
+                    if (i != st)
+                    {
+                        var Result = CALinearAnalisys((CA)CACr.FN.Automata.Clone(), new List<int> { st });
+                        Result.Reverse();
+                        Sum[st] = Result.Skip(1).Sum(c => c.Count);
+                        break;
+                    }
+                }
+            }
+            var Best = Sum.Where(c => c != 0).Min();
+        }
+        static void Main(string[] args)
+        {
+            //Создаю стандартный шифр на 128
+            var CACr = new Allax.Cryptography.CACryptor(7, 128);
+            //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
+            //var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
+            //ShowMatixes(Func);
+            // Нумеруем 2-фактор
+            var NewAut = Numerate((CA)CACr.FN.Automata.Clone());
+            //запихиваем граф в шифратор
+            CACr.FN.AssignAutomata(NewAut);
+
+            SearchCollision((CA)NewAut.Clone());
+
+
+            DifferencialWatcher differencialWatcher = new DifferencialWatcher((CA)NewAut.Clone());
+            var Mask = NewAut.GetValues();
+            var B = new List<int> {
+                114, 118, 80, 61, 174, 115, 81, 172, 47, 136, 104, 100, 91, 23, 86, 144, 51, 22, 44, 74, 66, 13, 7, 46,
+10, 78, 112, 129, 163, 171, 60, 102, 101, 116, 82, 133, 165, 125, 142, 8, 25, 166, 37, 0, 138, 6, 67, 76, 92, 169, 95, 111, 84, 34, 126, 62, 85, 4, 58, 9, 128, };
+            
+            foreach(var b in B)
+            {
+                Mask[b] = 1;
+            }
+            differencialWatcher.SetDiffMask(Mask);
+            differencialWatcher.ResetInput();
+            while(differencialWatcher.NextPair(7))
+            {
+                var CurDiff = differencialWatcher.GetPairDifference();
+                var DiffCount = CurDiff.Last().Cells.Sum(i => i.Value);
+                Console.WriteLine(DiffCount);
+                if(DiffCount<50)
+                {
+                    ;
+                }
+            }
+            //TestLinAnalisys(CACr);
+            //Search collision
+            //SearchCollision((CA)NewAut.Clone());
+           // TestCrypt(CACr);
         }
     }
 }
