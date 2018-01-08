@@ -201,7 +201,7 @@ namespace Allax.Cryptography
         {
             for (int s = 0; s < Steps; s++)
             {
-                var NextStepCA = (CA)Orig.Clone();
+                var NextStepCA = (CA)Orig/*.Clone()*/;
                 if (MultiThread)
                 {
                     var E = new EngineForTaskerAndWorker();
@@ -216,12 +216,17 @@ namespace Allax.Cryptography
                 }
                 else
                 {
+                    List<int> NextStep = new List<int>(Enumerable.Repeat(0, Orig.GetCellCount()));
                     for (int i = 0; i < Orig.G.Cells.Count; i++)
                     {
-                        NextStepCA[i].Value = Orig.GetNextStepCellValue(i);
+                        NextStep[i] = Orig.GetNextStepCellValue(i);
+                    }
+                    for (int i = 0; i < Orig.G.Cells.Count; i++)
+                    {
+                        Orig[i].Value = NextStep[i];
                     }
                 }
-                Orig = NextStepCA;
+                //Orig = NextStepCA;
             }
             return Orig;
         }
@@ -384,7 +389,7 @@ namespace Allax.Cryptography
             }
             return sb;
         }
-        static List<int> GetRandomBitList(int Length, int WeightRequirement = -1)
+        public static List<int> GetRandomBitList(int Length, int WeightRequirement = -1)
         {
             if (Length <= 0)
                 return new List<int>();
@@ -553,6 +558,11 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static List<T> RetReverse<T>(this List<T> list)
+        {
+            list.Reverse();
+            return list;
+        }
         public static void Add<T>(this Queue<T> q, T el)
         {
             q.Enqueue(el);
@@ -681,16 +691,82 @@ namespace CATesting
             this.Neighbors = new List<Allax.Cryptography.Cell>(C.Neighbors);
         }
     }
+    public interface IIterator
+    {
+        bool IsFinished();
+        List<int> GetNext();
+        void Reset();
+    }
+    public class MyIterator : IIterator
+    {
+        public MyIterator(Dictionary<BigInteger, int>.KeyCollection list) { SeenN = list; }
+        public void SetKey(List<int> Key)
+        {
+            this.Key = Key;
+        }
+        public void SetConst(List<int> Const)
+        {
+            this.Const = Const;
+        }
+        public List<int> Key=Enumerable.Repeat(0, 64).ToList();
+        public List<int> Const=Enumerable.Repeat(0, 54).ToList();
+        public static List<int> BigIntegerToList(BigInteger BI, int ListLength = 182)
+        {
+            return Enumerable.Range(0, ListLength).Select(i => (int)((BI >> i) & 1)).Reverse().ToList();
+        }
+        public static BigInteger ListToBigInteger(List<int> L)
+        {
+            BigInteger ret = 0;
+            foreach (var Value in L)
+            {
+                ret = (ret << 1) + Value;
+            }
+            return ret;
+        }
+        public BigInteger N = 0;
+        int Log2Limit = 64;
+        Func<BigInteger, BigInteger> F = ((I) => { return ++I; });
+        public void SetOpenTextGenFunc(Func<BigInteger, BigInteger> func)
+        {
+            this.F = func;
+        }
+        public IEnumerable<BigInteger> SeenN = new HashSet<BigInteger>();
+        public bool IsFinished()
+        {
+            if (N < BigInteger.Pow(2, Log2Limit))
+                return false;
+            else
+                return true;
+        }
+        public List<int> GetNext()
+        {
+            N=F(N);
+            while(SeenN.Contains(N))
+            {
+                N = F(N);
+            }
+            return BigIntegerToList(N, 64).Concat(Key).Concat(Const).ToList();
+        }
+        public void Reset()
+        {
+            N = 0;
+        }
+    }
     class DifferencialWatcher
     {
         List<List<Graph>> States=new List<List<Graph>>();
         CA OriginAutomata;
         List<CA> Automatas = new List<CA>();
         List<int> Mask;
-        BigInteger Input;
-        public void ResetInput()
+        IIterator It;
+        public static List<int> CreateDiffMask(CA Aut, List<int> BitsNumsToChange)
         {
-            Input = 0;
+            var Mask = Enumerable.Repeat(0, Aut.GetCellCount()).ToList();
+            foreach (var b in BitsNumsToChange)
+            {
+                Mask[b] = 1;
+            }
+            return Mask;
         }
         public DifferencialWatcher(CA Aut)
         {
@@ -707,6 +783,10 @@ namespace CATesting
                     States.Last().Add((Graph)Automata.G.Clone());
                 }
             }
+        }
+        public void SetIterator(IIterator iterator)
+        {
+            this.It = iterator;
         }
         public void Step()
         {
@@ -737,26 +817,13 @@ namespace CATesting
         {
             this.Mask = new List<int>(Mask);
         }
-        public List<int> BigIntegerToList(BigInteger BI)
-        {
-            return Enumerable.Range(0, OriginAutomata.GetCellCount()).Select(i => (int)((BI >> i) & 1)).Reverse().ToList();
-        }
-        public BigInteger ListToBigInteger(List<int> L)
-        {
-            BigInteger ret = 0;
-            foreach(var Value in L)
-            {
-                ret = (ret << 1) + Value;
-            }
-            return ret;
-        }
         public bool NextPair(int Step)
         {
-            if (Input < BigInteger.Pow(2, OriginAutomata.GetCellCount()))
+            if (!It.IsFinished())
             {
-                SetAutomatas(new List<List<int>> { BigIntegerToList(Input), BigIntegerToList(Input ^ ListToBigInteger(Mask))});
+                var Input = It.GetNext();
+                SetAutomatas(new List<List<int>> { Input, Input.Zip(Mask, (x,y)=>x^y).ToList()});
                 this.Step(Step);
-                Input = BigInteger.Add(Input, 1);
                 return true;
             }
             else
@@ -1048,6 +1115,60 @@ namespace CATesting
             }
             var Best = Sum.Where(c => c != 0).Min();
         }
+        static void DiffAnalisys(CA NewAut, BigInteger TrCount, List<int> K, List<int> C, Func<BigInteger, BigInteger> OTGenFunc)
+        {
+            DifferencialWatcher differencialWatcher = new DifferencialWatcher((CA)NewAut.Clone());
+            var Result = new Dictionary<BigInteger, int>();
+            var iterator = new MyIterator(Result.Keys);
+            iterator.Reset();
+            iterator.SetOpenTextGenFunc(OTGenFunc);
+            iterator.SetKey(K);
+            iterator.SetConst(C);
+            differencialWatcher.SetIterator(iterator);
+            var BitsNums = new List<int> { 0, };
+            var Mask = DifferencialWatcher.CreateDiffMask(NewAut, BitsNums);
+            differencialWatcher.SetDiffMask(Mask);
+            for (BigInteger j = 0; differencialWatcher.NextPair(7) && (j<TrCount);j++)
+            {
+                var CurDiff = differencialWatcher.GetPairDifference();
+                var DiffCount = CurDiff.Last().Cells.Sum(i => i.Value);
+                Result.Add(iterator.N, DiffCount);
+            }
+            using (FileStream aFile = new FileStream(string.Format(@"out_{0}_{1}.txt", string.Join("", iterator.Key), string.Join("", iterator.Const)), FileMode.Append, FileAccess.ReadWrite))
+            {
+                using (StreamWriter sr = new StreamWriter(aFile))
+                {
+                    sr.WriteLine(string.Format("Key: {0}", string.Join("", iterator.Key)));
+
+                    sr.WriteLine(string.Format("Const: {0}", string.Join("", iterator.Const)));
+                    StringBuilder sb = new StringBuilder();
+
+                    foreach (var r in Result)
+                    {
+                        sb.Append(string.Format("{0};{1}", string.Join("", MyIterator.BigIntegerToList(r.Key)), r.Value));
+                    }
+                    sr.WriteLine(sb);
+                }
+            }
+        }
+        static void BigDiffAnalisys(CA NewAut, int Log2Treshold, int KeysCount, int ConstsCount)
+        {
+            var Keys = new Dictionary<BigInteger, int>(KeysCount);
+            foreach(var )
+            Enumerable.Range(0, KeysCount).Select(i => MyIterator.ListToBigInteger(CACryptor.GetRandomBitList(64))).ToList().ForEach(j => Keys.Add(j, 0));
+
+            var Consts = new Dictionary<BigInteger, int>(ConstsCount);
+            Enumerable.Range(0, ConstsCount).Select(i => MyIterator.ListToBigInteger(CACryptor.GetRandomBitList(54))).ToList().ForEach(j => Keys.Add(j, 0));
+
+
+            foreach (var K in Keys)
+            {
+                foreach (var C in Consts)
+                {
+                    DiffAnalisys(NewAut, BigInteger.Pow(2, Log2Treshold), K, C, (I) => { return MyIterator.ListToBigInteger(CACryptor.GetRandomBitList(64)); });
+                }
+            }
+        }
         static void Main(string[] args)
         {
             //Создаю стандартный шифр на 128
@@ -1060,35 +1181,13 @@ namespace CATesting
             //запихиваем граф в шифратор
             CACr.FN.AssignAutomata(NewAut);
 
-            SearchCollision((CA)NewAut.Clone());
-
-
-            DifferencialWatcher differencialWatcher = new DifferencialWatcher((CA)NewAut.Clone());
-            var Mask = NewAut.GetValues();
-            var B = new List<int> {
-                114, 118, 80, 61, 174, 115, 81, 172, 47, 136, 104, 100, 91, 23, 86, 144, 51, 22, 44, 74, 66, 13, 7, 46,
-10, 78, 112, 129, 163, 171, 60, 102, 101, 116, 82, 133, 165, 125, 142, 8, 25, 166, 37, 0, 138, 6, 67, 76, 92, 169, 95, 111, 84, 34, 126, 62, 85, 4, 58, 9, 128, };
-            
-            foreach(var b in B)
-            {
-                Mask[b] = 1;
-            }
-            differencialWatcher.SetDiffMask(Mask);
-            differencialWatcher.ResetInput();
-            while(differencialWatcher.NextPair(7))
-            {
-                var CurDiff = differencialWatcher.GetPairDifference();
-                var DiffCount = CurDiff.Last().Cells.Sum(i => i.Value);
-                Console.WriteLine(DiffCount);
-                if(DiffCount<50)
-                {
-                    ;
-                }
-            }
-            //TestLinAnalisys(CACr);
-            //Search collision
             //SearchCollision((CA)NewAut.Clone());
-           // TestCrypt(CACr);
+            /*114, 118, 80, 61, 174, 115, 81, 172, 47, 136, 104, 100, 91, 23, 86, 144, 51, 22, 44, 74, 66, 13, 7, 46,
+10, 78, 112, 129, 163, 171, 60, 102, 101, 116, 82, 133, 165, 125, 142, 8, 25, 166, 37, 0, 138, 6, 67, 76, 92, 169, 95, 111, 84, 34, 126, 62, 85, 4, 58, 9, 128,*/
+
+            Console.WriteLine();
+            BigDiffAnalisys(NewAut, 17,)
+           ;
         }
     }
 }

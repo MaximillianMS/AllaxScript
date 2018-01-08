@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2009
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxScript", "AllaxScript.csproj", "{A7240CD1-B08D-43D0-9685-9B5741DCF221}"
 EndProject
@@ -13,6 +13,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaxForm", "AllaxForm\AllaxForm.csproj", "{080E8CB5-8BA4-4392-9CEB-0C84FF1DCD2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NIR-CellAutomata", "NIR-CellAutomata\NIR-CellAutomata.csproj", "{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NIR-CellAutomataGUI", "..\NIR-CellAutomataGUI\NIR-CellAutomataGUI.csproj", "{0E28301A-900B-4902-A5AA-B4F2783803A7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,8 +56,19 @@ Global
 		{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}.Release|x64.ActiveCfg = Release|Any CPU
 		{13F50794-CE49-4EDA-A61F-D60DCBD92EEF}.Release|x64.Build.0 = Release|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Debug|x64.Build.0 = Debug|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Release|x64.ActiveCfg = Release|Any CPU
+		{0E28301A-900B-4902-A5AA-B4F2783803A7}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DEFB6237-493B-453D-A5A3-11DCE0877746}
 	EndGlobalSection
 EndGlobal
