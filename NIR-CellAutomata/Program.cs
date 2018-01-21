@@ -583,9 +583,9 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
-        public static void ExtractElements<T>(this List<T> list, List<int> IndexOrder)
+        public static List<T> ExtractElements<T>(this List<T> list, List<int> IndexOrder)
         {
-            list = IndexOrder.Select(i => list[i]).ToList();
+            return Enumerable.Range(0, IndexOrder.Count).Select(j=>list[IndexOrder.IndexOf(j)]).ToList();
         }
         public static List<T> RetReverse<T>(this List<T> list)
         {
@@ -958,6 +958,25 @@ namespace CATesting
                     var Neighbours = C.Neighbors;
                     Neighbours.ReInsert(Neighbours.FindIndex(c => (c.Index == Cycle[i + 1])), LinearArgInd);
                     C.NeighboursIndexes = Neighbours.Select(c => c.Index).ToList();
+                }
+            }
+            Func<List<int>, int, int, List<int>> GetSubCycle = (Cycle, startInd, Count) => Enumerable.Range(0,Count).Select(i=>Cycle[(startInd+i)%Cycle.Count]).ToList();
+            foreach(var Cycle in Cycles)
+            {
+                for(int i=0;i<Cycle.Count;i++)
+                {
+                    var Triple = GetSubCycle(Cycle, i, 3).RetReverse();
+                    foreach(var Neighbour in Aut[Triple[0]].Neighbors.Where(c=>c.Index!=Aut[Triple[1]].Index))
+                    {
+                        if(Neighbour.NeighboursIndexes.Contains(Aut[Triple[2]].Index))
+                        {
+                            var x2 = Neighbour.Neighbors.First(c => c.NeighboursIndexes[1] == Neighbour.Index);
+                            if(Aut[Triple[1]].NeighboursIndexes.Contains(x2.Index))
+                            {
+                                Console.WriteLine(string.Format("Start={0},Neighbour={1}", Triple[0], Neighbour.Index));
+                            }
+                        }
+                    }
                 }
             }
             return Aut;
@@ -1366,7 +1385,7 @@ namespace CATesting
         }
         static void NewNumerationForCell(Cell C, List<int> NewOrderOfNeighbours)
         {
-            C.Neighbors.ExtractElements(NewOrderOfNeighbours.Select(i => i - 1).ToList());
+            C.Neighbors=C.Neighbors.ExtractElements(NewOrderOfNeighbours.Select(i => i - 1).ToList());
             C.NeighboursIndexes = C.Neighbors.Select(i => i.Index).ToList();
         }
         static CA SpecialNumeration(CA A)
@@ -1375,7 +1394,7 @@ namespace CATesting
             NewNumerationForCell(ret[28], new List<int> { 1, 2, 4, 3, 5, 6 });
             NewNumerationForCell(ret[164], new List<int> { 1, 2, 6, 4, 5, 3 });
             NewNumerationForCell(ret[83], new List<int> { 6, 2, 4, 1, 5, 3 });
-            NewNumerationForCell(ret[173], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[173], new List<int> { 1, 2, 3, 4, 6, 5 });
             NewNumerationForCell(ret[108], new List<int> { 4, 2, 3, 1, 5, 6 });
             NewNumerationForCell(ret[177], new List<int> { 4, 2, 3, 1, 5, 6 });
             NewNumerationForCell(ret[94], new List<int> { 1, 2, 3, 4, 6, 5 });
@@ -1558,7 +1577,7 @@ namespace CATesting
             //Биты открытого текста, необходимые для создания коллизии
             var RequiredOTValues = new Dictionary<int, int> { { 0, 0 }, { 6, 0 }, { 8, 0 }, { 14, 0 }, { 19, 0 }, { 33, 0 }, { 37, 0 }, { 40, 0 },{ 41, 1 }, { 45, 0 }, { 46, 0 }, { 52, 1 }, { 54, 0 }, { 60, 1 } };
             //Биты констант, необходимые для создания коллизии
-            var RequiredCValues = new Dictionary<int, int> { { 180, 0 }, { 160, 0 }, { 142, 0 }, { 154, 0 }, { 162, 0 }, { 175, 0 }, { 176, 0 }, { 147, 0 }, };
+            var RequiredCValues = new Dictionary<int, int> { { 180, 0 }, { 160, 0 }, { 142, 0 }, { 154, 0 }, { 162, 0 }, { 175, 0 }, { 176, 1 }, { 147, 0 }, };
             //Соотношения между битами, необходимые для создания коллизии
             var RequiredExpressions = new Dictionary<string, int> { { "26+138", 1 }
                 , {"11+34", 1 }, {"178*129", 0 }, {"159*144", 0 }, {"158+156", 1 } };
@@ -1567,10 +1586,10 @@ namespace CATesting
 
             var Consts = //GetConsts(RequiredCValues, RequiredExpressions);
                 (new List<BigInteger> {
-                    new BigInteger((new byte[] { 0x00, 0x2F, 0x6A, 0x5B, 0x20, 0xD3, 0x67, 0x18 }).Reverse().ToArray()),
-                    new BigInteger((new byte[] { 0x00, 0x2D, 0x25, 0xB5, 0x05, 0xCE, 0xA3, 0xF0}).Reverse().ToArray()),
-                    new BigInteger((new byte[] { 0x00, 0x0D, 0x9A, 0x7B, 0xC1, 0x97, 0xF1, 0x80 }).Reverse().ToArray()),
-                    new BigInteger((new byte[] { 0x00, 0x3C, 0x81, 0x87, 0x9C, 0x8F, 0xA4, 0x1F }).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x08, 0x85, 0x79, 0xF4, 0x87, 0xBC, 0xB8 }).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x04, 0x28, 0x2F, 0x6E, 0x24, 0xF3, 0x7E}).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x07, 0xF1, 0x49, 0x36, 0x17, 0xC9, 0xAC, }).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x33, 0x0A, 0xEE, 0x16, 0x3A, 0xE3, 0x13 }).Reverse().ToArray()),
 
                 }).Select(i => MyIterator.BigIntegerToList(i, 54)).ToList();
             
@@ -1593,6 +1612,7 @@ namespace CATesting
             };
             var BitsNums = new List<int> { 28 };
             var Result = DiffAnalisys(NewAut, 1, Key.Take(64).ToList(), Consts.First(), OTGenFunc, 7, BitsNums);
+            ;
             //BigDiffAnalisys_FAST(NewAut, 8, 7, 100, 100, new List<int> { 28 });
 
             // int ultramin = 91;
