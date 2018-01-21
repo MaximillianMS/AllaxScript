@@ -459,6 +459,20 @@ namespace Allax.Cryptography
         {
             SetKey(GetRandomBitList(KeyLength).ConvertAll(i => Convert.ToBoolean(i)));
         }
+        public void SetConstants(List<List<int>> Constants)
+        {
+            if (Constants == null || Constants.Count != RoundsCount)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (Constants[0].Count != ConstLength)
+                    throw new NotImplementedException();
+                this.Constants = new List<List<int>>((from i in Constants select new List<int>(i)));
+                FN.RoundConstants = this.Constants;
+            }
+        }
         public void SetConstants(List<List<bool>> Constants)
         {
             if (Constants == null || Constants.Count != RoundsCount)
@@ -569,6 +583,10 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static void ExtractElements<T>(this List<T> list, List<int> IndexOrder)
+        {
+            list = IndexOrder.Select(i => list[i]).ToList();
+        }
         public static List<T> RetReverse<T>(this List<T> list)
         {
             list.Reverse();
@@ -1165,7 +1183,7 @@ namespace CATesting
             }
             var Best = Sum.Where(c => c != 0).Min();
         }
-        static void WriteDiffAnalisysToFile(List<int> Key,List<int>Const,List<int>BitsNums, Dictionary<BigInteger, int> Result)
+        static void WriteDiffAnalisysToFile(List<int> Key, List<int> Const, List<int> BitsNums, Dictionary<BigInteger, int> Result)
         {
 
             using (FileStream aFile = new FileStream(string.Format(@"out_{0}_{1}.txt", string.Join("", Key), string.Join("", Const)), FileMode.Append, FileAccess.ReadWrite))
@@ -1186,7 +1204,7 @@ namespace CATesting
                 }
             }
         }
-        static DiffResult DiffAnalisys(CA NewAut, BigInteger TrCount, List<int> K, List<int> C, Func<BigInteger, BigInteger> OTGenFunc, int StepCount, List<int>BitsNums)
+        static DiffResult DiffAnalisys(CA NewAut, BigInteger TrCount, List<int> K, List<int> C, Func<BigInteger, BigInteger> OTGenFunc, int StepCount, List<int> BitsNums)
         {
             DifferencialWatcher differencialWatcher = new DifferencialWatcher((CA)NewAut.Clone());
             var Result = new Dictionary<BigInteger, int>();
@@ -1202,7 +1220,8 @@ namespace CATesting
             for (BigInteger j = 0; differencialWatcher.NextPair(StepCount) && (j < TrCount); j++)
             {
                 var CurDiff = differencialWatcher.GetPairDifference().Last().Cells;
-                var DiffCount = CurDiff.Select(i=>i.Value).Sum();
+                var D = differencialWatcher.GetPairDifference();
+                var DiffCount = CurDiff.Select(i => i.Value).Sum();
                 Result.Add(iterator.N, DiffCount);
                 if (Math.Abs(91 - DiffCount) > Math.Abs(91 - Min.Diff))
                 {
@@ -1243,11 +1262,11 @@ namespace CATesting
 
         class DiffResult
         {
-            public int Diff=91;
-            public BigInteger K=0;
-            public BigInteger C=0;
-            public BigInteger OT=0;
-            public List<int> BitsNums=new List<int>();
+            public int Diff = 91;
+            public BigInteger K = 0;
+            public BigInteger C = 0;
+            public BigInteger OT = 0;
+            public List<int> BitsNums = new List<int>();
         }
         static Dictionary<BigInteger, DiffResult> BigDiffAnalisys(CA NewAut, int StepCount, int Log2Treshold, int KeysCount, int ConstsCount, List<int> BitsNums)
         {
@@ -1297,15 +1316,15 @@ namespace CATesting
             }
             return Keys;
         }
-        static Dictionary<BigInteger, DiffResult> BigDiffAnalisys_FAST(CA NewAut,int StepCount, int Log2Treshold, int KeysCount, int ConstsCount, List<int> BitsNums)
+        static Dictionary<BigInteger, DiffResult> BigDiffAnalisys_FAST(CA NewAut, int StepCount, int Log2Treshold, int KeysCount, int ConstsCount, List<int> BitsNums)
         {
             var Keys = new Dictionary<BigInteger, DiffResult>(KeysCount);
-            while(Keys.Count != KeysCount)
+            while (Keys.Count != KeysCount)
             {
                 var Candidate = MyIterator.ListToBigInteger(CACryptor.GetRandomBitList(64));
-                if(!Keys.Keys.Contains(Candidate))
+                if (!Keys.Keys.Contains(Candidate))
                 {
-                    Keys.Add(Candidate, new DiffResult(){ K = Candidate });
+                    Keys.Add(Candidate, new DiffResult() { K = Candidate });
                 }
             }
             var Consts = new Dictionary<BigInteger, DiffResult>(ConstsCount);
@@ -1327,14 +1346,14 @@ namespace CATesting
                     var K_List = MyIterator.BigIntegerToList(K.Key, 64);
                     var C_List = MyIterator.BigIntegerToList(C.Key, 54);
                     var Result = DiffAnalisys_LastRound(NewAut, BigInteger.Pow(2, Log2Treshold), K_List, C_List, OTGenFunc, StepCount, BitsNums);
-                    if(Math.Abs(91-Result.Diff)>Math.Abs(91-K.Value.Diff))
+                    if (Math.Abs(91 - Result.Diff) > Math.Abs(91 - K.Value.Diff))
                     {
                         K.Value.Diff = Result.Diff;
                         K.Value.C = C.Key;
                         K.Value.BitsNums = BitsNums;
                         K.Value.OT = Result.OT;
                     }
-                    if (Math.Abs(91-Result.Diff)>Math.Abs(91-C.Value.Diff))
+                    if (Math.Abs(91 - Result.Diff) > Math.Abs(91 - C.Value.Diff))
                     {
                         C.Value.Diff = Result.Diff;
                         C.Value.K = K.Key;
@@ -1345,18 +1364,189 @@ namespace CATesting
             }
             return Keys;
         }
+        static void NewNumerationForCell(Cell C, List<int> NewOrderOfNeighbours)
+        {
+            C.Neighbors.ExtractElements(NewOrderOfNeighbours.Select(i => i - 1).ToList());
+            C.NeighboursIndexes = C.Neighbors.Select(i => i.Index).ToList();
+        }
+        static CA SpecialNumeration(CA A)
+        {
+            var ret = (CA)A.Clone();
+            NewNumerationForCell(ret[28], new List<int> { 1, 2, 4, 3, 5, 6 });
+            NewNumerationForCell(ret[164], new List<int> { 1, 2, 6, 4, 5, 3 });
+            NewNumerationForCell(ret[83], new List<int> { 6, 2, 4, 1, 5, 3 });
+            NewNumerationForCell(ret[173], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[108], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[177], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[94], new List<int> { 1, 2, 3, 4, 6, 5 });
+            NewNumerationForCell(ret[45], new List<int> { 1, 2, 4, 5, 3, 6 });
+            NewNumerationForCell(ret[114], new List<int> { 1, 6, 2, 3, 4, 5 });
+            NewNumerationForCell(ret[11], new List<int> { 5, 2, 3, 4, 1, 6 });
+            NewNumerationForCell(ret[142], new List<int> { 1, 2, 6, 4, 5, 3 });
+            NewNumerationForCell(ret[60], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[1], new List<int> { 1, 2, 3, 5, 4, 6 });
+
+
+            return ret;
+        }
+        static bool CheckConst(List<int> Const, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions)
+        {
+            var ret = true;
+            foreach(var K in RequiredValues.Keys)
+            {
+                if (Const[K - 128] != RequiredValues[K])
+                {
+                    ret = false;
+                    return ret;
+                }
+            }
+            foreach(var strExpr in RequiredExpressions.Keys)
+            {
+                List<int> listCellId = strExpr.Split('+', '*').Select(i => Convert.ToInt32(i)).ToList();
+                if(listCellId.All(i=>i>127))
+                {
+                    var intOperPos = strExpr.IndexOfAny(new char []{ '+', '*'});
+                    switch (strExpr[intOperPos])
+                    {
+                        case '+':
+                            {
+                                var sum = listCellId.Select(i => Const[i - 128]).Sum() % 2;
+                                if (sum != RequiredExpressions[strExpr])
+                                {
+                                    ret = false;
+                                    return ret;
+                                }
+                                break;
+                            }
+                        case '*':
+                            {
+                                var mul = (listCellId.Select(i => Const[i - 128]).All(i=>i==1))?1:0;
+                                if (mul != RequiredExpressions[strExpr])
+                                {
+                                    ret = false;
+                                    return ret;
+                                }
+                                break;
+                            }
+                    }
+                }
+            }
+            return ret;
+        }
+        static bool CrossCheck(List<int> Const, List<int> OT, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions)
+        {
+            var ret = true;
+            foreach (var K in RequiredValues.Keys)
+            {
+                if (K <64)
+                {
+                    if (OT != null)
+                    {
+                        if (OT[K] != RequiredValues[K])
+                        {
+                            ret = false;
+                            return ret;
+                        }
+                    }
+
+                }
+                else
+                {
+                    if (Const != null)
+                    {
+                        if (Const[K - 128] != RequiredValues[K])
+                        {
+                            ret = false;
+                            return ret;
+                        }
+                    }
+                }
+            }
+            
+            foreach (var strExpr in RequiredExpressions.Keys)
+            {
+                List<int> listCellId = strExpr.Split('+', '*').Select(i => Convert.ToInt32(i)).ToList();
+                if (!listCellId.TrueForAll(i =>
+                {
+                    if (i < 64)
+                    {
+                        return (OT != null);
+                    }
+                    else
+                    {
+                        return (Const != null);
+                    }
+                }
+                ))
+                {
+                    continue;
+                }
+                var intOperPos = strExpr.IndexOfAny(new char[] { '+', '*' });
+                switch (strExpr[intOperPos])
+                {
+                    case '+':
+                        {
+                            var sum = listCellId.Select(i => (i<64)?OT[i]:Const[i - 128]).Sum() % 2;
+                            if (sum != RequiredExpressions[strExpr])
+                            {
+                                ret = false;
+                                return ret;
+                            }
+                            break;
+                        }
+                    case '*':
+                        {
+                            var mul = (listCellId.Select(i => (i < 64) ? OT[i] : Const[i - 128]).All(i => i == 1)) ? 1 : 0;
+                            if (mul != RequiredExpressions[strExpr])
+                            {
+                                ret = false;
+                                return ret;
+                            }
+                            break;
+                        }
+                }
+            }
+            return ret;
+
+        }
+        static List<List<int>> GetConsts(Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions, int Count = 4)
+        {
+            var Consts = new List<List<int>>();
+            while (Consts.Count < Count)
+            {
+                var Candidate = CACryptor.GetRandomBitList(54, 27);
+                //Check Const operates only with two-operand expressions
+                if ((Consts.Count % 2 == 1) || CrossCheck(Candidate,null, RequiredValues, RequiredExpressions))
+                {
+                    if (Consts.Count == 0)
+                    {
+                        Consts.Add(Candidate);
+                        continue;
+                    }
+                    var Last = Consts.Last();
+                    var Distance = Last.Zip(Candidate, (i, j) => i ^ j).Sum();
+                    if (Math.Abs(Distance - 27) < 4)
+                    {
+                        Consts.Add(Candidate);
+                    }
+
+                }
+            }
+            return Consts;
+        }
         static void Main(string[] args)
         {
             //Создаю стандартный шифр на 128
             var CACr = new Allax.Cryptography.CACryptor(7, 128);
-            var CACr_2 = new CACryptor(7, 128, "x3x4+x1x3+x1+x2+1", 4);
+            //var CACr_2 = new CACryptor(7, 128, "x3x4+x1x3+x1+x2+1", 4);
             //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
-            var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
-            ShowMatixes(Func);
-            var Func_2 = Enumerable.Range(0, 1 << 4).Select(i => CACr_2.FN.Automata.F.GetResult(WayConverter.ToList(i, 4).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
-            ShowMatixes(Func_2);
+            //var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
+            //ShowMatixes(Func);
+            //var Func_2 = Enumerable.Range(0, 1 << 4).Select(i => CACr_2.FN.Automata.F.GetResult(WayConverter.ToList(i, 4).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
+            //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
-            var NewAut = Numerate((CA)CACr.FN.Automata.Clone());
+            var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
+            var NewAut = SpecialNumeration(NewAut_before);
             //запихиваем граф в шифратор
             CACr.FN.AssignAutomata(NewAut);
 
@@ -1365,24 +1555,62 @@ namespace CATesting
 10, 78, 112, 129, 163, 171, 60, 102, 101, 116, 82, 133, 165, 125, 142, 8, 25, 166, 37, 0, 138, 6, 67, 76, 92, 169, 95, 111, 84, 34, 126, 62, 85, 4, 58, 9, 128,*/
 
             Console.WriteLine();
-            BigDiffAnalisys(NewAut, 7, 4, 1, 1, new List<int> { 28 });
+            //Биты открытого текста, необходимые для создания коллизии
+            var RequiredOTValues = new Dictionary<int, int> { { 0, 0 }, { 6, 0 }, { 8, 0 }, { 14, 0 }, { 19, 0 }, { 33, 0 }, { 37, 0 }, { 40, 0 },{ 41, 1 }, { 45, 0 }, { 46, 0 }, { 52, 1 }, { 54, 0 }, { 60, 1 } };
+            //Биты констант, необходимые для создания коллизии
+            var RequiredCValues = new Dictionary<int, int> { { 180, 0 }, { 160, 0 }, { 142, 0 }, { 154, 0 }, { 162, 0 }, { 175, 0 }, { 176, 0 }, { 147, 0 }, };
+            //Соотношения между битами, необходимые для создания коллизии
+            var RequiredExpressions = new Dictionary<string, int> { { "26+138", 1 }
+                , {"11+34", 1 }, {"178*129", 0 }, {"159*144", 0 }, {"158+156", 1 } };
+            var Key = CACryptor.GetRandomBitList(128);
+            Console.WriteLine(string.Format("Key:{0}", BitConverter.ToString(MyIterator.ListToBigInteger(Key).ToByteArray().Reverse().ToArray(), 0, 16)));
 
-            int ultramin = 91;
-            DiffResult UltraMinR = new DiffResult();;
-            for(int i=0;i<64;i++)
+            var Consts = //GetConsts(RequiredCValues, RequiredExpressions);
+                (new List<BigInteger> {
+                    new BigInteger((new byte[] { 0x00, 0x2F, 0x6A, 0x5B, 0x20, 0xD3, 0x67, 0x18 }).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x2D, 0x25, 0xB5, 0x05, 0xCE, 0xA3, 0xF0}).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x0D, 0x9A, 0x7B, 0xC1, 0x97, 0xF1, 0x80 }).Reverse().ToArray()),
+                    new BigInteger((new byte[] { 0x00, 0x3C, 0x81, 0x87, 0x9C, 0x8F, 0xA4, 0x1F }).Reverse().ToArray()),
+
+                }).Select(i => MyIterator.BigIntegerToList(i, 54)).ToList();
+            
+            foreach (var C in Consts)
             {
-                var BitsNums = new List<int> { i};
-                var Result = BigDiffAnalisys_FAST(NewAut, 7, 4, 100, 100, BitsNums);
-                foreach (var r in Result)
-                {
-                    if (Math.Abs(91 - r.Value.Diff) > Math.Abs(91 - ultramin))
-                    {
-                        ultramin = r.Value.Diff;
-                        UltraMinR = r.Value;
-                    }
-                }
+                Console.WriteLine(string.Format("Const:{0}, Checked: {1}", BitConverter.ToString(MyIterator.ListToBigInteger(C).ToByteArray().Reverse().ToArray(), 0, 7), CheckConst(C, RequiredCValues, RequiredExpressions)));
             }
-           Console.WriteLine(Math.Abs(91-ultramin));
+            ;
+            CACr.SetConstants(Consts);
+            Func<BigInteger, BigInteger> OTGenFunc = (I) => { while (true)
+                {
+                    var ret = CACryptor.GetRandomBitList(64);
+                    foreach(var Id in RequiredOTValues.Keys)
+                    {
+                        ret[Id] = RequiredOTValues[Id];
+                    }
+                if (CrossCheck(Consts.First(), ret, RequiredCValues.Concat(RequiredOTValues).ToDictionary(i =>  i.Key, i=>i.Value ), RequiredExpressions))
+                    return MyIterator.ListToBigInteger(ret);
+                }
+            };
+            var BitsNums = new List<int> { 28 };
+            var Result = DiffAnalisys(NewAut, 1, Key.Take(64).ToList(), Consts.First(), OTGenFunc, 7, BitsNums);
+            //BigDiffAnalisys_FAST(NewAut, 8, 7, 100, 100, new List<int> { 28 });
+
+            // int ultramin = 91;
+            // DiffResult UltraMinR = new DiffResult();;
+            // for(int i=0;i<64;i++)
+            // {
+            //     var BitsNums = new List<int> { i};
+            //     var Result = BigDiffAnalisys_FAST(NewAut, 7, 4, 100, 100, BitsNums);
+            //     foreach (var r in Result)
+            //     {
+            //         if (Math.Abs(91 - r.Value.Diff) > Math.Abs(91 - ultramin))
+            //         {
+            //             ultramin = r.Value.Diff;
+            //             UltraMinR = r.Value;
+            //         }
+            //     }
+            // }
+            //Console.WriteLine(Math.Abs(91-ultramin));
         }
     }
 }
