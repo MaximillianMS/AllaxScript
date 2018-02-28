@@ -7,6 +7,7 @@ using Allax;
 namespace Allax
 {
 
+
 }
 namespace AllaxScript
 {
