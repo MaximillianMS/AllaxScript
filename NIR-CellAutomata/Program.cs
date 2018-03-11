@@ -8,6 +8,8 @@ using Allax;
 using Allax.Cryptography;
 using System.Threading;
 using System.Numerics;
+using System.Collections;
+using CATesting;
 
 namespace Allax.Cryptography
 {
@@ -145,13 +147,134 @@ namespace Allax.Cryptography
         }
         Dictionary<long, int> FuncMatrix;
     }
-    class CA : ICloneable
+    class CA : ICloneable, IEnumerable
     {
         public Graph G;
         public LocalFunc F;
         //public LocalFuncByIndex F_Index;
         //public delegate int LocalFunc(List<int> Values);
         //public delegate int LocalFuncByIndex(int Index);
+        public IEnumerator GetEnumerator()
+        {
+            return GetWorkSubgraphs(GetCellCount(), 0);
+        }
+        public IEnumerator GetWorkSubgraphs(int intStartNodesCount, int intStepsCount, int intCurrentLayerForRecursive=0, List<List<MyCell>> cellsForRecursive = null)
+        {
+            if (intCurrentLayerForRecursive == intStepsCount)
+            {
+                yield return cellsForRecursive;
+                yield break;
+            }
+            if (cellsForRecursive == null)
+            {
+                cellsForRecursive = new List<List<MyCell>>();
+                var ZeroLayer = new List<MyCell>();
+                //
+                var precomputedBins = Enumerable.Range(0, GetCellCount()).Select(i => new List<MyCell>(G.Cells.Skip(i).Select(j=>new MyCell(j)))).ToList();
+                var bins = new List<List<MyCell>>(Enumerable.Range(0, intStartNodesCount).Select(i=>new List<MyCell>()));
+                bins[0] = precomputedBins[0];
+                //search in cycle
+                for (int i = 0; i < bins.Count; i++)
+                {
+                    var bin = bins[i];
+                    if(bin.Count>0)
+                    {
+                        if (ZeroLayer.Count > i)
+                            ZeroLayer.RemoveAt(i);
+                        ZeroLayer.Insert(i, bin[0]);
+                        if(i<bins.Count-1)
+                        {
+                            bins[i + 1] = precomputedBins[bin[0].Index + 1];
+                        }
+                        bin.RemoveAt(0);
+                    }
+                    else
+                    {
+                        if (i > 0)
+                        {
+                            i -= 2;
+                            continue;
+                        }
+                        else
+                            break;
+                    }
+                    if(i==bins.Count-1)
+                    {
+
+                        var NewCellsForRecursive = new List<List<MyCell>>(cellsForRecursive);
+                        NewCellsForRecursive.Add(ZeroLayer);
+                        var it = GetWorkSubgraphs(intStartNodesCount, intStepsCount, 0, NewCellsForRecursive);
+                        while (it.MoveNext())
+                        {
+                            yield return it.Current;
+                        }
+                        i -= 1;
+                    }
+                }
+
+                //
+                yield break;
+            }
+            var LastLayer = cellsForRecursive.Last();
+            var Candidates = new List<MyCell>();
+            var X2CellsFromCandidates = new List<MyCell>();
+            LastLayer.ForEach(cell => {
+                foreach (var c in cell.Neighbors)
+                {
+                    var myC = new MyCell(c);
+                    myC.ParInd.Add(c.Index);
+                    if (!Candidates.All(i=>i.Index!=myC.Index))
+                    {
+                        //Candidates does not contain myC
+                        Candidates.Add(myC);
+                        if (cell.Neighbors[1].Index == myC.Index)
+                        {
+                                X2CellsFromCandidates.Add(myC);
+                        }
+
+                    }
+                    else
+                    {
+                        //Candidates contains myC
+                        myC = Candidates.Find(i => i.Index == myC.Index);
+                        myC.ParInd.Add(cell.Index);
+                        if (X2CellsFromCandidates.All(i => i.Index != myC.Index))
+                        {
+                            X2CellsFromCandidates.Remove(myC);
+                        }
+                    }
+                }
+            });
+            foreach (var cell in X2CellsFromCandidates)
+            {
+                Candidates.Remove(cell);
+            }
+            //Lets organize depth-first search for the remaining candidates
+            
+            for(BigInteger bigInteger = 0;bigInteger<BigInteger.Pow(2, Candidates.Count); bigInteger++)
+            {
+                var NewLayer = new List<MyCell>();
+                //Move X2 Cells to NewLayer hard because of lack of any else edge toward this cell
+                foreach (var cell in X2CellsFromCandidates)
+                    NewLayer.Add(cell);
+                for (int i = 0; i < Candidates.Count;i++)
+                {
+                    if((bigInteger & BigInteger.Pow(2, i))!=0)
+                    {
+                        NewLayer.Add(Candidates[i]);
+                    }
+                }
+                var NewCellsForRecursive = new List< List<MyCell>>(cellsForRecursive);
+                NewCellsForRecursive.Add(NewLayer);
+                var it =
+                GetWorkSubgraphs(intStartNodesCount, intStepsCount, intCurrentLayerForRecursive + 1, NewCellsForRecursive);
+                while (it.MoveNext())
+                {
+                    yield return it.Current;
+                }
+            }
+            yield break;
+        }
         public void ResetValues()
         {
             foreach (var N in G.Cells)
@@ -1565,6 +1688,16 @@ namespace CATesting
             //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
             var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
+            var sgItr = NewAut_before.GetWorkSubgraphs(2, 1);
+            while(sgItr.MoveNext())
+            {
+                var sg = (List<List<MyCell>>) sgItr.Current;
+                sg.ForEach(i => {
+                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", Convert.ToString(j.ParInd)) + ")-")));
+                    Console.Write(";");
+                });
+                Console.WriteLine();
+            }
             var NewAut = SpecialNumeration(NewAut_before);
             //запихиваем граф в шифратор
             CACr.FN.AssignAutomata(NewAut);
