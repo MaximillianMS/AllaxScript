@@ -222,8 +222,8 @@ namespace Allax.Cryptography
                 foreach (var c in cell.Neighbors)
                 {
                     var myC = new MyCell(c);
-                    myC.ParInd.Add(c.Index);
-                    if (!Candidates.All(i=>i.Index!=myC.Index))
+                    myC.ParInd.Add(cell.Index);
+                    if (Candidates.All(i=>i.Index!=myC.Index))
                     {
                         //Candidates does not contain myC
                         Candidates.Add(myC);
@@ -233,12 +233,12 @@ namespace Allax.Cryptography
                         }
 
                     }
-                    else
+                    else 
                     {
                         //Candidates contains myC
                         myC = Candidates.Find(i => i.Index == myC.Index);
                         myC.ParInd.Add(cell.Index);
-                        if (X2CellsFromCandidates.All(i => i.Index != myC.Index))
+                        if (!X2CellsFromCandidates.All(i => i.Index != myC.Index))
                         {
                             X2CellsFromCandidates.Remove(myC);
                         }
@@ -250,21 +250,20 @@ namespace Allax.Cryptography
                 Candidates.Remove(cell);
             }
             //Lets organize depth-first search for the remaining candidates
-            
-            for(BigInteger bigInteger = 0;bigInteger<BigInteger.Pow(2, Candidates.Count); bigInteger++)
+            for (BigInteger bigInteger = 0; bigInteger < BigInteger.Pow(2, Candidates.Count); bigInteger++)
             {
                 var NewLayer = new List<MyCell>();
                 //Move X2 Cells to NewLayer hard because of lack of any else edge toward this cell
                 foreach (var cell in X2CellsFromCandidates)
                     NewLayer.Add(cell);
-                for (int i = 0; i < Candidates.Count;i++)
+                for (int i = 0; i < Candidates.Count; i++)
                 {
-                    if((bigInteger & BigInteger.Pow(2, i))!=0)
+                    if ((bigInteger & BigInteger.Pow(2, i)) != 0)
                     {
                         NewLayer.Add(Candidates[i]);
                     }
                 }
-                var NewCellsForRecursive = new List< List<MyCell>>(cellsForRecursive);
+                var NewCellsForRecursive = new List<List<MyCell>>(cellsForRecursive);
                 NewCellsForRecursive.Add(NewLayer);
                 var it =
                 GetWorkSubgraphs(intStartNodesCount, intStepsCount, intCurrentLayerForRecursive + 1, NewCellsForRecursive);
@@ -1688,16 +1687,79 @@ namespace CATesting
             //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
             var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
-            var sgItr = NewAut_before.GetWorkSubgraphs(2, 1);
+            //Get All Structures - Differencials
+            var sgItr = NewAut_before.GetWorkSubgraphs(1, 3);
             while(sgItr.MoveNext())
             {
-                var sg = (List<List<MyCell>>) sgItr.Current;
+                var sg = (List<List<MyCell>>) sgItr.Current; // Get current struct
+                                                             
+                //Check that on next step there will be no X2 neighbours with one edge
+
+                var LastLayer = sg.Last();
+                var ConstLayerAfterLast = new List<MyCell>();
+                var X2CellsFromLastLayer = new List<MyCell>();
+                LastLayer.ForEach(cell => {
+                    foreach (var c in cell.Neighbors)
+                    {
+                        var myC = new MyCell(c);
+                        myC.ParInd.Add(cell.Index);
+                        if (ConstLayerAfterLast.All(i => i.Index != myC.Index))
+                        {
+                            //ConstLayerAfterLast does not contain myC
+                            ConstLayerAfterLast.Add(myC);
+                            if (cell.Neighbors[1].Index == myC.Index)
+                            {
+                                X2CellsFromLastLayer.Add(myC);
+                            }
+
+                        }
+                        else
+                        {
+                            //ConstLayerAfterLast contains myC
+                            myC = ConstLayerAfterLast.Find(i => i.Index == myC.Index);
+                            myC.ParInd.Add(cell.Index);
+                            if (!X2CellsFromLastLayer.All(i => i.Index != myC.Index))
+                            {
+                                X2CellsFromLastLayer.Remove(myC);
+                            }
+                        }
+                    }
+                });
+                if(X2CellsFromLastLayer.Count!=0)
+                {
+                    continue; //skip analisys beacuse of X2 Neighbours on next layer
+                }
+
+
+                continue; //skip analisys
+
+                //Print Struct
                 sg.ForEach(i => {
-                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", Convert.ToString(j.ParInd)) + ")-")));
+                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", j.ParInd.ToArray()) + ")")));
                     Console.Write(";");
                 });
                 Console.WriteLine();
+                //TODO: Lets do ditry hacks for checking my super-collision-differencial analisys
+                //First, Find expressions
+                var Expressions = new Dictionary<string, int>();
+
+
+                //Check existance of solution with supercheck
+
+                throw new NotImplementedException();
+                CrossCheck(null, null, null,null);
+                //Print success probability
+                throw new NotImplementedException();
+                //Make choise take it or drop
+                throw new NotImplementedException();
+                //Try another struct. Reccomed to use SUPER COMPUTATION CLUSTER, ask Google for help ;)
             }
+
+
+
+
+
+            //My proof of concept
             var NewAut = SpecialNumeration(NewAut_before);
             //запихиваем граф в шифратор
             CACr.FN.AssignAutomata(NewAut);
@@ -1707,6 +1769,18 @@ namespace CATesting
 10, 78, 112, 129, 163, 171, 60, 102, 101, 116, 82, 133, 165, 125, 142, 8, 25, 166, 37, 0, 138, 6, 67, 76, 92, 169, 95, 111, 84, 34, 126, 62, 85, 4, 58, 9, 128,*/
 
             Console.WriteLine();
+            /*
+             var RequiredOTValues = new Dictionary<int, int> {
+                { 2, 1}, { 14, 1}, { 18, 1}, { 19, 1}, { 39, 1}, { 62, 1}, { 53, 1}, { 24, 1}, { 11, 1}, { 21, 1},
+                { 38, 1}, { 6, 1}, { 36, 1}, { 7, 1}, { 33, 1}, { 42, 1}, { 59, 1}, { 54, 1}, { 20, 1},
+                { 26, 1},  {25, 0},
+                { 45, 0}, { 1, 0}, { 30, 0}, };
+            //Биты констант, необходимые для создания коллизии
+            var RequiredCValues = new Dictionary<int, int> { { 148, 1 }, { 161, 1 }, { 158, 1 }, { 159, 1 }, { 169, 1 }, { 140, 1 }, { 167, 1 }, { 146, 0 } };
+            //Соотношения между битами, необходимые для создания коллизии
+            var RequiredExpressions = new Dictionary<string, int> { { "28+149", 1 }
+                , {"125+5", 1 }, {"86+149", 1 }, {"32+133", 1 }, {"61+131", 1 }, { "145+15", 1 }
+        };*/
             //Биты открытого текста, необходимые для создания коллизии
             var RequiredOTValues = new Dictionary<int, int> { { 0, 0 }, { 6, 0 }, { 8, 0 }, { 14, 0 }, { 19, 0 }, { 33, 0 }, { 37, 0 }, { 40, 0 },{ 41, 1 }, { 45, 0 }, { 46, 0 }, { 52, 1 }, { 54, 0 }, { 60, 1 } };
             //Биты констант, необходимые для создания коллизии
@@ -1743,7 +1817,7 @@ namespace CATesting
                     return MyIterator.ListToBigInteger(ret);
                 }
             };
-            var BitsNums = new List<int> { 28 };
+            var BitsNums = new List<int> { 28 }; //new List<int> { 57 };
             var Result = DiffAnalisys(NewAut, 1, Key.Take(64).ToList(), Consts.First(), OTGenFunc, 7, BitsNums);
             ;
             //BigDiffAnalisys_FAST(NewAut, 8, 7, 100, 100, new List<int> { 28 });
