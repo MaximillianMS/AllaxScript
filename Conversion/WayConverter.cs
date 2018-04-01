@@ -183,6 +183,10 @@ namespace Allax
                 Logger.UltraLogger.Instance.AddToLog("WayConverter: CopyOutToIn Func. I cant copy from and to this layer types.", Logger.MsgType.Error);
             }
         }
+        public static long ToLong(List<int> Input)
+        {
+            return ToLong(Input.ConvertAll(i => Convert.ToBoolean(i)));
+        }
         public static long ToLong(List<bool> Input)
         {
             long ret = 0;
@@ -195,6 +199,10 @@ namespace Allax
                 }
             }
             return ret;
+        }
+        public static List<int> ToIntList(long Input, int length)
+        {
+            return ToList(Input, length).ConvertAll(i => Convert.ToInt32(i));
         }
         public static List<bool> ToList(long Input, int length)
         {

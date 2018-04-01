@@ -218,6 +218,10 @@ namespace Allax.Cryptography
             var LastLayer = cellsForRecursive.Last();
             var Candidates = new List<MyCell>();
             var X2CellsFromCandidates = new List<MyCell>();
+            if(intCurrentLayerForRecursive==0)
+            {
+                ;
+            }
             LastLayer.ForEach(cell => {
                 foreach (var c in cell.Neighbors)
                 {
@@ -227,7 +231,7 @@ namespace Allax.Cryptography
                     {
                         //Candidates does not contain myC
                         Candidates.Add(myC);
-                        if (cell.Neighbors[1].Index == myC.Index)
+                        if (cell.Index == myC.Neighbors[1].Index)
                         {
                                 X2CellsFromCandidates.Add(myC);
                         }
@@ -836,6 +840,8 @@ namespace CATesting
     class MyCell:Allax.Cryptography.Cell
     {
         public List<int> ParInd = new List<int>();
+        public List<MyCell> ConstParrents = new List<MyCell>();
+        public List<MyCell> VarParrents = new List<MyCell>();
         public MyCell(Allax.Cryptography.Cell C)
         {
             this.Index = C.Index;
@@ -1148,7 +1154,7 @@ namespace CATesting
             }
             return V;
         }
-        static void ShowMatixes(List<List<bool>> Func)
+        static List<List<List<short>>> ShowMatixes(List<List<bool>> Func)
         {
             var DB = new SBlockDB();
             //Выведем матрицы корреляции и разности
@@ -1164,7 +1170,7 @@ namespace CATesting
                 WayConverter.ToList(Ind, 6).ForEach(X => Console.Write(string.Format("{0} ", Convert.ToInt32(X))));
                 Console.WriteLine(string.Format("{0}", Res2[Ind][1]));
             }
-
+            return new List<List<List<short>>> { Res, Res2 };
         }
         static void SearchCollision(CA A)
         {
@@ -1675,63 +1681,104 @@ namespace CATesting
             }
             return Consts;
         }
+        static void SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DifStruct, List<MyCell> ConstLayer, List<MyCell> X2ConstLayer, List<List<List<bool>>> SubFunctions)
+        {
+
+        }
         static void Main(string[] args)
         {
             //Создаю стандартный шифр на 128
             var CACr = new Allax.Cryptography.CACryptor(7, 128);
             //var CACr_2 = new CACryptor(7, 128, "x3x4+x1x3+x1+x2+1", 4);
             //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
-            //var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
-            //ShowMatixes(Func);
+            var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
+            var SubFunctions =
+                Enumerable.Range(0, 1 << 6).Select(i => //VarMask
+                  {
+                      var ConstCount = 6-WayConverter.ToList(i, 6).ConvertAll(z => Convert.ToInt32(z)).Sum();
+                      var VarMask = WayConverter.ToList(i, 6);
+                      return Enumerable.Range(0, 1 << ConstCount).Select(j => //ConstValues
+                      {
+                          var ConstValues = WayConverter.ToList(j, ConstCount).ConvertAll(abc => Convert.ToInt32(abc));
+                          //Get required indexes for Func and then get all func
+                          return Enumerable.Range(0, 1 << 6).Where(m => //Func Enum
+
+                          {
+                              var iterConstValues = ConstValues.GetEnumerator();
+                              //Set Const values on their places in EnumMask
+                              var EnumMask = VarMask.Select(varMaskBit =>
+                              {
+                                  iterConstValues.MoveNext();
+                                  return (!varMaskBit) ? ((iterConstValues.Current == 1) ? true : false) : false;
+                              }).ToList();
+                              var intEnumMask = (int)WayConverter.ToLong(EnumMask);
+                              //xor const values in m, make them zero. Make and with constmask (~i) so var bits become zero. 
+                              //If all result is zero then const bits in m are the same as required.
+                              return (((~i) & (intEnumMask ^ m)) == 0);
+                          }
+
+                              ).Select(k => Func[k][0]).ToList();
+                      }
+                      ).ToList();
+                  }
+                      ).ToList();
+            var MX = ShowMatixes(Func);
             //var Func_2 = Enumerable.Range(0, 1 << 4).Select(i => CACr_2.FN.Automata.F.GetResult(WayConverter.ToList(i, 4).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
             //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
             var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
             //Get All Structures - Differencials
-            var sgItr = NewAut_before.GetWorkSubgraphs(1, 3);
+            var sgItr = NewAut_before.GetWorkSubgraphs(1, 1);
             while(sgItr.MoveNext())
             {
                 var sg = (List<List<MyCell>>) sgItr.Current; // Get current struct
                                                              
                 //Check that on next step there will be no X2 neighbours with one edge
 
-                var LastLayer = sg.Last();
+                var LastDifLayer = sg.Last();
+                //All neighbors of last diff layer
                 var ConstLayerAfterLast = new List<MyCell>();
-                var X2CellsFromLastLayer = new List<MyCell>();
-                LastLayer.ForEach(cell => {
+                var X2CellsFromConstLayer = new List<MyCell>();
+                LastDifLayer.ForEach(cell => {
                     foreach (var c in cell.Neighbors)
                     {
+                        //Conevert each neighbor of cell from LastDifLayer
                         var myC = new MyCell(c);
+                        //Remember parrent of this neighbor - current cell form last dif layer
                         myC.ParInd.Add(cell.Index);
                         if (ConstLayerAfterLast.All(i => i.Index != myC.Index))
                         {
-                            //ConstLayerAfterLast does not contain myC
+                            //if neighbor didn't added to ConstLayerAfterLastDif layer already. i checking that beacuse 
+                            //another cells from LastDifLayer may contain that neighbor as own neighbor
                             ConstLayerAfterLast.Add(myC);
-                            if (cell.Neighbors[1].Index == myC.Index)
+                            //if current cell is X2 neighbor for neighbor
+                            if (cell.Index == myC.Neighbors[1].Index)
                             {
-                                X2CellsFromLastLayer.Add(myC);
+                                X2CellsFromConstLayer.Add(myC);
                             }
 
                         }
                         else
                         {
-                            //ConstLayerAfterLast contains myC
+                            //ConstLayerAfterLast contains myC, find it in CostLayer array
                             myC = ConstLayerAfterLast.Find(i => i.Index == myC.Index);
+                            //add current cell as parent
                             myC.ParInd.Add(cell.Index);
-                            if (!X2CellsFromLastLayer.All(i => i.Index != myC.Index))
+                            //if X2CellsFromConstLayer contains already this neighbor then remove it from array. It means that it's possible to
+                            //create expression for neibors of this neighbor to get const value for neighbor
+                            if (!X2CellsFromConstLayer.All(i => i.Index != myC.Index))
                             {
-                                X2CellsFromLastLayer.Remove(myC);
+                                X2CellsFromConstLayer.Remove(myC);
                             }
                         }
                     }
                 });
-                if(X2CellsFromLastLayer.Count!=0)
+                if(X2CellsFromConstLayer.Count!=0)
                 {
-                    continue; //skip analisys beacuse of X2 Neighbours on next layer
+                    continue; //skip analisys beacuse of X2 Neighbours on next layer which must be const
                 }
 
 
-                continue; //skip analisys
 
                 //Print Struct
                 sg.ForEach(i => {
@@ -1742,7 +1789,28 @@ namespace CATesting
                 //TODO: Lets do ditry hacks for checking my super-collision-differencial analisys
                 //First, Find expressions
                 var Expressions = new Dictionary<string, int>();
+                //Lets find nodes In ContLayer After last differencial layer that have X2 edge to nodes from last differencial layer
+                var X2fromConstLayerAfterLast = new List<MyCell>();
+                foreach(var node in ConstLayerAfterLast)
+                {
+                    //if last dif layer have cell that X2 for this cell
+                    if(!LastDifLayer.All(i=>i.Index!=node.Neighbors[1].Index))
+                    {
+                        X2fromConstLayerAfterLast.Add(node);
+                    }
+                    //Find parrents for node inside last dif layer. Note that ParInd contains only var parrents
+                    node.ConstParrents = node.Neighbors.Where(i => !node.ParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
+                    node.VarParrents = node.Neighbors.Where(i => node.ParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
+                }
 
+                foreach(var node in X2fromConstLayerAfterLast)
+                {
+                    var VarMask = (short)WayConverter.ToLong(node.Neighbors.Select(i => (!node.VarParrents.All(j => j.Index != i.Index)) ? true: false).ToList());
+                    var ExpressionsCandidates = SubFunctions[VarMask];
+
+                }
+                SUPERDIFFERENCIALCRYPTOANALISYS(sg, ConstLayerAfterLast, X2fromConstLayerAfterLast, SubFunctions);
+                continue; //skip analisys
 
                 //Check existance of solution with supercheck
 
