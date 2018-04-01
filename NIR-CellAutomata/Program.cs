@@ -709,6 +709,62 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static List<List<T>> GetCombinations<T>(this List<T> source, int k)
+        {
+            var it = source.CombinationIterator(k);
+            var res = new List<List<T>>();
+            while (it.MoveNext())
+            {
+                res.Add((List<T>)it.Current);
+            }
+            return res;
+        }
+        public static IEnumerator CombinationIterator<T>(this List<T> source, int k)
+        {
+            var ZeroLayer = new List<T>();
+            //
+            var precomputedBins = Enumerable.Range(0, source.Count).Select(i => new List<T>(source.Skip(i))).ToList();
+            var bins = new List<List<T>>(Enumerable.Range(0, k).Select(i => new List<T>()));
+            bins[0] = precomputedBins[0];
+            var IndexDict = new Dictionary<T, int>();
+            Enumerable.Range(0, source.Count).ToList().ForEach(i => IndexDict.Add(source[i], i));
+            //search in cycle
+            for (int i = 0; i < bins.Count; i++)
+            {
+                var bin = bins[i];
+                if (bin.Count > 0)
+                {
+                    if (ZeroLayer.Count > i)
+                        ZeroLayer.RemoveAt(i);
+                    ZeroLayer.Insert(i, bin[0]);
+                    if (i < bins.Count - 1)
+                    {
+                        bins[i + 1] = precomputedBins[IndexDict[bin[0]] + 1];
+                    }
+                    bin.RemoveAt(0);
+                }
+                else
+                {
+                    if (i > 0)
+                    {
+                        i -= 2;
+                        continue;
+                    }
+                    else
+                        break;
+                }
+                if (i == bins.Count - 1)
+                {
+
+                    yield return new List<T>(ZeroLayer);
+                    i -= 1;
+                }
+            }
+
+            //
+            yield break;
+        }
+
         public static List<T> ExtractElements<T>(this List<T> list, List<int> IndexOrder)
         {
             return Enumerable.Range(0, IndexOrder.Count).Select(j=>list[IndexOrder.IndexOf(j)]).ToList();
@@ -740,6 +796,9 @@ namespace Allax.Cryptography
 }
 namespace CATesting
 {
+
+    public static class MyExtenstions
+    {}
     class CycleFinder
     {
         void Find(Allax.Cryptography.CACryptor CACr)
@@ -1676,19 +1735,97 @@ namespace CATesting
                     {
                         Consts.Add(Candidate);
                     }
-
                 }
             }
             return Consts;
         }
-        static void SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DifStruct, List<MyCell> ConstLayer, List<MyCell> X2ConstLayer, List<List<List<bool>>> SubFunctions)
-        {
 
+        static void SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DiffStruct, List<MyCell> ConstLayer, List<MyCell> X2ConstLayer, List<List<(List<bool>, int,int)>> SubFunctions)
+        {
+            Dictionary<MyCell, List<(List<bool>, int, int)>> X2FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
+            foreach(var CurrentX2Cell in X2ConstLayer)
+            {
+                var Neighbors = CurrentX2Cell.Neighbors;
+                var VarParents = CurrentX2Cell.VarParrents;
+                var VarParrentsInd = VarParents.Select(i => i.Index).ToList();
+                if (!(VarParrentsInd.All(i => CurrentX2Cell.ParInd.Contains(i)) && (VarParrentsInd.Count == CurrentX2Cell.ParInd.Count)))
+                    throw new NotImplementedException("I used ParInd for VAr Parrent earlier, but it's not so");
+                var ConstParents = CurrentX2Cell.ConstParrents;
+                var ConstParrentsInd = ConstParents.Select(i => i.Index).ToList();
+                var lVarMask = Neighbors.Select(i => (VarParrentsInd.Contains(i.Index)) ? true : false).ToList();
+                var intVarMask = (int)WayConverter.ToLong(lVarMask);
+                var FunctionCandidates = SubFunctions[intVarMask];
+                /*Trash
+                var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i => { var sum = i.ConvertAll(j => Convert.ToInt32(j)).Sum(); return (sum == 0) || (sum == i.Count); }).ToList();
+                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+                */
+                //Choose candidates
+                var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i =>
+                {
+                    var intFunc = i.Item1.ConvertAll(j => Convert.ToInt32(j));
+                    var sum = Enumerable.Range(0, intFunc.Count).Select(x => (intFunc[x ^ intVarMask] ^ intFunc[x])).ToList().Sum();
+                    return (sum == 0) || (sum == intFunc.Count);
+                }
+                ).ToList();
+                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+            }
+            //Check that every x2 have const expression
+            foreach(var T in X2FuncCandidates)
+            {
+                if (T.Value.Count == 0)
+                    return;
+            }
+            //Extract const values from candidates, convert possible const mask to int
+            // cell, varmask, facemask, constmasks
+            var X2ConstValues = new Dictionary<MyCell, (int, List<(int,int)>)>();
+            foreach (var tCell in X2FuncCandidates)
+            {
+                var cell = tCell.Key;
+                var intVarMask = tCell.Value[0].Item2;
+                //operating with const masks,searching subcube faces:
+                var lConstMasks = tCell.Value.Select(i => i.Item3).ToList();
+                var intLogUpperGroupLimit = Enumerable.Range(0, 6).Last(i => (1 << i) < lConstMasks.Count);
+                Enumerable.Range(0, intLogUpperGroupLimit).ToList().ForEach(
+                    i =>
+                    {
+                        var CombinationsK = lConstMasks.GetCombinations(i);
+                        //Is this a face? check func
+                        //...
+                        X2ConstValues.Add(cell, (intVarMask, new List<(int,int)>()));
+                        foreach(var Combination in CombinationsK)
+                        {
+                            var Count = Combination.Count;
+                            if(Count==1)
+                            {
+                                X2ConstValues[cell].Item2.Add((0, Combination[0]));
+                                continue;
+                            }
+                            var face = Combination.Select(n => n ^ Combination[0]).ToList();
+                            //get face mask
+                            throw new NotImplementedException();
+                            //check that all vectors in combination
+                            throw new NotImplementedException();
+
+                            //add comb to dict
+                            throw new NotImplementedException();
+                        }
+                    });
+            }
+            //
+            throw new NotImplementedException();
+            //Lets organaize bruteforce among all variats of X2FuncCandidates
+            foreach(var X2 in X2FuncCandidates)
+            {
+                foreach(var FuncCandidate in X2.Value)
+                {
+
+                }
+            }
         }
         static void Main(string[] args)
         {
             //Создаю стандартный шифр на 128
-            var CACr = new Allax.Cryptography.CACryptor(7, 128);
+           var CACr = new Allax.Cryptography.CACryptor(7, 128);
             //var CACr_2 = new CACryptor(7, 128, "x3x4+x1x3+x1+x2+1", 4);
             //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
             var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
@@ -1701,23 +1838,23 @@ namespace CATesting
                       {
                           var ConstValues = WayConverter.ToList(j, ConstCount).ConvertAll(abc => Convert.ToInt32(abc));
                           //Get required indexes for Func and then get all func
-                          return Enumerable.Range(0, 1 << 6).Where(m => //Func Enum
 
+                          var iterConstValues = ConstValues.GetEnumerator();
+                          //Set Const values on their places in EnumMask
+                          var EnumMask = VarMask.Select(varMaskBit =>
                           {
-                              var iterConstValues = ConstValues.GetEnumerator();
-                              //Set Const values on their places in EnumMask
-                              var EnumMask = VarMask.Select(varMaskBit =>
-                              {
-                                  iterConstValues.MoveNext();
-                                  return (!varMaskBit) ? ((iterConstValues.Current == 1) ? true : false) : false;
-                              }).ToList();
-                              var intEnumMask = (int)WayConverter.ToLong(EnumMask);
+                              iterConstValues.MoveNext();
+                              return (!varMaskBit) ? ((iterConstValues.Current == 1) ? true : false) : false;
+                          }).ToList();
+                          var intEnumMask = (int)WayConverter.ToLong(EnumMask);
+                          return (Enumerable.Range(0, 1 << 6).Where(m => //Func Arg Enum
+                          {
                               //xor const values in m, make them zero. Make and with constmask (~i) so var bits become zero. 
                               //If all result is zero then const bits in m are the same as required.
                               return (((~i) & (intEnumMask ^ m)) == 0);
                           }
 
-                              ).Select(k => Func[k][0]).ToList();
+                              ).Select(k => Func[k][0]).ToList(), i, intEnumMask);
                       }
                       ).ToList();
                   }
