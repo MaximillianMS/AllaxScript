@@ -10,6 +10,7 @@ using System.Threading;
 using System.Numerics;
 using System.Collections;
 using CATesting;
+using System.Linq.Expressions;
 
 namespace Allax.Cryptography
 {
@@ -226,7 +227,7 @@ namespace Allax.Cryptography
                 foreach (var c in cell.Neighbors)
                 {
                     var myC = new MyCell(c);
-                    myC.ParInd.Add(cell.Index);
+                    myC.VarParInd.Add(cell.Index);
                     if (Candidates.All(i=>i.Index!=myC.Index))
                     {
                         //Candidates does not contain myC
@@ -241,7 +242,7 @@ namespace Allax.Cryptography
                     {
                         //Candidates contains myC
                         myC = Candidates.Find(i => i.Index == myC.Index);
-                        myC.ParInd.Add(cell.Index);
+                        myC.VarParInd.Add(cell.Index);
                         if (!X2CellsFromCandidates.All(i => i.Index != myC.Index))
                         {
                             X2CellsFromCandidates.Remove(myC);
@@ -709,6 +710,52 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static IEnumerator MultiListSerialIterator<T>(this List<List<T>> source)
+        {
+            var ZeroLayer = new List<T>();
+            //
+            var k = source.Count;
+            var precomputedBins = source;
+            var bins = new List<List<T>>(Enumerable.Range(0, k).Select(i => new List<T>()));
+            bins[0] = new List<T>(precomputedBins[0]);
+            //var IndexDict = new Dictionary<T, int>();
+            //Enumerable.Range(0, source.Count).ToList().ForEach(i => IndexDict.Add(source[i], i));
+            //search in cycle
+            for (int i = 0; i < bins.Count; i++)
+            {
+                var bin = bins[i];
+                if (bin.Count > 0)
+                {
+                    if (ZeroLayer.Count > i)
+                        ZeroLayer.RemoveAt(i);
+                    ZeroLayer.Insert(i, bin[0]);
+                    if (i < bins.Count - 1)
+                    {
+                        bins[i + 1] = new List<T>(precomputedBins[i+1]);
+                    }
+                    bin.RemoveAt(0);
+                }
+                else
+                {
+                    if (i > 0)
+                    {
+                        //indeed i-=1; continue operator will add extra one
+                        i -= 2;
+                        continue;
+                    }
+                    else
+                        break;
+                }
+                if (i == bins.Count - 1)
+                {
+                    yield return new List<T>(ZeroLayer);
+                    i -= 1;
+                }
+            }
+
+            //
+            yield break;
+        }
         public static List<List<T>> GetCombinations<T>(this List<T> source, int k)
         {
             var it = source.CombinationIterator(k);
@@ -842,9 +889,9 @@ namespace CATesting
                                     if (ResultCells.ElementAt(ind).Index == i)
                                     {
                                         //Console.WriteLine("Found cycle:");
-                                        foreach (int I in ResultCells.ElementAt(ind).ParInd)
+                                        foreach (int I in ResultCells.ElementAt(ind).VarParInd)
                                         {
-                                            Cycles.Add(new List<int>(ResultCells.ElementAt(ind).ParInd));
+                                            Cycles.Add(new List<int>(ResultCells.ElementAt(ind).VarParInd));
                                             //Console.Write(string.Format("{0, 3} ", I));
                                         }
                                         //Console.WriteLine(i);
@@ -859,9 +906,9 @@ namespace CATesting
                     for (int CellIt = 0; CellIt < CellsCount; CellIt++)
                     {
                         MyCell C = ResultCells.Dequeue();
-                        var NewParInd = new List<int>(C.ParInd);
+                        var NewParInd = new List<int>(C.VarParInd);
                         NewParInd.Add(C.Index);
-                        C.Neighbors.ForEach(c => ResultCells.Enqueue(new MyCell(c) { ParInd = NewParInd }));
+                        C.Neighbors.ForEach(c => ResultCells.Enqueue(new MyCell(c) { VarParInd = NewParInd }));
                     }
                 }
             }
@@ -898,13 +945,14 @@ namespace CATesting
     }
     class MyCell:Allax.Cryptography.Cell
     {
-        public List<int> ParInd = new List<int>();
+        public List<int> VarParInd = new List<int>();
         public List<MyCell> ConstParrents = new List<MyCell>();
         public List<MyCell> VarParrents = new List<MyCell>();
         public MyCell(Allax.Cryptography.Cell C)
         {
             this.Index = C.Index;
             this.Neighbors = new List<Allax.Cryptography.Cell>(C.Neighbors);
+            this.NeighboursIndexes = new List<int>(C.NeighboursIndexes);
         }
     }
     public interface IIterator
@@ -1739,46 +1787,52 @@ namespace CATesting
             }
             return Consts;
         }
-
-        static void SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DiffStruct, List<MyCell> ConstLayer, List<MyCell> X2ConstLayer, List<List<(List<bool>, int,int)>> SubFunctions)
+        class CellSolution
         {
-            Dictionary<MyCell, List<(List<bool>, int, int)>> X2FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
-            foreach(var CurrentX2Cell in X2ConstLayer)
+            public MyCell cell;
+            public int VarMask;
+            public int FaceMask;
+            public int ConstMask;
+            public CellSolution() { }
+            public CellSolution(MyCell myCell, int varMask, int faceMask, int constMask)
             {
-                var Neighbors = CurrentX2Cell.Neighbors;
-                var VarParents = CurrentX2Cell.VarParrents;
-                var VarParrentsInd = VarParents.Select(i => i.Index).ToList();
-                if (!(VarParrentsInd.All(i => CurrentX2Cell.ParInd.Contains(i)) && (VarParrentsInd.Count == CurrentX2Cell.ParInd.Count)))
-                    throw new NotImplementedException("I used ParInd for VAr Parrent earlier, but it's not so");
-                var ConstParents = CurrentX2Cell.ConstParrents;
-                var ConstParrentsInd = ConstParents.Select(i => i.Index).ToList();
-                var lVarMask = Neighbors.Select(i => (VarParrentsInd.Contains(i.Index)) ? true : false).ToList();
-                var intVarMask = (int)WayConverter.ToLong(lVarMask);
-                var FunctionCandidates = SubFunctions[intVarMask];
-                /*Trash
-                var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i => { var sum = i.ConvertAll(j => Convert.ToInt32(j)).Sum(); return (sum == 0) || (sum == i.Count); }).ToList();
-                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
-                */
-                //Choose candidates
-                var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i =>
-                {
-                    var intFunc = i.Item1.ConvertAll(j => Convert.ToInt32(j));
-                    var sum = Enumerable.Range(0, intFunc.Count).Select(x => (intFunc[x ^ intVarMask] ^ intFunc[x])).ToList().Sum();
-                    return (sum == 0) || (sum == intFunc.Count);
-                }
-                ).ToList();
-                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+                this.cell = myCell;
+                this.VarMask = varMask;
+                this.FaceMask = faceMask;
+                this.ConstMask = constMask;
             }
-            //Check that every x2 have const expression
-            foreach(var T in X2FuncCandidates)
+        }
+        static List<(List<bool>, int, int)> GetConstValuesForParrents(MyCell myCell, List<List<(List<bool>, int, int)>> SubFunctions)
+        {
+            var Neighbors = myCell.Neighbors;
+            var VarParents = myCell.VarParrents;
+            var VarParrentsInd = VarParents.Select(i => i.Index).ToList();
+            if (!(VarParrentsInd.All(i => myCell.VarParInd.Contains(i)) && (VarParrentsInd.Count == myCell.VarParInd.Count)))
+                throw new NotImplementedException("I used ParInd for VAr Parrent earlier, but it's not so");
+            var ConstParents = myCell.ConstParrents;
+            var ConstParrentsInd = ConstParents.Select(i => i.Index).ToList();
+            var lVarMask = Neighbors.Select(i => (VarParrentsInd.Contains(i.Index)) ? true : false).ToList();
+            var intVarMask = (int)WayConverter.ToLong(lVarMask);
+            var FunctionCandidates = SubFunctions[intVarMask];
+            /*Trash
+            var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i => { var sum = i.ConvertAll(j => Convert.ToInt32(j)).Sum(); return (sum == 0) || (sum == i.Count); }).ToList();
+            X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+            */
+            //Choose candidates
+            var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i =>
             {
-                if (T.Value.Count == 0)
-                    return;
+                var intFunc = i.Item1.ConvertAll(j => Convert.ToInt32(j));
+                var sum = Enumerable.Range(0, intFunc.Count).Select(x => (intFunc[x ^ intVarMask] ^ intFunc[x])).ToList().Sum();
+                return (sum == 0) || (sum == intFunc.Count);
             }
-            //Extract const values from candidates, convert possible const mask to int
-            // cell, varmask, facemask, constmasks
-            var X2ConstValues = new Dictionary<MyCell, (int, List<(int,int)>)>();
-            foreach (var tCell in X2FuncCandidates)
+            ).ToList();
+            return ConstFunctionsFromFunctionCandidates;
+        }
+        static Dictionary<MyCell, (int, List<(int, int)>)> CombineListOfConstsIntoFaces(Dictionary<MyCell, List<(List<bool>, int, int)>> DicCells)
+        {
+            // cell, varmask, list<( facemask, constmasks)>
+            var DicCellsFaceMasked = new Dictionary<MyCell, (int, List<(int, int)>)>();
+            foreach (var tCell in DicCells)
             {
                 var cell = tCell.Key;
                 var intVarMask = tCell.Value[0].Item2;
@@ -1788,37 +1842,187 @@ namespace CATesting
                 Enumerable.Range(0, intLogUpperGroupLimit).ToList().ForEach(
                     i =>
                     {
-                        var CombinationsK = lConstMasks.GetCombinations(i);
+                        var CombinationsK = lConstMasks.CombinationIterator(i);
                         //Is this a face? check func
                         //...
-                        X2ConstValues.Add(cell, (intVarMask, new List<(int,int)>()));
-                        foreach(var Combination in CombinationsK)
+                        DicCellsFaceMasked.Add(cell, (intVarMask, new List<(int, int)>()));
+                        while (CombinationsK.MoveNext())
                         {
+                            var Combination = (List<int>)CombinationsK.Current;
                             var Count = Combination.Count;
-                            if(Count==1)
+                            if (Count == 1)
                             {
-                                X2ConstValues[cell].Item2.Add((0, Combination[0]));
+                                DicCellsFaceMasked[cell].Item2.Add((0, Combination[0]));
                                 continue;
                             }
-                            var face = Combination.Select(n => n ^ Combination[0]).ToList();
+                            //var face = Combination.Select(n => n ^ Combination[0]).ToList();
                             //get face mask
-                            throw new NotImplementedException();
-                            //check that all vectors in combination
-                            throw new NotImplementedException();
-
-                            //add comb to dict
-                            throw new NotImplementedException();
+                            var FixedBitsInFace = Enumerable.Range(0, 6).Where(bitNum =>
+                            {
+                                var Mask = 1 << bitNum;
+                                var sum = Enumerable.Range(0, Count).Select(vector => ((Combination[vector] & Mask) == 0) ? 0 : 1).Sum();
+                                return ((sum == Count) || (sum == 0));
+                            }).ToList();
+                            var intVarBitsCountInFace = 6 - FixedBitsInFace.Count;
+                            if ((1 << intVarBitsCountInFace) != Count)
+                                continue;
+                            //add comb to dict if all vectors of face in combination
+                            var FaceMask = (int)WayConverter.ToLong(Enumerable.Range(0, 6).Select(bit => (FixedBitsInFace.Contains(bit)) ? false : true).ToList());
+                            DicCellsFaceMasked[cell].Item2.Add((FaceMask, Combination[0] & ~FaceMask));
                         }
                     });
+                //
             }
-            //
+            return DicCellsFaceMasked;
+        }
+        static List<Dictionary<MyCell, int>> GetSolutionsForListOfCells(List<MyCell> CellList, List<List<(List<bool>, int, int)>> SubFunctions)
+        {
+            var X2FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
+            foreach (var CurrentX2Cell in CellList)
+            {
+                var ConstFunctionsFromFunctionCandidates = GetConstValuesForParrents(CurrentX2Cell, SubFunctions);
+                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+            }
+            //Check that every x2 have const expression
+            foreach (var T in X2FuncCandidates)
+            {
+                if (T.Value.Count == 0)
+                    //reject current diff graph struct
+                    return null;
+            }
+            //Extract const values from candidates, convert possible const mask to int
+            // cell, varmask, list<( facemask, constmasks)>
+            var X2ConstValues = CombineListOfConstsIntoFaces(X2FuncCandidates);
+
+            //Sort combinations in star count order
+            X2ConstValues.Values.ToList().ForEach(i => i.Item2.Sort((comb1, comb2) =>
+            {
+                var startCountInFace1 = WayConverter.ToIntList(comb1.Item1, 6).Sum();
+                var startCountInFace2 = WayConverter.ToIntList(comb2.Item1, 6).Sum();
+                //decreasing order
+                return startCountInFace2.CompareTo(startCountInFace1);
+            }));
+            //Combine possible combinations
+            var PossibleSolutions = new List<List<CellSolution>>();
+            foreach (var myCell in X2ConstValues)
+            {
+                PossibleSolutions.Add(new List<CellSolution>(myCell.Value.Item2.Select(i => new CellSolution(myCell.Key, myCell.Value.Item1, i.Item1, i.Item2))));
+            }
+            var solutionsIterator = PossibleSolutions.MultiListSerialIterator();
+            //get Solutions for t-1 level
+            var Solutions = new List<Dictionary<MyCell, int>>();
+            while (solutionsIterator.MoveNext())
+            {
+                var PossibleSolution = (List<CellSolution>)solutionsIterator.Current;
+                //try to combine
+                var solution = new Dictionary<MyCell, int>();
+                bool RightSolution = true;
+                foreach (var cell in PossibleSolution)
+                {
+                    var ConstMask = cell.ConstMask;
+                    var FaceMask = cell.FaceMask;
+                    var VarMask = cell.VarMask;
+                    var FixedParentsMask = (~VarMask) & (~FaceMask);
+                    for (int i = 0; i < 6; i++)
+                    {
+                        //if current neighbout in fixedparrentsmask
+                        if (((1 << i) & FixedParentsMask) != 0)
+                        {
+                            var Value = (((1 << i) & ConstMask) == 0) ? 0 : 1;
+                            if (solution.ContainsKey(cell.cell))
+                            {
+                                if (solution[cell.cell] != Value)
+                                {
+                                    RightSolution = false;
+                                    break;
+                                }
+                                else
+                                {
+                                    solution.Add(cell.cell, Value);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!RightSolution)
+                    break;
+                Solutions.Add(solution);
+            }
+            return Solutions;
+        }
+        static (List<MyCell>, List<MyCell>) ExtractConstCells(List<List<MyCell>> DiffStruct, int Step)
+        {
+            var DiffLayer = DiffStruct[Step];
+            //All neighbors of last diff layer
+            var CurrentConstLayer = new List<MyCell>();
+            var X2CellsFromConstLayer = new List<MyCell>();
+            DiffLayer.ForEach(cell => {
+                foreach (var c in cell.Neighbors)
+                {
+                    //Drop cell if it's in next Layer of DiffStruct
+                    if(Step<DiffStruct.Count-1)
+                    {
+
+                    }
+                    //Convert each neighbor of cell from LastDifLayer
+                    var myC = new MyCell(c);
+                    //Remember parrent of this neighbor - current cell form last dif layer
+                    myC.VarParInd.Add(cell.Index);
+                    if (CurrentConstLayer.All(j => j.Index != myC.Index))
+                    {
+                        //if neighbor didn't added to ConstLayerAfterLastDif layer already. i checking that beacuse 
+                        //another cells from LastDifLayer may contain that neighbor as own neighbor
+                        CurrentConstLayer.Add(myC);
+                        //if current cell is X2 neighbor for neighbor
+                        if (cell.Index == myC.Neighbors[1].Index)
+                        {
+                            X2CellsFromConstLayer.Add(myC);
+                        }
+                    }
+                    else
+                    {
+                        //ConstLayerAfterLast contains myC, find it in CostLayer array
+                        myC = CurrentConstLayer.Find(j => j.Index == myC.Index);
+                        //add current cell as parent
+                        myC.VarParInd.Add(cell.Index);
+                        //if X2CellsFromConstLayer contains already this neighbor then remove it from array. It means that it's possible to
+                        //create expression for neibors of this neighbor to get const value for neighbor
+                        if (!X2CellsFromConstLayer.All(j => j.Index != myC.Index))
+                        {
+                            X2CellsFromConstLayer.Remove(myC);
+                        }
+                    }
+                }
+            });
+            return (CurrentConstLayer, X2CellsFromConstLayer);
+        }
+        static IEnumerator SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DiffStruct, List<List<(List<bool>, int, int)>> SubFunctions, Dictionary<MyCell,int> ConstCellsAtStep=null, int InverseStep = 0)
+        {
+            //get Solutions for X2 at t-1 level
+            // Solution -> (Fixed Cell at t-1 level, Value for Cell)
+            var Deep = DiffStruct.Count - 1 - InverseStep;
+            var CurrentConstAndX2Layer = ExtractConstCells(DiffStruct, Deep);
+            var CurrentConstLayer = CurrentConstAndX2Layer.Item1;
+            var X2CellsFromConstLayer = CurrentConstAndX2Layer.Item2;
+            if(InverseStep==0)
+            {
+                if (X2CellsFromConstLayer.Count != 0)
+                {
+                    yield break; //skip analisys beacuse of X2 Neighbours on next layer which must be const
+                }
+            }
+            if(ConstCellsAtStep!=null)
+            {
+                
+            }
+            var LayerSolutions = GetSolutionsForListOfCells(CurrentConstLayer, SubFunctions);
+            //Lets organaize bruteforce among all solutions
             throw new NotImplementedException();
-            //Lets organaize bruteforce among all variats of X2FuncCandidates
-            foreach(var X2 in X2FuncCandidates)
+            foreach (var X2 in X2FuncCandidates)
             {
                 foreach(var FuncCandidate in X2.Value)
                 {
-
+                    X2.Value.CombinationIterator
                 }
             }
         }
@@ -1879,10 +2083,10 @@ namespace CATesting
                 LastDifLayer.ForEach(cell => {
                     foreach (var c in cell.Neighbors)
                     {
-                        //Conevert each neighbor of cell from LastDifLayer
+                        //Convert each neighbor of cell from LastDifLayer
                         var myC = new MyCell(c);
                         //Remember parrent of this neighbor - current cell form last dif layer
-                        myC.ParInd.Add(cell.Index);
+                        myC.VarParInd.Add(cell.Index);
                         if (ConstLayerAfterLast.All(i => i.Index != myC.Index))
                         {
                             //if neighbor didn't added to ConstLayerAfterLastDif layer already. i checking that beacuse 
@@ -1893,14 +2097,13 @@ namespace CATesting
                             {
                                 X2CellsFromConstLayer.Add(myC);
                             }
-
                         }
                         else
                         {
                             //ConstLayerAfterLast contains myC, find it in CostLayer array
                             myC = ConstLayerAfterLast.Find(i => i.Index == myC.Index);
                             //add current cell as parent
-                            myC.ParInd.Add(cell.Index);
+                            myC.VarParInd.Add(cell.Index);
                             //if X2CellsFromConstLayer contains already this neighbor then remove it from array. It means that it's possible to
                             //create expression for neibors of this neighbor to get const value for neighbor
                             if (!X2CellsFromConstLayer.All(i => i.Index != myC.Index))
@@ -1919,7 +2122,7 @@ namespace CATesting
 
                 //Print Struct
                 sg.ForEach(i => {
-                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", j.ParInd.ToArray()) + ")")));
+                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", j.VarParInd.ToArray()) + ")")));
                     Console.Write(";");
                 });
                 Console.WriteLine();
@@ -1936,16 +2139,17 @@ namespace CATesting
                         X2fromConstLayerAfterLast.Add(node);
                     }
                     //Find parrents for node inside last dif layer. Note that ParInd contains only var parrents
-                    node.ConstParrents = node.Neighbors.Where(i => !node.ParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
-                    node.VarParrents = node.Neighbors.Where(i => node.ParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
+                    node.ConstParrents = node.Neighbors.Where(i => !node.VarParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
+                    node.VarParrents = node.Neighbors.Where(i => node.VarParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
                 }
-
+                /*
                 foreach(var node in X2fromConstLayerAfterLast)
                 {
                     var VarMask = (short)WayConverter.ToLong(node.Neighbors.Select(i => (!node.VarParrents.All(j => j.Index != i.Index)) ? true: false).ToList());
                     var ExpressionsCandidates = SubFunctions[VarMask];
 
                 }
+                */
                 SUPERDIFFERENCIALCRYPTOANALISYS(sg, ConstLayerAfterLast, X2fromConstLayerAfterLast, SubFunctions);
                 continue; //skip analisys
 
