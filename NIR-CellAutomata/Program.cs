@@ -159,7 +159,7 @@ namespace Allax.Cryptography
         {
             return GetWorkSubgraphs(GetCellCount(), 0);
         }
-        public IEnumerator GetWorkSubgraphs(int intStartNodesCount, int intStepsCount, int intCurrentLayerForRecursive=0, List<List<MyCell>> cellsForRecursive = null)
+        public IEnumerator GetWorkSubgraphs(int intStartNodesCount, int intStepsCount, int intCurrentLayerForRecursive=0, List<List<MyCell>> cellsForRecursive = null, bool StartNodesFromOpenText = true)
         {
             if (intCurrentLayerForRecursive == intStepsCount)
             {
@@ -168,13 +168,15 @@ namespace Allax.Cryptography
             }
             if (cellsForRecursive == null)
             {
+                int EndCellIndex = (StartNodesFromOpenText) ? 64 : GetCellCount();
                 cellsForRecursive = new List<List<MyCell>>();
                 var ZeroLayer = new List<MyCell>();
                 //
-                var precomputedBins = Enumerable.Range(0, GetCellCount()).Select(i => new List<MyCell>(G.Cells.Skip(i).Select(j=>new MyCell(j)))).ToList();
+                var precomputedBins = Enumerable.Range(0, EndCellIndex).Select(i => new List<MyCell>(G.Cells.Skip(i).Select(j=>new MyCell(j)))).ToList();
                 var bins = new List<List<MyCell>>(Enumerable.Range(0, intStartNodesCount).Select(i=>new List<MyCell>()));
                 bins[0] = precomputedBins[0];
-                //search in cycle
+                Console.WriteLine("Warning! Starting from cell with number 2");
+                    //search in cycle
                 for (int i = 0; i < bins.Count; i++)
                 {
                     var bin = bins[i];
@@ -183,7 +185,7 @@ namespace Allax.Cryptography
                         if (ZeroLayer.Count > i)
                             ZeroLayer.RemoveAt(i);
                         ZeroLayer.Insert(i, bin[0]);
-                        if(i<bins.Count-1)
+                        if((i<bins.Count-1) && (bin[0].Index + 1 < precomputedBins.Count))
                         {
                             bins[i + 1] = precomputedBins[bin[0].Index + 1];
                         }
@@ -269,6 +271,11 @@ namespace Allax.Cryptography
                     }
                 }
                 var NewCellsForRecursive = new List<List<MyCell>>(cellsForRecursive);
+                if(NewLayer.Count==0)
+                {
+                    yield return NewCellsForRecursive;
+                    continue;
+                }
                 NewCellsForRecursive.Add(NewLayer);
                 var it =
                 GetWorkSubgraphs(intStartNodesCount, intStepsCount, intCurrentLayerForRecursive + 1, NewCellsForRecursive);
@@ -710,6 +717,54 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static bool BitComparable(this int Int1, int Int2)
+        {
+            int result = 0;
+            var ComparationResult = Enumerable.Range(0, 32).Select(i => (((((1 << i) & Int1) > 0) ? 1 : 0) - ((((1 << i) & Int2) > 0) ? 1 : 0))).ToList();
+            if (ComparationResult.All(i => i >= 0))
+                result = 1;
+            else
+            {
+                if (ComparationResult.All(i => i <= 0))
+                {
+                    result = -1;
+                }
+            }
+            return result!=0;
+        }
+        public static bool BitCompareG(this int Int1, int Int2)
+        {
+            int result = 0;
+            var ComparationResult = Enumerable.Range(0, 32).Select(i => (((((1 << i) & Int1) > 0) ? 1 : 0) - ((((1 << i) & Int2) > 0) ? 1 : 0))).ToList();
+            if (ComparationResult.All(i => i >= 0))
+            {
+                if (Int1 != Int2)
+                    result = 1;
+            }
+            else
+            {
+                if (ComparationResult.All(i => i <= 0))
+                {
+                    result = -1;
+                }
+            }
+            return result > 0;
+        }
+        public static bool BitCompareGE(this int Int1, int Int2)
+        {
+            int result = 0;
+            var ComparationResult = Enumerable.Range(0, 32).Select(i => (((((1 << i) & Int1)>0)?1:0) - ((((1 << i) & Int2)>0)?1:0))).ToList();
+            if (ComparationResult.All(i => i >= 0))
+                result = 1;
+            else
+            {
+                if (ComparationResult.All(i => i <= 0))
+                {
+                    result = -1;
+                }
+            }
+            return result>0;
+        }
         public static IEnumerator MultiListSerialIterator<T>(this List<List<T>> source)
         {
             var ZeroLayer = new List<T>();
@@ -729,7 +784,7 @@ namespace Allax.Cryptography
                     if (ZeroLayer.Count > i)
                         ZeroLayer.RemoveAt(i);
                     ZeroLayer.Insert(i, bin[0]);
-                    if (i < bins.Count - 1)
+                    if ((i < bins.Count - 1)&&(i+1 < precomputedBins.Count))
                     {
                         bins[i + 1] = new List<T>(precomputedBins[i+1]);
                     }
@@ -784,7 +839,7 @@ namespace Allax.Cryptography
                     if (ZeroLayer.Count > i)
                         ZeroLayer.RemoveAt(i);
                     ZeroLayer.Insert(i, bin[0]);
-                    if (i < bins.Count - 1)
+                    if ((i < bins.Count - 1)&&(IndexDict[bin[0]] + 1< precomputedBins.Count))
                     {
                         bins[i + 1] = precomputedBins[IndexDict[bin[0]] + 1];
                     }
@@ -1643,6 +1698,36 @@ namespace CATesting
 
             return ret;
         }
+        static CA SpecialNumeration_57(CA A)
+        {
+            var ret = (CA)A.Clone();
+            NewNumerationForCell(ret[57], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[162], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[132], new List<int> { 3, 2, 4, 1, 6, 5 });
+            NewNumerationForCell(ret[150], new List<int> { 4, 2, 1, 3, 5, 6 });
+            NewNumerationForCell(ret[72], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[113], new List<int> { 1, 2, 3, 5, 6, 4 });
+            NewNumerationForCell(ret[167], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[62], new List<int> { 1, 2, 6, 3, 4, 5 });
+            NewNumerationForCell(ret[140], new List<int> { 1, 2, 4, 5, 3, 6 });
+            NewNumerationForCell(ret[53], new List<int> { 4, 2, 5, 1, 6, 3 });
+            NewNumerationForCell(ret[118], new List<int> { 1, 2, 3, 4, 6, 5 });
+            NewNumerationForCell(ret[164], new List<int> { 1, 2, 3, 4, 6, 5 });
+            NewNumerationForCell(ret[160], new List<int> { 3, 2, 4, 1, 6, 5 });
+            NewNumerationForCell(ret[81], new List<int> { 4, 2, 6, 3, 5, 1 });
+            NewNumerationForCell(ret[66], new List<int> { 4, 2, 6, 3, 1, 5 });
+            NewNumerationForCell(ret[169], new List<int> { 1, 2, 4, 3, 5, 6 });
+            NewNumerationForCell(ret[88], new List<int> { 3, 2, 1, 4, 5, 6 });
+            NewNumerationForCell(ret[161], new List<int> { 3, 2, 4, 1, 5, 6 });
+            NewNumerationForCell(ret[18], new List<int> { 3, 2, 4, 5, 6, 1 });
+            NewNumerationForCell(ret[14], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[167], new List<int> { 1, 2, 3, 5, 4, 6 });
+            NewNumerationForCell(ret[53], new List<int> { 4, 2, 3, 1, 5, 6 });
+            NewNumerationForCell(ret[24], new List<int> { 4, 2, 3, 1, 6, 5 });
+
+
+            return ret;
+        }
         static bool CheckConst(List<int> Const, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions)
         {
             var ret = true;
@@ -1802,13 +1887,13 @@ namespace CATesting
                 this.ConstMask = constMask;
             }
         }
-        static List<(List<bool>, int, int)> GetConstValuesForParrents(MyCell myCell, List<List<(List<bool>, int, int)>> SubFunctions)
+        static List<(List<bool>, int, int)> GetConstValuesForParrents(MyCell myCell, List<List<(List<bool>, int, int)>> SubFunctions, int PredefinedValue = -1)
         {
             var Neighbors = myCell.Neighbors;
-            var VarParents = myCell.VarParrents;
-            var VarParrentsInd = VarParents.Select(i => i.Index).ToList();
-            if (!(VarParrentsInd.All(i => myCell.VarParInd.Contains(i)) && (VarParrentsInd.Count == myCell.VarParInd.Count)))
-                throw new NotImplementedException("I used ParInd for VAr Parrent earlier, but it's not so");
+            //var VarParents = myCell.VarParInd;
+            var VarParrentsInd = myCell.VarParInd;//VarParents.Select(i => i.Index).ToList();
+            //if (!(VarParrentsInd.All(i => myCell.VarParInd.Contains(i)) && (VarParrentsInd.Count == myCell.VarParInd.Count)))
+             //   throw new NotImplementedException("I used ParInd for VAr Parrent earlier, but it's not so");
             var ConstParents = myCell.ConstParrents;
             var ConstParrentsInd = ConstParents.Select(i => i.Index).ToList();
             var lVarMask = Neighbors.Select(i => (VarParrentsInd.Contains(i.Index)) ? true : false).ToList();
@@ -1822,8 +1907,13 @@ namespace CATesting
             var ConstFunctionsFromFunctionCandidates = FunctionCandidates.Where(i =>
             {
                 var intFunc = i.Item1.ConvertAll(j => Convert.ToInt32(j));
-                var sum = Enumerable.Range(0, intFunc.Count).Select(x => (intFunc[x ^ intVarMask] ^ intFunc[x])).ToList().Sum();
-                return (sum == 0) || (sum == intFunc.Count);
+                //var sum = Enumerable.Range(0, intFunc.Count).Select(x => (intFunc[(x + VarParrentsInd.Count)%intFunc.Count] ^ intFunc[x])).ToList().Sum();
+                if(PredefinedValue!=-1)
+                {
+                    if (intFunc.Count > 0 && intFunc[0] != PredefinedValue)
+                        return false;
+                }
+                return (intFunc.First() == intFunc.Last());//(sum == 0) || (sum == intFunc.Count);
             }
             ).ToList();
             return ConstFunctionsFromFunctionCandidates;
@@ -1836,16 +1926,16 @@ namespace CATesting
             {
                 var cell = tCell.Key;
                 var intVarMask = tCell.Value[0].Item2;
+                DicCellsFaceMasked.Add(cell, (intVarMask, new List<(int, int)>()));
                 //operating with const masks,searching subcube faces:
                 var lConstMasks = tCell.Value.Select(i => i.Item3).ToList();
-                var intLogUpperGroupLimit = Enumerable.Range(0, 6).Last(i => (1 << i) < lConstMasks.Count);
+                var intLogUpperGroupLimit = Enumerable.Range(0, 6).Last(i => (1 << i) <= lConstMasks.Count);
                 Enumerable.Range(0, intLogUpperGroupLimit).ToList().ForEach(
                     i =>
                     {
-                        var CombinationsK = lConstMasks.CombinationIterator(i);
+                        var CombinationsK = lConstMasks.CombinationIterator(1<<i);
                         //Is this a face? check func
                         //...
-                        DicCellsFaceMasked.Add(cell, (intVarMask, new List<(int, int)>()));
                         while (CombinationsK.MoveNext())
                         {
                             var Combination = (List<int>)CombinationsK.Current;
@@ -1867,7 +1957,7 @@ namespace CATesting
                             if ((1 << intVarBitsCountInFace) != Count)
                                 continue;
                             //add comb to dict if all vectors of face in combination
-                            var FaceMask = (int)WayConverter.ToLong(Enumerable.Range(0, 6).Select(bit => (FixedBitsInFace.Contains(bit)) ? false : true).ToList());
+                            var FaceMask = (int)WayConverter.ToLong(Enumerable.Range(0, 6).Select(bit => (FixedBitsInFace.Contains(bit)) ? false : true).ToList().RetReverse());
                             DicCellsFaceMasked[cell].Item2.Add((FaceMask, Combination[0] & ~FaceMask));
                         }
                     });
@@ -1875,25 +1965,44 @@ namespace CATesting
             }
             return DicCellsFaceMasked;
         }
-        static List<Dictionary<MyCell, int>> GetSolutionsForListOfCells(List<MyCell> CellList, List<List<(List<bool>, int, int)>> SubFunctions)
+        static List<Dictionary<MyCell, int>> GetSolutionsForListOfCells(List<MyCell> CellList, List<List<(List<bool>, int, int)>> SubFunctions, Dictionary<MyCell, int> predefinedCells = null)
         {
-            var X2FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
-            foreach (var CurrentX2Cell in CellList)
+            var FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
+            foreach (var CurrentCell in CellList)
             {
-                var ConstFunctionsFromFunctionCandidates = GetConstValuesForParrents(CurrentX2Cell, SubFunctions);
-                X2FuncCandidates.Add(CurrentX2Cell, ConstFunctionsFromFunctionCandidates);
+                var Value = -1;
+                if (predefinedCells != null)
+                {
+                    var ResultIndex = predefinedCells.Keys.ToList().FindIndex(i => i.Index == CurrentCell.Index);
+                    if (ResultIndex > 0)
+                    {
+                        Value = predefinedCells[predefinedCells.Keys.ElementAt(ResultIndex)];
+                    }
+                }
+                var ConstFunctionsFromFunctionCandidates = GetConstValuesForParrents(CurrentCell, SubFunctions, Value);
+                FuncCandidates.Add(CurrentCell, ConstFunctionsFromFunctionCandidates);
             }
-            //Check that every x2 have const expression
-            foreach (var T in X2FuncCandidates)
+            //Check that every cell have const expression
+            foreach (var T in FuncCandidates)
             {
                 if (T.Value.Count == 0)
                     //reject current diff graph struct
-                    return null;
+                    return new List<Dictionary<MyCell, int>>();
             }
             //Extract const values from candidates, convert possible const mask to int
             // cell, varmask, list<( facemask, constmasks)>
-            var X2ConstValues = CombineListOfConstsIntoFaces(X2FuncCandidates);
-
+            var X2ConstValues = CombineListOfConstsIntoFaces(FuncCandidates);
+            // Remove faces wich are already included in other faces
+            X2ConstValues.Values.ToList().ForEach(i =>
+            {
+                var faceMaskList = i.Item2;
+                var copyfaceMaskList = new List<(int, int)>(faceMaskList);
+                copyfaceMaskList.ForEach(cur =>
+                {
+                    if (!faceMaskList.All(target => (((target.Item1 == cur.Item1) && (target.Item2 == cur.Item2)) || (!target.Item1.BitCompareG(cur.Item1)) || (((target.Item1.BitCompareG(cur.Item1)) && (target.Item2!=((~target.Item1)&cur.Item2)))))))
+                        faceMaskList.Remove(cur);
+                });
+            });
             //Sort combinations in star count order
             X2ConstValues.Values.ToList().ForEach(i => i.Item2.Sort((comb1, comb2) =>
             {
@@ -1925,27 +2034,29 @@ namespace CATesting
                     var FixedParentsMask = (~VarMask) & (~FaceMask);
                     for (int i = 0; i < 6; i++)
                     {
+                        var Neighbour = new MyCell(cell.cell.Neighbors[6 - 1 - i]);
                         //if current neighbout in fixedparrentsmask
                         if (((1 << i) & FixedParentsMask) != 0)
                         {
                             var Value = (((1 << i) & ConstMask) == 0) ? 0 : 1;
-                            if (solution.ContainsKey(cell.cell))
+                            if (!solution.Keys.All(k => k.Index != Neighbour.Index))
                             {
-                                if (solution[cell.cell] != Value)
+                                if (solution.First(kv => kv.Key.Index == Neighbour.Index).Value != Value)
                                 {
                                     RightSolution = false;
                                     break;
                                 }
-                                else
-                                {
-                                    solution.Add(cell.cell, Value);
-                                }
                             }
+                            else
+                            {
+                                solution.Add(Neighbour, Value);
+                            }
+                            
                         }
                     }
                 }
                 if (!RightSolution)
-                    break;
+                    continue;
                 Solutions.Add(solution);
             }
             return Solutions;
@@ -1962,7 +2073,12 @@ namespace CATesting
                     //Drop cell if it's in next Layer of DiffStruct
                     if(Step<DiffStruct.Count-1)
                     {
-
+                        var DiffNextLayer = DiffStruct[Step + 1];
+                        if (!DiffNextLayer.All(i=>(i.Index!=c.Index)))
+                        {
+                            //drop cell
+                            continue;
+                        }
                     }
                     //Convert each neighbor of cell from LastDifLayer
                     var myC = new MyCell(c);
@@ -2001,6 +2117,8 @@ namespace CATesting
             //get Solutions for X2 at t-1 level
             // Solution -> (Fixed Cell at t-1 level, Value for Cell)
             var Deep = DiffStruct.Count - 1 - InverseStep;
+            if (Deep < 0)
+                yield return ConstCellsAtStep;
             var CurrentConstAndX2Layer = ExtractConstCells(DiffStruct, Deep);
             var CurrentConstLayer = CurrentConstAndX2Layer.Item1;
             var X2CellsFromConstLayer = CurrentConstAndX2Layer.Item2;
@@ -2011,20 +2129,31 @@ namespace CATesting
                     yield break; //skip analisys beacuse of X2 Neighbours on next layer which must be const
                 }
             }
+            CurrentConstLayer.ForEach(i => Console.Write(string.Format("{0}-", i.Index)));
+            Console.WriteLine();
             if(ConstCellsAtStep!=null)
             {
-                
-            }
-            var LayerSolutions = GetSolutionsForListOfCells(CurrentConstLayer, SubFunctions);
-            //Lets organaize bruteforce among all solutions
-            throw new NotImplementedException();
-            foreach (var X2 in X2FuncCandidates)
-            {
-                foreach(var FuncCandidate in X2.Value)
+                foreach(var cell in ConstCellsAtStep)
                 {
-                    X2.Value.CombinationIterator
+                    if(CurrentConstLayer.All(i=>i.Index!=cell.Key.Index))
+                    {
+                        CurrentConstLayer.Add(cell.Key);
+                    }
                 }
             }
+            var LayerSolutions = GetSolutionsForListOfCells(CurrentConstLayer, SubFunctions, ConstCellsAtStep);
+            foreach(var Solution in LayerSolutions)
+            {
+                var It = SUPERDIFFERENCIALCRYPTOANALISYS(DiffStruct, SubFunctions, Solution, InverseStep + 1);
+                while(It.MoveNext())
+                {
+                    var NextSolution = It.Current;
+                    yield return NextSolution;
+                }
+            }
+            yield break;
+            //Lets organaize bruteforce among all solutions
+            throw new NotImplementedException();
         }
         static void Main(string[] args)
         {
@@ -2034,40 +2163,46 @@ namespace CATesting
             //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
             var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
             var SubFunctions =
-                Enumerable.Range(0, 1 << 6).Select(i => //VarMask
-                  {
-                      var ConstCount = 6-WayConverter.ToList(i, 6).ConvertAll(z => Convert.ToInt32(z)).Sum();
-                      var VarMask = WayConverter.ToList(i, 6);
-                      return Enumerable.Range(0, 1 << ConstCount).Select(j => //ConstValues
+                Enumerable.Range(0, 1 << 6).Select(intVarMask => //VarMask
+                { 
+                      var ConstCount = 6-WayConverter.ToIntList(intVarMask, 6).Sum();
+                      var lstVarMask = WayConverter.ToList(intVarMask, 6);
+                      return Enumerable.Range(0, 1 << ConstCount).Select(ConstNum => //ConstValues
                       {
-                          var ConstValues = WayConverter.ToList(j, ConstCount).ConvertAll(abc => Convert.ToInt32(abc));
+                          var ConstBits = WayConverter.ToIntList(ConstNum, ConstCount);
                           //Get required indexes for Func and then get all func
 
-                          var iterConstValues = ConstValues.GetEnumerator();
+                          var iterConstBits = ConstBits.GetEnumerator();
                           //Set Const values on their places in EnumMask
-                          var EnumMask = VarMask.Select(varMaskBit =>
+                          var EnumMask = lstVarMask.Select(varMaskBit =>
                           {
-                              iterConstValues.MoveNext();
-                              return (!varMaskBit) ? ((iterConstValues.Current == 1) ? true : false) : false;
+                              if(!varMaskBit)
+                                iterConstBits.MoveNext();
+                              return (!varMaskBit) ? ((iterConstBits.Current == 1) ? true : false) : false;
                           }).ToList();
                           var intEnumMask = (int)WayConverter.ToLong(EnumMask);
                           return (Enumerable.Range(0, 1 << 6).Where(m => //Func Arg Enum
                           {
                               //xor const values in m, make them zero. Make and with constmask (~i) so var bits become zero. 
                               //If all result is zero then const bits in m are the same as required.
-                              return (((~i) & (intEnumMask ^ m)) == 0);
+                              return (((~intVarMask) & (intEnumMask ^ m)) == 0);
                           }
 
-                              ).Select(k => Func[k][0]).ToList(), i, intEnumMask);
+                              ).Select(k => Func[k][0]).ToList(), intVarMask, intEnumMask);
                       }
                       ).ToList();
                   }
                       ).ToList();
+
+            //throw new NotImplementedException("Subfunctions have non-unique constmasks for same varmask");
             var MX = ShowMatixes(Func);
             //var Func_2 = Enumerable.Range(0, 1 << 4).Select(i => CACr_2.FN.Automata.F.GetResult(WayConverter.ToList(i, 4).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
             //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
             var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
+            //посмотрим proof of concept 
+
+            NewAut_before = SpecialNumeration_57(NewAut_before);
             //Get All Structures - Differencials
             var sgItr = NewAut_before.GetWorkSubgraphs(1, 1);
             while(sgItr.MoveNext())
@@ -2128,6 +2263,7 @@ namespace CATesting
                 Console.WriteLine();
                 //TODO: Lets do ditry hacks for checking my super-collision-differencial analisys
                 //First, Find expressions
+                /*
                 var Expressions = new Dictionary<string, int>();
                 //Lets find nodes In ContLayer After last differencial layer that have X2 edge to nodes from last differencial layer
                 var X2fromConstLayerAfterLast = new List<MyCell>();
@@ -2141,7 +2277,9 @@ namespace CATesting
                     //Find parrents for node inside last dif layer. Note that ParInd contains only var parrents
                     node.ConstParrents = node.Neighbors.Where(i => !node.VarParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
                     node.VarParrents = node.Neighbors.Where(i => node.VarParInd.Contains(i.Index)).ToList().ConvertAll(i => new MyCell(i));
-                }
+                }6
+
+                */
                 /*
                 foreach(var node in X2fromConstLayerAfterLast)
                 {
@@ -2150,15 +2288,19 @@ namespace CATesting
 
                 }
                 */
-                SUPERDIFFERENCIALCRYPTOANALISYS(sg, ConstLayerAfterLast, X2fromConstLayerAfterLast, SubFunctions);
+                var Solutions = SUPERDIFFERENCIALCRYPTOANALISYS(sg, SubFunctions);
+                while(Solutions.MoveNext())
+                {
+                    var Solution = (Dictionary<MyCell, int>)Solutions.Current;
+                    var intDicSolution = Solution.ToDictionary(i => i.Key.Index, j=>j.Value);
+                    //Check existance of solution with supercheck
+
+                    //CrossCheck(null, null, intDicSolution, null);
+                    //Print success probability
+                    Console.WriteLine(string.Format("Success prob: {0}", Math.Pow(.5, intDicSolution.Where(i => (i.Key > 63) && (i.Key < 128)).Count())));
+                }
+
                 continue; //skip analisys
-
-                //Check existance of solution with supercheck
-
-                throw new NotImplementedException();
-                CrossCheck(null, null, null,null);
-                //Print success probability
-                throw new NotImplementedException();
                 //Make choise take it or drop
                 throw new NotImplementedException();
                 //Try another struct. Reccomed to use SUPER COMPUTATION CLUSTER, ask Google for help ;)
