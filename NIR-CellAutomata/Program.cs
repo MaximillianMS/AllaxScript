@@ -14,7 +14,7 @@ using System.Linq.Expressions;
 
 namespace Allax.Cryptography
 {
-    class Cell
+    public class Cell
     {
         public int Value;
         public int Index;
@@ -159,7 +159,7 @@ namespace Allax.Cryptography
         {
             return GetWorkSubgraphs(GetCellCount(), 0);
         }
-        public IEnumerator GetWorkSubgraphs(int intStartNodesCount, int intStepsCount, int intCurrentLayerForRecursive=0, List<List<MyCell>> cellsForRecursive = null, bool StartNodesFromOpenText = true)
+        public IEnumerator GetWorkSubgraphs(int intStartNodesCount, int intStepsCount, int intCurrentLayerForRecursive=0, List<List<MyCell>> cellsForRecursive = null, bool StartNodesFromOpenText = true, int StartFrom=0)
         {
             if (intCurrentLayerForRecursive == intStepsCount)
             {
@@ -174,8 +174,8 @@ namespace Allax.Cryptography
                 //
                 var precomputedBins = Enumerable.Range(0, EndCellIndex).Select(i => new List<MyCell>(G.Cells.Skip(i).Select(j=>new MyCell(j)))).ToList();
                 var bins = new List<List<MyCell>>(Enumerable.Range(0, intStartNodesCount).Select(i=>new List<MyCell>()));
-                bins[0] = precomputedBins[0];
-                Console.WriteLine("Warning! Starting from cell with number 2");
+                bins[0] = precomputedBins[StartFrom%precomputedBins.Count];
+                Console.WriteLine(string.Format("Warning! Starting from cell with number {0}", StartFrom));
                     //search in cycle
                 for (int i = 0; i < bins.Count; i++)
                 {
@@ -717,6 +717,18 @@ namespace Allax.Cryptography
     }
     public static class Ext
     {
+        public static Dictionary<TKey, TValue> ToDictionary<TKey,TValue>(this IEnumerable<KeyValuePair<TKey,TValue>> keyValuePairs)
+        {
+            return keyValuePairs.ToDictionary(kv => kv.Key, kv => kv.Value);
+        }
+        public static bool MyContains(this IEnumerable<MyCell> myCells, MyCell cell)
+        {
+            return !myCells.All(i => i.Index != cell.Index);
+        }
+        public static bool All(this IEnumerable<bool> vs)
+        {
+            return vs.All(i => i);
+        }
         public static bool BitComparable(this int Int1, int Int2)
         {
             int result = 0;
@@ -998,7 +1010,7 @@ namespace CATesting
             }
         }
     }
-    class MyCell:Allax.Cryptography.Cell
+    public class MyCell:Allax.Cryptography.Cell
     {
         public List<int> VarParInd = new List<int>();
         public List<MyCell> ConstParrents = new List<MyCell>();
@@ -1205,6 +1217,30 @@ namespace CATesting
     }
     class Program
     {
+        static void FindSubCyclesByHeuristicMethod(List<List<int>> Cycles, CA Aut)
+        {
+
+            Func<List<int>, int, int, List<int>> GetSubCycle = (Cycle, startInd, Count) => Enumerable.Range(0, Count).Select(i => Cycle[(startInd + i) % Cycle.Count]).ToList();
+            foreach (var Cycle in Cycles)
+
+            {
+                for (int i = 0; i < Cycle.Count; i++)
+                {
+                    var Triple = GetSubCycle(Cycle, i, 3).RetReverse();
+                    foreach (var Neighbour in Aut[Triple[0]].Neighbors.Where(c => c.Index != Aut[Triple[1]].Index))
+                    {
+                        if (Neighbour.NeighboursIndexes.Contains(Aut[Triple[2]].Index))
+                        {
+                            var x2 = Neighbour.Neighbors.First(c => c.NeighboursIndexes[1] == Neighbour.Index);
+                            if (Aut[Triple[1]].NeighboursIndexes.Contains(x2.Index))
+                            {
+                                Console.WriteLine(string.Format("Start={0},Neighbour={1}", Triple[0], Neighbour.Index));
+                            }
+                        }
+                    }
+                }
+            }
+        }
         static CA Numerate(CA Aut, int LinearArgInd = 1)
         {
             Aut = (CA)Aut.Clone();
@@ -1250,25 +1286,7 @@ namespace CATesting
                     C.NeighboursIndexes = Neighbours.Select(c => c.Index).ToList();
                 }
             }
-            Func<List<int>, int, int, List<int>> GetSubCycle = (Cycle, startInd, Count) => Enumerable.Range(0,Count).Select(i=>Cycle[(startInd+i)%Cycle.Count]).ToList();
-            foreach(var Cycle in Cycles)
-            {
-                for(int i=0;i<Cycle.Count;i++)
-                {
-                    var Triple = GetSubCycle(Cycle, i, 3).RetReverse();
-                    foreach(var Neighbour in Aut[Triple[0]].Neighbors.Where(c=>c.Index!=Aut[Triple[1]].Index))
-                    {
-                        if(Neighbour.NeighboursIndexes.Contains(Aut[Triple[2]].Index))
-                        {
-                            var x2 = Neighbour.Neighbors.First(c => c.NeighboursIndexes[1] == Neighbour.Index);
-                            if(Aut[Triple[1]].NeighboursIndexes.Contains(x2.Index))
-                            {
-                                Console.WriteLine(string.Format("Start={0},Neighbour={1}", Triple[0], Neighbour.Index));
-                            }
-                        }
-                    }
-                }
-            }
+            //FindSubCyclesByHeuristicMethod(Cycles, Aut);
             return Aut;
         }
 
@@ -1731,6 +1749,7 @@ namespace CATesting
         static bool CheckConst(List<int> Const, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions)
         {
             var ret = true;
+            RequiredValues = RequiredValues.Where(kv => kv.Key >= 128).ToDictionary();
             foreach(var K in RequiredValues.Keys)
             {
                 if (Const[K - 128] != RequiredValues[K])
@@ -1772,7 +1791,7 @@ namespace CATesting
             }
             return ret;
         }
-        static bool CrossCheck(List<int> Const, List<int> OT, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions)
+        static bool CrossCheck(List<int> Const, List<int> OT, Dictionary<int, int> RequiredValues, Dictionary<string, int> RequiredExpressions, List<int> Key = null)
         {
             var ret = true;
             foreach (var K in RequiredValues.Keys)
@@ -1788,6 +1807,18 @@ namespace CATesting
                         }
                     }
 
+                }
+                else
+                if(K<128)
+                {
+                    if (Key != null)
+                    {
+                        if (Key[K] != RequiredValues[K])
+                        {
+                            ret = false;
+                            return ret;
+                        }
+                    }
                 }
                 else
                 {
@@ -1930,7 +1961,7 @@ namespace CATesting
                 //operating with const masks,searching subcube faces:
                 var lConstMasks = tCell.Value.Select(i => i.Item3).ToList();
                 var intLogUpperGroupLimit = Enumerable.Range(0, 6).Last(i => (1 << i) <= lConstMasks.Count);
-                Enumerable.Range(0, intLogUpperGroupLimit).ToList().ForEach(
+                Enumerable.Range(0, intLogUpperGroupLimit+1).ToList().ForEach(
                     i =>
                     {
                         var CombinationsK = lConstMasks.CombinationIterator(1<<i);
@@ -1965,6 +1996,62 @@ namespace CATesting
             }
             return DicCellsFaceMasked;
         }
+        static List<Dictionary<MyCell, int>> MergeSolution(List<Dictionary<MyCell, int>> solutions, Dictionary<MyCell, int> solution)
+        {
+            var ret = new List<Dictionary<MyCell, int>>(solutions);
+            for (int SolInd = 0; SolInd < solutions.Count; SolInd++)
+            {
+                var CurSol = solutions[SolInd];
+                if (CurSol.Count == solution.Count)
+                {
+                    if (CurSol.Zip(solution, (kv1, kv2) => kv1.Key.Index == kv2.Key.Index).All())
+                    {
+                        //CurSol and TarSol have the same cells
+                        var CellIndex = 0;
+                        var Sum = CurSol.Zip(solution, (kv1, kv2) => { if (kv1.Value != kv2.Value) { CellIndex = kv1.Key.Index; return 1; } else return 0; }).Sum();
+                        if (Sum == 1)
+                        {
+                            var NewSolution = CurSol.Where(i => i.Key.Index != CellIndex).ToDictionary();
+                            var NewSolutions = solutions.Where(i => i != CurSol).ToList();
+                            ret = MergeSolution(NewSolutions, NewSolution);
+                            return ret;
+                        }
+                        if (Sum == 0)
+                            return ret;
+                    }
+                }
+                if (CurSol.Count < solution.Count)
+                {
+                    //Same Cells
+                    if (CurSol.Keys.All(CurKey => solution.Keys.MyContains(CurKey)))
+                    {
+                        //check for same values
+                        if (CurSol.All(kv => solution.First(i => i.Key.Index == kv.Key.Index).Value == kv.Value))
+                            return ret;
+                    }
+                }
+                if (CurSol.Count > solution.Count)
+                {
+                    if (solution.Keys.All(SolKey => CurSol.Keys.MyContains(SolKey)))
+                    {
+                        //check for same values
+                        if (solution.All(kv => CurSol.First(i => i.Key.Index == kv.Key.Index).Value == kv.Value))
+                        {
+                            var ExtraRet = Enumerable.Range(SolInd, solutions.Count - SolInd).Select(i => solutions[i]).Where(s =>
+                            !((s.Count > solution.Count) &&
+                            (solution.Keys.All(SolKey => s.Keys.MyContains(SolKey))) &&
+                            (solution.All(kv => s.First(i => i.Key.Index == kv.Key.Index).Value == kv.Value))));
+                            ret = ret.Take(SolInd).ToList();
+                            ret.AddRange(ExtraRet);
+                            ret = MergeSolution(ret, solution);
+                            return ret;
+                        }
+                    }
+                }
+            }
+            ret.Add(solution);
+            return ret;
+        }
         static List<Dictionary<MyCell, int>> GetSolutionsForListOfCells(List<MyCell> CellList, List<List<(List<bool>, int, int)>> SubFunctions, Dictionary<MyCell, int> predefinedCells = null)
         {
             var FuncCandidates = new Dictionary<MyCell, List<(List<bool>, int, int)>>();
@@ -1996,6 +2083,9 @@ namespace CATesting
             X2ConstValues.Values.ToList().ForEach(i =>
             {
                 var faceMaskList = i.Item2;
+                if (i.Item2.Count == 0)
+                    return;
+                    //throw new NotImplementedException();
                 var copyfaceMaskList = new List<(int, int)>(faceMaskList);
                 copyfaceMaskList.ForEach(cur =>
                 {
@@ -2011,6 +2101,22 @@ namespace CATesting
                 //decreasing order
                 return startCountInFace2.CompareTo(startCountInFace1);
             }));
+            // Drop bad solutions, greedy alg
+            //Console.WriteLine("greedy search!");
+            X2ConstValues.Values.ToList().ForEach(i =>
+            {
+                var cellSolutions = i.Item2;
+                var startCountInFace = WayConverter.ToIntList(cellSolutions[0].Item1, 6).Sum();
+                for (int index=0;index<cellSolutions.Count;index++)
+                {
+                    var startCountInFaceCur = WayConverter.ToIntList(cellSolutions[index].Item1, 6).Sum();
+                    if(true&&(((startCountInFaceCur<startCountInFace-LIMIT_1_STARS)) || (index > LIMIT_2_MAX)))
+                    { 
+                        i.Item2.RemoveRange(index, i.Item2.Count - index);
+                        break;
+                    }
+                }
+                });
             //Combine possible combinations
             var PossibleSolutions = new List<List<CellSolution>>();
             foreach (var myCell in X2ConstValues)
@@ -2054,10 +2160,21 @@ namespace CATesting
                             
                         }
                     }
+                    if (!RightSolution)
+                        break;
                 }
                 if (!RightSolution)
                     continue;
-                Solutions.Add(solution);
+                //Search already found solution to merge
+                //sort new solution, required for this func
+                solution = solution.OrderBy(kv => kv.Key.Index).ToDictionary();
+                Solutions = MergeSolution(Solutions, solution);
+            }
+            if (LIMIT_3_DISCARDBIGSOLUTIONS)
+            {
+                if (Solutions.Count > 0)
+                    Solutions.Sort((b, a) => b.Count.CompareTo(a.Count));
+                Solutions = Solutions.TakeWhile(i => i.Count == Solutions[0].Count).ToList();
             }
             return Solutions;
         }
@@ -2112,13 +2229,118 @@ namespace CATesting
             });
             return (CurrentConstLayer, X2CellsFromConstLayer);
         }
+        static List<Dictionary<MyCell, int>> RemoveRedudantSolutions(List<Dictionary<MyCell, int>> solutions)
+        {
+            //trash func
+            return solutions;
+            if (solutions.Count == 0)
+                return solutions;
+            //Remove equal solutions
+            for(int SolInd=0;SolInd<solutions.Count;SolInd++)
+            {
+                var IndexList = new List<int>();
+                if (!IndexList.Contains(SolInd))
+                {
+                    var CurSol = solutions[SolInd];
+                    for (int i = SolInd+1; i < solutions.Count; i++)
+                    {
+                        var TarSol = solutions[i];
+                        if(CurSol.Count==TarSol.Count)
+                        {
+                            if(CurSol.All(kv=>
+                                !TarSol.All(kv2=>(kv.Key.Index!=kv2.Key.Index)||(kv.Value!=kv2.Value))
+                            ))
+                            {
+                                IndexList.Add(i);
+                            }
+                        }
+                    }
+
+                }
+                if (IndexList.Count > 0)
+                {
+                    IndexList.Sort();
+                    IndexList.Reverse();
+                    IndexList.ForEach(i => solutions.RemoveAt(i));
+                }
+            }
+            //
+            //Remove extra solutions
+            /*
+            // cell, varmask, list<( facemask, constmasks)>
+            var DicCellsFaceMasked = new List<Dictionary<MyCell, int>>();
+                var lConstMasks = solutions;
+                var intLogUpperGroupLimit = Enumerable.Range(0, 32).Last(i => (1 << i) <= lConstMasks.Count);
+                Enumerable.Range(0, intLogUpperGroupLimit).ToList().ForEach(
+                    i =>
+                    {
+                        var CombinationsK = lConstMasks.CombinationIterator(1 << i);
+                        //Is this a face? check func
+                        //...
+                        while (CombinationsK.MoveNext())
+                        {
+                            var Combination = (List<int>)CombinationsK.Current;
+                            var Count = Combination.Count;
+                            if (Count == 1)
+                            {
+                                DicCellsFaceMasked[cell].Item2.Add((0, Combination[0]));
+                                continue;
+                            }
+                            //var face = Combination.Select(n => n ^ Combination[0]).ToList();
+                            //get face mask
+                            var FixedBitsInFace = Enumerable.Range(0, 6).Where(bitNum =>
+                            {
+                                var Mask = 1 << bitNum;
+                                var sum = Enumerable.Range(0, Count).Select(vector => ((Combination[vector] & Mask) == 0) ? 0 : 1).Sum();
+                                return ((sum == Count) || (sum == 0));
+                            }).ToList();
+                            var intVarBitsCountInFace = 6 - FixedBitsInFace.Count;
+                            if ((1 << intVarBitsCountInFace) != Count)
+                                continue;
+                            //add comb to dict if all vectors of face in combination
+                            var FaceMask = (int)WayConverter.ToLong(Enumerable.Range(0, 6).Select(bit => (FixedBitsInFace.Contains(bit)) ? false : true).ToList().RetReverse());
+                            DicCellsFaceMasked[cell].Item2.Add((FaceMask, Combination[0] & ~FaceMask));
+                        }
+                    });
+                //
+            return DicCellsFaceMasked;
+            */
+            for (int SolInd = 0; SolInd < solutions.Count; SolInd++)
+            {
+                var IndexList = new List<int>();
+                if (!IndexList.Contains(SolInd))
+                {
+                    var CurSol = solutions[SolInd];
+                    for (int i = SolInd + 1; i < solutions.Count; i++)
+                    {
+                        var TarSol = solutions[i];
+                        if (CurSol.Count == TarSol.Count)
+                        {
+                            
+                        }
+                    }
+
+                }
+                if (IndexList.Count > 0)
+                {
+                    IndexList.Sort();
+                    IndexList.Reverse();
+                    IndexList.ForEach(i => solutions.RemoveAt(i));
+                }
+            }
+            throw new NotImplementedException();
+        }
         static IEnumerator SUPERDIFFERENCIALCRYPTOANALISYS(List<List<MyCell>> DiffStruct, List<List<(List<bool>, int, int)>> SubFunctions, Dictionary<MyCell,int> ConstCellsAtStep=null, int InverseStep = 0)
         {
             //get Solutions for X2 at t-1 level
             // Solution -> (Fixed Cell at t-1 level, Value for Cell)
             var Deep = DiffStruct.Count - 1 - InverseStep;
             if (Deep < 0)
+            {
                 yield return ConstCellsAtStep;
+                yield break;
+            }   
+
             var CurrentConstAndX2Layer = ExtractConstCells(DiffStruct, Deep);
             var CurrentConstLayer = CurrentConstAndX2Layer.Item1;
             var X2CellsFromConstLayer = CurrentConstAndX2Layer.Item2;
@@ -2129,7 +2351,6 @@ namespace CATesting
                     yield break; //skip analisys beacuse of X2 Neighbours on next layer which must be const
                 }
             }
-            CurrentConstLayer.ForEach(i => Console.Write(string.Format("{0}-", i.Index)));
             Console.WriteLine();
             if(ConstCellsAtStep!=null)
             {
@@ -2141,8 +2362,13 @@ namespace CATesting
                     }
                 }
             }
+            Console.Write(string.Format("Current deep:{0} ", Deep+1));
+            CurrentConstLayer.ForEach(i => Console.Write(string.Format("{0}-", i.Index)));
             var LayerSolutions = GetSolutionsForListOfCells(CurrentConstLayer, SubFunctions, ConstCellsAtStep);
-            foreach(var Solution in LayerSolutions)
+            //Combine Solutions
+            //LayerSolutions = RemoveRedudantSolutions(LayerSolutions);
+            //
+            foreach (var Solution in LayerSolutions)
             {
                 var It = SUPERDIFFERENCIALCRYPTOANALISYS(DiffStruct, SubFunctions, Solution, InverseStep + 1);
                 while(It.MoveNext())
@@ -2155,47 +2381,218 @@ namespace CATesting
             //Lets organaize bruteforce among all solutions
             throw new NotImplementedException();
         }
+        static List<List<bool>> ExtractFuncFromCACryptor(CACryptor CACr)
+        {
+            return Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
+        }
+        static List<List<(List<bool>, int, int)>> GetSubFunctions(List<List<bool>> Func)
+        {
+            return
+                Enumerable.Range(0, 1 << 6).Select(intVarMask => //VarMask
+                {
+                    var ConstCount = 6 - WayConverter.ToIntList(intVarMask, 6).Sum();
+                    var lstVarMask = WayConverter.ToList(intVarMask, 6);
+                    return Enumerable.Range(0, 1 << ConstCount).Select(ConstNum => //ConstValues
+                    {
+                        var ConstBits = WayConverter.ToIntList(ConstNum, ConstCount);
+                        //Get required indexes for Func and then get all func
+
+                        var iterConstBits = ConstBits.GetEnumerator();
+                        //Set Const values on their places in EnumMask
+                        var EnumMask = lstVarMask.Select(varMaskBit =>
+                        {
+                            if (!varMaskBit)
+                                iterConstBits.MoveNext();
+                            return (!varMaskBit) ? ((iterConstBits.Current == 1) ? true : false) : false;
+                        }).ToList();
+                        var intEnumMask = (int)WayConverter.ToLong(EnumMask);
+                        return (Enumerable.Range(0, 1 << 6).Where(m => //Func Arg Enum
+                        {
+                            //xor const values in m, make them zero. Make and with constmask (~i) so var bits become zero. 
+                            //If all result is zero then const bits in m are the same as required.
+                            return (((~intVarMask) & (intEnumMask ^ m)) == 0);
+                        }
+
+                            ).Select(k => Func[k][0]).ToList(), intVarMask, intEnumMask);
+                    }
+                    ).ToList();
+                }
+                      ).ToList();
+        }
+        static bool IsNextLayerConst(List<List<MyCell>> sg)
+        {
+            //Check that on next step there will be no X2 neighbours with one edge
+
+            var LastDifLayer = sg.Last();
+            //All neighbors of last diff layer
+            var ConstLayerAfterLast = new List<MyCell>();
+            var X2CellsFromConstLayer = new List<MyCell>();
+            LastDifLayer.ForEach(cell => {
+                foreach (var c in cell.Neighbors)
+                {
+                    //Convert each neighbor of cell from LastDifLayer
+                    var myC = new MyCell(c);
+                    //Remember parrent of this neighbor - current cell form last dif layer
+                    myC.VarParInd.Add(cell.Index);
+                    if (ConstLayerAfterLast.All(i => i.Index != myC.Index))
+                    {
+                        //if neighbor didn't added to ConstLayerAfterLastDif layer already. i checking that beacuse 
+                        //another cells from LastDifLayer may contain that neighbor as own neighbor
+                        ConstLayerAfterLast.Add(myC);
+                        //if current cell is X2 neighbor for neighbor
+                        if (cell.Index == myC.Neighbors[1].Index)
+                        {
+                            X2CellsFromConstLayer.Add(myC);
+                        }
+                    }
+                    else
+                    {
+                        //ConstLayerAfterLast contains myC, find it in CostLayer array
+                        myC = ConstLayerAfterLast.Find(i => i.Index == myC.Index);
+                        //add current cell as parent
+                        myC.VarParInd.Add(cell.Index);
+                        //if X2CellsFromConstLayer contains already this neighbor then remove it from array. It means that it's possible to
+                        //create expression for neibors of this neighbor to get const value for neighbor
+                        if (!X2CellsFromConstLayer.All(i => i.Index != myC.Index))
+                        {
+                            X2CellsFromConstLayer.Remove(myC);
+                        }
+                    }
+                }
+            });
+            return (X2CellsFromConstLayer.Count == 0);
+        }
+        static void PrintStruct(List<List<MyCell>> sg)
+        {
+            //Print Struct
+            Console.WriteLine("\nStruct:\n");
+            sg.ForEach(i => {
+                i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", j.VarParInd.ToArray()) + ")")));
+                Console.Write(";");
+            });
+            Console.WriteLine();
+        }
+        static int LIMIT_1_STARS=0;
+        static int LIMIT_2_MAX = 0;
+        static bool LIMIT_3_DISCARDBIGSOLUTIONS = true;
         static void Main(string[] args)
+        {
+
+            //Создаю стандартный шифр на 128
+            var CACr = new CACryptor(7, 128);
+            //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
+            var Func = ExtractFuncFromCACryptor(CACr);
+            var SubFunctions = GetSubFunctions(Func);
+            //var MX = ShowMatixes(Func);
+            Console.WriteLine("2-factor:");
+            // Нумеруем 2-фактор
+            var NewAut_before = Numerate((CA)CACr.FN.Automata.Clone());
+            //посмотрим proof of concept 
+
+            //NewAut_before = SpecialNumeration_57(NewAut_before);
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Lets find required subgraphs of Cellular Automata's work.");
+            Console.WriteLine("Start cells Count:");
+            var SNCount = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("Max Deep of Structs:");
+            var Steps = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("Cells have numerous variants of neighbours's cells values for making current cell stay const.\n" +
+                "Variants are represented as binary vectors and boolean cube's faces and sorted in decreasing order of stars count in face. \n" +
+                "Put a difference of stars in such faces for every cell to limit brute force (0-5):");
+            LIMIT_1_STARS = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("And the max of possible variants for every cell is:");
+            LIMIT_2_MAX = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("Start cell:");
+            var StartCell = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            Console.WriteLine("Discard big solutions? (y\\N)");
+            LIMIT_3_DISCARDBIGSOLUTIONS = "yesYes".Contains(Console.ReadLine());
+            Console.WriteLine();
+            var sgItr = NewAut_before.GetWorkSubgraphs(SNCount, Steps,0,null,true,StartCell);
+            while (sgItr.MoveNext())
+            {
+                var sg = (List<List<MyCell>>)sgItr.Current; // Get current struct
+
+                if (!IsNextLayerConst(sg))
+                    continue;
+                PrintStruct(sg);
+                
+                var Solutions = SUPERDIFFERENCIALCRYPTOANALISYS(sg, SubFunctions);
+                while (Solutions.MoveNext())
+                {
+                    var Solution = (Dictionary<MyCell, int>)Solutions.Current;
+                    var intDicSolution = Solution.ToDictionary(i => i.Key.Index, j => j.Value);
+                    Console.WriteLine("Solution:");
+                    intDicSolution.ToList().ForEach(j => Console.Write(string.Format("{0}{1}-", j.Key, "(" + j.Value+ ")")));
+                    Console.WriteLine();
+                    //Check existance of solution with supercheck
+
+                    //CrossCheck(null, null, intDicSolution, null);
+
+
+                    var Key = CACryptor.GetRandomBitList(128);
+                    while(!CrossCheck(null, null,intDicSolution, new Dictionary<string, int>(), Key))
+                    {
+                        Key = CACryptor.GetRandomBitList(128);
+                    }
+                    Key = Key.Skip(64).ToList();
+                    var RequiredOTValues = intDicSolution.Where(kv => kv.Key < 64).ToDictionary();
+                    var RequiredCValues = intDicSolution.Where(kv => kv.Key >= 128).ToDictionary();
+                    var Converted = MyIterator.ListToBigInteger(Key).ToByteArray().Take(8).Reverse().ToArray();
+                    Console.WriteLine(string.Format("Key:{0}", BitConverter.ToString(Converted, 0, Converted.Length)));
+
+                    var Consts = GetConsts(intDicSolution, new Dictionary<string, int>());
+
+                    foreach (var C in Consts)
+                    {
+                        Console.WriteLine(string.Format("Const:{0}, Checked: {1}", BitConverter.ToString(MyIterator.ListToBigInteger(C).ToByteArray().Reverse().ToArray(), 0, MyIterator.ListToBigInteger(C).ToByteArray().Reverse().ToArray().Length), CheckConst(C, RequiredCValues, new Dictionary<string, int>())));
+                    }
+            ;
+                    CACr.SetConstants(Consts);
+                    Func<BigInteger, BigInteger> OTGenFunc = (I) => {
+                        while (true)
+                        {
+                            var ret = CACryptor.GetRandomBitList(64);
+                            foreach (var Id in RequiredOTValues.Keys)
+                            {
+                                ret[Id] = RequiredOTValues[Id];
+                            }
+                            if (CrossCheck(Consts.First(), ret, RequiredCValues.Concat(RequiredOTValues).ToDictionary(i => i.Key, i => i.Value), new Dictionary<string, int>()))
+                                return MyIterator.ListToBigInteger(ret);
+                        }
+                    };
+                    var BitsNums = new List<int> { 28 }; //new List<int> { 57 };
+                    var Result = DiffAnalisys(NewAut_before, 1, Key.Take(64).ToList(), Consts.First(), OTGenFunc, 7, sg.First().Select(i=>i.Index).ToList());
+                    ;
+                    Console.WriteLine(string.Format("OT:{0}", BitConverter.ToString(Result.OT.ToByteArray().Take(8).Reverse().ToArray(), 0, Result.OT.ToByteArray().Take(8).Reverse().ToArray().Length)));
+
+                    //
+
+                    //Print success probability
+                    if (Result.Diff == 0)
+                        Console.WriteLine(string.Format("Success prob: {0}", Math.Pow(.5, intDicSolution.Where(i => (i.Key > 63) && (i.Key < 128)).Count())));
+                }
+
+                continue; //skip analisys
+                //Make choise take it or drop
+            }
+            Console.WriteLine("\n\nFinished.");
+            Console.ReadLine();
+        }
+        static void Main2(string[] args)
         {
             //Создаю стандартный шифр на 128
            var CACr = new Allax.Cryptography.CACryptor(7, 128);
             //var CACr_2 = new CACryptor(7, 128, "x3x4+x1x3+x1+x2+1", 4);
-            //Граф на 182 вершины выбран. Извлечем Функцию в нужном нам формате
-            var Func = Enumerable.Range(0, 1 << 6).Select(i => CACr.FN.Automata.F.GetResult(WayConverter.ToList(i, 6).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
-            var SubFunctions =
-                Enumerable.Range(0, 1 << 6).Select(intVarMask => //VarMask
-                { 
-                      var ConstCount = 6-WayConverter.ToIntList(intVarMask, 6).Sum();
-                      var lstVarMask = WayConverter.ToList(intVarMask, 6);
-                      return Enumerable.Range(0, 1 << ConstCount).Select(ConstNum => //ConstValues
-                      {
-                          var ConstBits = WayConverter.ToIntList(ConstNum, ConstCount);
-                          //Get required indexes for Func and then get all func
-
-                          var iterConstBits = ConstBits.GetEnumerator();
-                          //Set Const values on their places in EnumMask
-                          var EnumMask = lstVarMask.Select(varMaskBit =>
-                          {
-                              if(!varMaskBit)
-                                iterConstBits.MoveNext();
-                              return (!varMaskBit) ? ((iterConstBits.Current == 1) ? true : false) : false;
-                          }).ToList();
-                          var intEnumMask = (int)WayConverter.ToLong(EnumMask);
-                          return (Enumerable.Range(0, 1 << 6).Where(m => //Func Arg Enum
-                          {
-                              //xor const values in m, make them zero. Make and with constmask (~i) so var bits become zero. 
-                              //If all result is zero then const bits in m are the same as required.
-                              return (((~intVarMask) & (intEnumMask ^ m)) == 0);
-                          }
-
-                              ).Select(k => Func[k][0]).ToList(), intVarMask, intEnumMask);
-                      }
-                      ).ToList();
-                  }
-                      ).ToList();
+            
 
             //throw new NotImplementedException("Subfunctions have non-unique constmasks for same varmask");
-            var MX = ShowMatixes(Func);
+            //var MX = ShowMatixes(Func);
             //var Func_2 = Enumerable.Range(0, 1 << 4).Select(i => CACr_2.FN.Automata.F.GetResult(WayConverter.ToList(i, 4).ConvertAll(k => (k == false) ? 0 : 1))).ToList().ConvertAll(l => (l == 0) ? new List<bool> { false } : new List<bool> { true });
             //ShowMatixes(Func_2);
             // Нумеруем 2-фактор
@@ -2204,63 +2601,7 @@ namespace CATesting
 
             NewAut_before = SpecialNumeration_57(NewAut_before);
             //Get All Structures - Differencials
-            var sgItr = NewAut_before.GetWorkSubgraphs(1, 1);
-            while(sgItr.MoveNext())
-            {
-                var sg = (List<List<MyCell>>) sgItr.Current; // Get current struct
-                                                             
-                //Check that on next step there will be no X2 neighbours with one edge
-
-                var LastDifLayer = sg.Last();
-                //All neighbors of last diff layer
-                var ConstLayerAfterLast = new List<MyCell>();
-                var X2CellsFromConstLayer = new List<MyCell>();
-                LastDifLayer.ForEach(cell => {
-                    foreach (var c in cell.Neighbors)
-                    {
-                        //Convert each neighbor of cell from LastDifLayer
-                        var myC = new MyCell(c);
-                        //Remember parrent of this neighbor - current cell form last dif layer
-                        myC.VarParInd.Add(cell.Index);
-                        if (ConstLayerAfterLast.All(i => i.Index != myC.Index))
-                        {
-                            //if neighbor didn't added to ConstLayerAfterLastDif layer already. i checking that beacuse 
-                            //another cells from LastDifLayer may contain that neighbor as own neighbor
-                            ConstLayerAfterLast.Add(myC);
-                            //if current cell is X2 neighbor for neighbor
-                            if (cell.Index == myC.Neighbors[1].Index)
-                            {
-                                X2CellsFromConstLayer.Add(myC);
-                            }
-                        }
-                        else
-                        {
-                            //ConstLayerAfterLast contains myC, find it in CostLayer array
-                            myC = ConstLayerAfterLast.Find(i => i.Index == myC.Index);
-                            //add current cell as parent
-                            myC.VarParInd.Add(cell.Index);
-                            //if X2CellsFromConstLayer contains already this neighbor then remove it from array. It means that it's possible to
-                            //create expression for neibors of this neighbor to get const value for neighbor
-                            if (!X2CellsFromConstLayer.All(i => i.Index != myC.Index))
-                            {
-                                X2CellsFromConstLayer.Remove(myC);
-                            }
-                        }
-                    }
-                });
-                if(X2CellsFromConstLayer.Count!=0)
-                {
-                    continue; //skip analisys beacuse of X2 Neighbours on next layer which must be const
-                }
-
-
-
-                //Print Struct
-                sg.ForEach(i => {
-                    i.ForEach(j => Console.Write(string.Format("{0}{1}-", j.Index, "(" + string.Join(",", j.VarParInd.ToArray()) + ")")));
-                    Console.Write(";");
-                });
-                Console.WriteLine();
+           
                 //TODO: Lets do ditry hacks for checking my super-collision-differencial analisys
                 //First, Find expressions
                 /*
@@ -2288,23 +2629,7 @@ namespace CATesting
 
                 }
                 */
-                var Solutions = SUPERDIFFERENCIALCRYPTOANALISYS(sg, SubFunctions);
-                while(Solutions.MoveNext())
-                {
-                    var Solution = (Dictionary<MyCell, int>)Solutions.Current;
-                    var intDicSolution = Solution.ToDictionary(i => i.Key.Index, j=>j.Value);
-                    //Check existance of solution with supercheck
-
-                    //CrossCheck(null, null, intDicSolution, null);
-                    //Print success probability
-                    Console.WriteLine(string.Format("Success prob: {0}", Math.Pow(.5, intDicSolution.Where(i => (i.Key > 63) && (i.Key < 128)).Count())));
-                }
-
-                continue; //skip analisys
-                //Make choise take it or drop
-                throw new NotImplementedException();
-                //Try another struct. Reccomed to use SUPER COMPUTATION CLUSTER, ask Google for help ;)
-            }
+                
 
 
 
